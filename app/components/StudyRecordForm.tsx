@@ -70,14 +70,14 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
           justifyContent: 'center'
         })}>
           <span className={css({
-            text: 'lg',
+            fontSize: 'lg',
             color: 'blue.600'
           })}>
             ✏️
           </span>
         </div>
         <h2 className={css({
-          text: 'lg',
+          fontSize: 'lg',
           fontWeight: 'bold',
           color: 'gray.900'
         })}>
@@ -91,7 +91,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
         <div>
           <label htmlFor="subject" className={css({
             display: 'block',
-            text: 'sm',
+            fontSize: 'sm',
             fontWeight: '600',
             color: 'gray.700',
             mb: '2'
@@ -128,7 +128,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
         <div>
           <label htmlFor="title" className={css({
             display: 'block',
-            text: 'sm',
+            fontSize: 'sm',
             fontWeight: '600',
             color: 'gray.700',
             mb: '2'
@@ -165,7 +165,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
         <div>
           <label htmlFor="content" className={css({
             display: 'block',
-            text: 'sm',
+            fontSize: 'sm',
             fontWeight: '600',
             color: 'gray.700',
             mb: '2'
