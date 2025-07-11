@@ -21,7 +21,7 @@ export default function Home() {
         mb: '6'
       })}>
         <h2 className={css({
-          text: '2xl',
+          fontSize: '2xl',
           fontWeight: 'bold',
           color: 'gray.900'
         })}>
@@ -33,7 +33,7 @@ export default function Home() {
           gap: '2'
         })}>
           <span className={css({
-            text: 'sm',
+            fontSize: 'sm',
             color: 'gray.500'
           })}>
             最新順
