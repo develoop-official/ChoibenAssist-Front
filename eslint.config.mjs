@@ -77,7 +77,27 @@ const eslintConfig = [
           "allowBind": false,
           "ignoreRefs": true
         }
-      ]
+      ],
+      // コメント必須ルール
+      "require-jsdoc": ["error", {
+        require: {
+          FunctionDeclaration: true,
+          MethodDefinition: true,
+          ClassDeclaration: true,
+          ArrowFunctionExpression: true,
+          FunctionExpression: true
+        }
+      }],
+      "jsdoc/require-jsdoc": ["error", {
+        require: {
+          FunctionDeclaration: true,
+          MethodDefinition: true,
+          ClassDeclaration: true,
+          ArrowFunctionExpression: true,
+          FunctionExpression: true
+        }
+      }],
+      "jsdoc/require-description": "error",
     }
   },
   {
