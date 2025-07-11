@@ -90,7 +90,7 @@ export default function StudyRecordCard({ record }: StudyRecordCardProps) {
               px: '3',
               py: '1',
               rounded: 'full',
-              text: 'xs',
+              fontSize: 'xs',
               fontWeight: '600',
               bg: subjectColor.bg,
               color: subjectColor.text
@@ -98,7 +98,7 @@ export default function StudyRecordCard({ record }: StudyRecordCardProps) {
               {record.subject}
             </span>
             <span className={css({
-              text: 'xs',
+              fontSize: 'xs',
               color: 'gray.500',
               fontWeight: '500'
             })}>
@@ -109,8 +109,8 @@ export default function StudyRecordCard({ record }: StudyRecordCardProps) {
 
         {/* Title */}
         <h3 className={css({
-          text: 'lg',
-          fontWeight: 'bold',
+          fontSize: 'lg',
+          fontWeight: 'bold', 
           color: 'gray.900',
           lineHeight: 'tight'
         })}>
@@ -119,7 +119,7 @@ export default function StudyRecordCard({ record }: StudyRecordCardProps) {
         
         {/* Content */}
         <p className={css({
-          text: 'sm',
+          fontSize: 'sm',
           color: 'gray.600',
           lineHeight: 'relaxed',
           whiteSpace: 'pre-wrap'
@@ -142,13 +142,13 @@ export default function StudyRecordCard({ record }: StudyRecordCardProps) {
             gap: '2'
           })}>
             <span className={css({
-              text: 'xs',
+              fontSize: 'xs',
               color: 'gray.400'
             })}>
               📚
             </span>
             <span className={css({
-              text: 'xs',
+              fontSize: 'xs',
               color: 'gray.500'
             })}>
               学習記録
@@ -167,7 +167,7 @@ export default function StudyRecordCard({ record }: StudyRecordCardProps) {
               rounded: 'full'
             })} />
             <span className={css({
-              text: 'xs',
+              fontSize: 'xs',
               color: 'gray.500'
             })}>
               完了
