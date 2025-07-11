@@ -10,7 +10,7 @@ export default function StudyRecordList({ records }: StudyRecordListProps) {
   if (records.length === 0) {
     return (
       <div className={css({
-        text: 'center',
+        textAlign: 'center',
         py: '16',
         px: '6'
       })}>
@@ -30,14 +30,14 @@ export default function StudyRecordList({ records }: StudyRecordListProps) {
             mb: '6'
           })}>
             <span className={css({
-              text: '3xl'
+              fontSize: '3xl'
             })}>
               📚
             </span>
           </div>
           
           <h3 className={css({
-            text: 'xl',
+            fontSize: 'xl',
             fontWeight: 'bold',
             color: 'gray.900',
             mb: '3'
@@ -46,7 +46,7 @@ export default function StudyRecordList({ records }: StudyRecordListProps) {
           </h3>
           
           <p className={css({
-            text: 'gray.600',
+            color: 'gray.600',
             mb: '6',
             lineHeight: 'relaxed'
           })}>
@@ -59,7 +59,7 @@ export default function StudyRecordList({ records }: StudyRecordListProps) {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '2',
-            text: 'sm',
+            fontSize: 'sm',
             color: 'gray.500'
           })}>
             <span>✨</span>
