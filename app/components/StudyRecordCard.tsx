@@ -1,11 +1,30 @@
+import { useState } from 'react';
 import { css } from '../../styled-system/css';
 import { StudyRecord } from '../types/study-record';
 
 interface StudyRecordCardProps {
   record: StudyRecord;
+  onDelete?: (id: string) => Promise<void>;
 }
 
-export default function StudyRecordCard({ record }: StudyRecordCardProps) {
+export default function StudyRecordCard({ record, onDelete }: StudyRecordCardProps) {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!onDelete || !confirm('この学習記録を削除しますか？')) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await onDelete(record.id);
+    } catch (error) {
+      console.error('削除に失敗しました:', error);
+      alert('削除に失敗しました');
+    } finally {
+      setDeleting(false);
+    }
+  };
   const formatDate = (date: Date) => {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
@@ -82,50 +101,95 @@ export default function StudyRecordCard({ record }: StudyRecordCardProps) {
         })}>
           <div className={css({
             display: 'flex',
-            alignItems: 'center',
-            gap: '3',
+            flexDirection: 'column',
+            gap: '2',
             flex: '1'
           })}>
-            <span className={css({
-              px: '3',
-              py: '1',
-              rounded: 'full',
-              fontSize: 'xs',
-              fontWeight: '600',
-              bg: subjectColor.bg,
-              color: subjectColor.text
+            <div className={css({
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3'
             })}>
-              {record.subject}
-            </span>
-            <span className={css({
-              fontSize: 'xs',
-              color: 'gray.500',
-              fontWeight: '500'
+              <span className={css({
+                px: '3',
+                py: '1',
+                rounded: 'full',
+                fontSize: 'xs',
+                fontWeight: '600',
+                bg: subjectColor.bg,
+                color: subjectColor.text
+              })}>
+                {record.subject}
+              </span>
+              <span className={css({
+                fontSize: 'xs',
+                color: 'gray.500',
+                fontWeight: '500'
+              })}>
+                {formatDate(record.createdAt)}
+              </span>
+            </div>
+            
+            {/* 投稿者情報 */}
+            <div className={css({
+              display: 'flex',
+              alignItems: 'center',
+              gap: '2'
             })}>
-              {formatDate(record.createdAt)}
-            </span>
+              <span className={css({
+                fontSize: 'xs',
+                color: 'gray.400'
+              })}>
+                👤
+              </span>
+              <span className={css({
+                fontSize: 'xs',
+                color: 'gray.600',
+                fontWeight: '500'
+              })}>
+                {record.user_name || record.user_email || '不明なユーザー'}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Title */}
-        <h3 className={css({
-          fontSize: 'lg',
-          fontWeight: 'bold', 
-          color: 'gray.900',
-          lineHeight: 'tight'
+        {/* Duration */}
+        <div className={css({
+          display: 'flex',
+          alignItems: 'center',
+          gap: '2'
         })}>
-          {record.title}
-        </h3>
+          <span className={css({
+            fontSize: 'sm',
+            color: 'gray.400'
+          })}>
+            ⏱️
+          </span>
+          <span className={css({
+            fontSize: 'lg',
+            fontWeight: 'bold',
+            color: 'blue.600'
+          })}>
+            {record.duration}分
+          </span>
+        </div>
         
-        {/* Content */}
-        <p className={css({
-          fontSize: 'sm',
-          color: 'gray.600',
-          lineHeight: 'relaxed',
-          whiteSpace: 'pre-wrap'
-        })}>
-          {record.content}
-        </p>
+        {/* Notes */}
+        {record.notes && (
+          <p className={css({
+            fontSize: 'sm',
+            color: 'gray.600',
+            lineHeight: 'relaxed',
+            whiteSpace: 'pre-wrap',
+            bg: 'gray.50',
+            p: '3',
+            rounded: 'md',
+            border: '1px solid',
+            borderColor: 'gray.200'
+          })}>
+            {record.notes}
+          </p>
+        )}
 
         {/* Footer */}
         <div className={css({
@@ -158,20 +222,55 @@ export default function StudyRecordCard({ record }: StudyRecordCardProps) {
           <div className={css({
             display: 'flex',
             alignItems: 'center',
-            gap: '1'
+            gap: '3'
           })}>
             <div className={css({
-              w: '2',
-              h: '2',
-              bg: 'green.400',
-              rounded: 'full'
-            })} />
-            <span className={css({
-              fontSize: 'xs',
-              color: 'gray.500'
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1'
             })}>
-              完了
-            </span>
+              <div className={css({
+                w: '2',
+                h: '2',
+                bg: 'green.400',
+                rounded: 'full'
+              })} />
+              <span className={css({
+                fontSize: 'xs',
+                color: 'gray.500'
+              })}>
+                完了
+              </span>
+            </div>
+            
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className={css({
+                  px: '2',
+                  py: '1',
+                  bg: 'red.50',
+                  color: 'red.600',
+                  rounded: 'md',
+                  fontSize: 'xs',
+                  fontWeight: 'medium',
+                  border: '1px solid',
+                  borderColor: 'red.200',
+                  transition: 'all 0.2s',
+                  _hover: {
+                    bg: 'red.100',
+                    borderColor: 'red.300'
+                  },
+                  _disabled: {
+                    opacity: '0.5',
+                    cursor: 'not-allowed'
+                  }
+                })}
+              >
+                {deleting ? '削除中...' : '削除'}
+              </button>
+            )}
           </div>
         </div>
       </div>
