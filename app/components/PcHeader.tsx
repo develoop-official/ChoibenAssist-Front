@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
+import { buttonStyles, layoutStyles } from "../styles/components";
 
 export default function PcHeader() {
   const pathname = usePathname();
@@ -37,10 +38,10 @@ export default function PcHeader() {
           <span className={css({
             fontSize: { base: "xl", md: "2xl" },
             fontWeight: "extrabold",
-            color: "#2563eb",
+            color: "#3D8D7A",
             letterSpacing: "wide",
             ml: "2",
-            textShadow: "0 1px 4px rgba(37,99,235,0.10)",
+            textShadow: "0 1px 4px rgba(61,141,122,0.10)",
           })}>ちょい勉アシスト</span>
         </Link>
         <ul style={{ 
@@ -63,7 +64,7 @@ export default function PcHeader() {
           <li style={{ display: "inline-block" }}>
             <Link href="/studyList" style={{ 
               color: isActive("/studyList") ? "#1d4ed8" : "#1e3a8a", 
-              borderBottom: isActive("/studyList") ? "2px solid #2563eb" : "none", 
+              borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none", 
               paddingBottom: "4px", 
               textDecoration: "none",
               transition: "all 0.2s"
@@ -72,7 +73,7 @@ export default function PcHeader() {
           <li style={{ display: "inline-block" }}>
             <Link href="/post" style={{ 
               color: isActive("/post") ? "#1d4ed8" : "#1e3a8a", 
-              borderBottom: isActive("/post") ? "2px solid #2563eb" : "none", 
+              borderBottom: isActive("/post") ? "2px solid #3D8D7A" : "none", 
               paddingBottom: "4px", 
               textDecoration: "none",
               transition: "all 0.2s"
@@ -81,22 +82,7 @@ export default function PcHeader() {
         </ul>
         {user && (
           <div style={{ marginLeft: "auto" }}>
-            <Link href="/logout" className={css({
-              color: "red.600",
-              textDecoration: "none",
-              fontSize: "sm",
-              fontWeight: "medium",
-              px: "4",
-              py: "2",
-              borderRadius: "md",
-              border: "1px solid",
-              borderColor: "red.600",
-              transition: "all 0.2s",
-              _hover: {
-                bg: "red.600",
-                color: "white"
-              }
-            })}>ログアウト</Link>
+            <Link href="/logout" className={buttonStyles.outline}>ログアウト</Link>
           </div>
         )}
       </nav>

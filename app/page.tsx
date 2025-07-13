@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { css } from '../styled-system/css';
 import { useAuth } from './hooks/useAuth';
 import SupabaseSetupNotice from './components/SupabaseSetupNotice';
+import { buttonStyles, formStyles, cardStyles } from './styles/components';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -66,7 +67,7 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      bg: 'gray.50',
+      bg: 'primary.50',
       px: '4'
     })}>
       {!process.env.NEXT_PUBLIC_SUPABASE_URL && (
@@ -87,7 +88,7 @@ export default function LoginPage() {
           <h1 className={css({
             fontSize: '3xl',
             fontWeight: 'bold',
-            color: 'blue.600',
+            color: 'primary.700',
             mb: '2'
           })}>
             ChoibenAssist
@@ -104,13 +105,7 @@ export default function LoginPage() {
           spaceY: '4'
         })}>
           <div>
-            <label className={css({
-              display: 'block',
-              fontSize: 'sm',
-              fontWeight: 'medium',
-              color: 'gray.700',
-              mb: '2'
-            })}>
+            <label className={formStyles.label}>
               メールアドレス
             </label>
             <input
@@ -118,32 +113,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className={css({
-                w: 'full',
-                px: '3',
-                py: '2',
-                border: '1px solid',
-                borderColor: 'gray.300',
-                rounded: 'md',
-                fontSize: 'sm',
-                _focus: {
-                  outline: 'none',
-                  ring: '2px',
-                  ringColor: 'blue.500',
-                  borderColor: 'blue.500'
-                }
-              })}
+              className={formStyles.input}
             />
           </div>
 
           <div>
-            <label className={css({
-              display: 'block',
-              fontSize: 'sm',
-              fontWeight: 'medium',
-              color: 'gray.700',
-              mb: '2'
-            })}>
+            <label className={formStyles.label}>
               パスワード
             </label>
             <input
@@ -151,21 +126,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className={css({
-                w: 'full',
-                px: '3',
-                py: '2',
-                border: '1px solid',
-                borderColor: 'gray.300',
-                rounded: 'md',
-                fontSize: 'sm',
-                _focus: {
-                  outline: 'none',
-                  ring: '2px',
-                  ringColor: 'blue.500',
-                  borderColor: 'blue.500'
-                }
-              })}
+              className={formStyles.input}
             />
           </div>
 
@@ -186,23 +147,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className={css({
-              w: 'full',
-              py: '2',
-              px: '4',
-              bg: 'blue.600',
-              color: 'white',
-              rounded: 'md',
-              fontSize: 'sm',
-              fontWeight: 'medium',
-              _hover: {
-                bg: 'blue.700'
-              },
-              _disabled: {
-                opacity: '0.5',
-                cursor: 'not-allowed'
-              }
-            })}
+            className={buttonStyles.primary + ' ' + css({ w: 'full' })}
           >
             {loading ? '処理中...' : (isSignUp ? 'アカウント作成' : 'ログイン')}
           </button>
@@ -216,9 +161,13 @@ export default function LoginPage() {
             onClick={() => setIsSignUp(!isSignUp)}
             className={css({
               fontSize: 'sm',
-              color: 'blue.600',
+              color: 'primary.700',
+              bg: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
               _hover: {
-                textDecoration: 'underline'
+                textDecoration: 'underline',
+                color: 'primary.800'
               }
             })}
           >
@@ -297,23 +246,7 @@ export default function LoginPage() {
             <button
               onClick={() => handleProviderAuth('twitter')}
               disabled={loading}
-              className={css({
-                w: 'full',
-                py: '2',
-                px: '4',
-                bg: 'blue.400',
-                color: 'white',
-                rounded: 'md',
-                fontSize: 'sm',
-                fontWeight: 'medium',
-                _hover: {
-                  bg: 'blue.500'
-                },
-                _disabled: {
-                  opacity: '0.5',
-                  cursor: 'not-allowed'
-                }
-              })}
+              className={buttonStyles.secondary + ' ' + css({ w: 'full' })}
             >
               X (Twitter)でログイン
             </button>

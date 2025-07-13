@@ -20,7 +20,7 @@ export default function EmptyState({
       textAlign: 'center',
       py: '16',
       px: '6'
-    }, className)}>
+    }) + (className ? ` ${className}` : '')}>
       <div className={css({
         maxW: 'md',
         mx: 'auto'

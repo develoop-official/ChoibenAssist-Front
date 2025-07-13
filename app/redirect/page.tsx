@@ -15,6 +15,12 @@ export default function RedirectPage() {
     const handleAuthCallback = async () => {
       try {
         // URLからセッション情報を取得
+        if (!supabase) {
+          setError('認証サービスが利用できません');
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
