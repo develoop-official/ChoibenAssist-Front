@@ -64,9 +64,9 @@ export default function MobileHeader() {
             textDecoration: "none",
             overflow: "hidden"
           })}>
-            {user.user_metadata?.icon_url ? (
+            {user.user_metadata?.avatar_url ? (
               <img
-                src={user.user_metadata.icon_url}
+                src={user.user_metadata.avatar_url}
                 alt="アバター"
                 className={css({
                   w: "full",

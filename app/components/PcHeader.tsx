@@ -93,33 +93,33 @@ export default function PcHeader() {
                 color: "blue.600"
               }
             })}>
-              <div className={css({
-                w: "8",
-                h: "8",
-                rounded: "full",
-                bg: "blue.100",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "sm",
-                fontWeight: "medium",
-                color: "blue.600",
-                overflow: "hidden"
-              })}>
-                {user.user_metadata?.icon_url ? (
-                  <img
-                    src={user.user_metadata.icon_url}
-                    alt="アバター"
-                    className={css({
-                      w: "full",
-                      h: "full",
-                      objectFit: "cover"
-                    })}
-                  />
-                ) : (
-                  user.user_metadata?.username?.[0] || user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || "U"
-                )}
-              </div>
+                          <div className={css({
+              w: "8",
+              h: "8",
+              rounded: "full",
+              bg: "blue.100",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "sm",
+              fontWeight: "medium",
+              color: "blue.600",
+              overflow: "hidden"
+            })}>
+              {user.user_metadata?.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt="アバター"
+                  className={css({
+                    w: "full",
+                    h: "full",
+                    objectFit: "cover"
+                  })}
+                />
+              ) : (
+                user.user_metadata?.username?.[0] || user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || "U"
+              )}
+            </div>
                              <span className={css({
                  fontSize: "sm",
                  fontWeight: "medium",
