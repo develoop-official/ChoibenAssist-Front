@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { css } from '../styled-system/css';
 import { useAuth } from './hooks/useAuth';
@@ -16,10 +16,11 @@ export default function LoginPage() {
   const { user, loading: authLoading, error: authError, signInWithEmail, signUpWithEmail, signInWithProvider } = useAuth();
 
   // ユーザーが既にログインしている場合はstudyListにリダイレクト
-  if (user) {
-    router.push('/studyList');
-    return null;
-  }
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.push('/studyList');
+    }
+  }, [user, authLoading, router]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
