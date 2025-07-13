@@ -3,9 +3,11 @@ import { css } from "../../styled-system/css";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useAuth } from "../hooks/useAuth";
 
 export default function PcHeader() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const isActive = (path: string) => pathname === path;
 
   console.log("PcHeaderが表示されています");
@@ -59,9 +61,9 @@ export default function PcHeader() {
           overflow: "hidden"
         }}>
           <li style={{ display: "inline-block" }}>
-            <Link href="/" style={{ 
-              color: isActive("/") ? "#1d4ed8" : "#1e3a8a", 
-              borderBottom: isActive("/") ? "2px solid #2563eb" : "none", 
+            <Link href="/studyList" style={{ 
+              color: isActive("/studyList") ? "#1d4ed8" : "#1e3a8a", 
+              borderBottom: isActive("/studyList") ? "2px solid #2563eb" : "none", 
               paddingBottom: "4px", 
               textDecoration: "none",
               transition: "all 0.2s"
@@ -77,6 +79,26 @@ export default function PcHeader() {
             }}>新規投稿</Link>
           </li>
         </ul>
+        {user && (
+          <div style={{ marginLeft: "auto" }}>
+            <Link href="/logout" className={css({
+              color: "red.600",
+              textDecoration: "none",
+              fontSize: "sm",
+              fontWeight: "medium",
+              px: "4",
+              py: "2",
+              borderRadius: "md",
+              border: "1px solid",
+              borderColor: "red.600",
+              transition: "all 0.2s",
+              _hover: {
+                bg: "red.600",
+                color: "white"
+              }
+            })}>ログアウト</Link>
+          </div>
+        )}
       </nav>
     </header>
   );
