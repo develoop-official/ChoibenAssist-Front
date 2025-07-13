@@ -1,17 +1,118 @@
 "use client";
+import { useEffect, useState } from "react";
 import { css } from "../../styled-system/css";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
+import { supabase } from "../../lib/supabase";
 import { buttonStyles, layoutStyles } from "../styles/components";
+
+interface UserProfile {
+  user_id: string;
+  username?: string;
+  full_name?: string;
+  icon_url?: string;
+  bio?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function PcHeader() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const isActive = (path: string) => pathname === path;
 
   console.log("PcHeaderが表示されています");
+
+  // ユーザープロフィールを取得
+  useEffect(() => {
+    if (user && supabase) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    if (!supabase || !user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!error && data) {
+        setProfile(data);
+      }
+    } catch (err) {
+      console.error('プロフィール取得エラー:', err);
+    }
+  };
+
+  // アバターURLを取得する関数
+  const getAvatarUrl = () => {
+    // 1. カスタムアバター（user_profiles.icon_url）を優先
+    if (profile?.icon_url) {
+      return profile.icon_url;
+    }
+    // 2. OAuthアバター（user_metadata.avatar_url）をフォールバック
+    if (user?.user_metadata?.avatar_url) {
+      return user.user_metadata.avatar_url;
+    }
+    return null;
+  };
+
+  // 表示名を取得する関数
+  const getDisplayName = () => {
+    // 1. カスタムユーザー名（user_profiles.username）を優先
+    if (profile?.username) {
+      return profile.username;
+    }
+    // 2. フルネーム（user_profiles.full_name）をフォールバック
+    if (profile?.full_name) {
+      return profile.full_name;
+    }
+    // 3. OAuthユーザー名（user_metadata.username）をフォールバック
+    if (user?.user_metadata?.username) {
+      return user.user_metadata.username;
+    }
+    // 4. OAuthフルネーム（user_metadata.full_name）をフォールバック
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name;
+    }
+    // 5. メールアドレスをフォールバック
+    return user?.email || 'ユーザー';
+  };
+
+  // アバターの初期文字を取得する関数
+  const getAvatarInitial = () => {
+    const avatarUrl = getAvatarUrl();
+    if (avatarUrl) return null; // アバター画像がある場合は初期文字を表示しない
+
+    // カスタムユーザー名の最初の文字
+    if (profile?.username?.[0]) {
+      return profile.username[0].toUpperCase();
+    }
+    // カスタムフルネームの最初の文字
+    if (profile?.full_name?.[0]) {
+      return profile.full_name[0].toUpperCase();
+    }
+    // OAuthユーザー名の最初の文字
+    if (user?.user_metadata?.username?.[0]) {
+      return user.user_metadata.username[0].toUpperCase();
+    }
+    // OAuthフルネームの最初の文字
+    if (user?.user_metadata?.full_name?.[0]) {
+      return user.user_metadata.full_name[0].toUpperCase();
+    }
+    // メールアドレスの最初の文字
+    if (user?.email?.[0]) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
 
   return (
     <header className={css({
@@ -93,40 +194,40 @@ export default function PcHeader() {
                 color: "blue.600"
               }
             })}>
-                          <div className={css({
-              w: "8",
-              h: "8",
-              rounded: "full",
-              bg: "blue.100",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "sm",
-              fontWeight: "medium",
-              color: "blue.600",
-              overflow: "hidden"
-            })}>
-              {user.user_metadata?.avatar_url ? (
-                <img
-                  src={user.user_metadata.avatar_url}
-                  alt="アバター"
-                  className={css({
-                    w: "full",
-                    h: "full",
-                    objectFit: "cover"
-                  })}
-                />
-              ) : (
-                user.user_metadata?.username?.[0] || user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || "U"
-              )}
-            </div>
-                             <span className={css({
-                 fontSize: "sm",
-                 fontWeight: "medium",
-                 display: { base: "none", md: "block" }
-               })}>
-                 {user.user_metadata?.username || user.user_metadata?.full_name || user.email}
-               </span>
+              <div className={css({
+                w: "8",
+                h: "8",
+                rounded: "full",
+                bg: "blue.100",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "sm",
+                fontWeight: "medium",
+                color: "blue.600",
+                overflow: "hidden"
+              })}>
+                {getAvatarUrl() ? (
+                  <img
+                    src={getAvatarUrl()}
+                    alt="アバター"
+                    className={css({
+                      w: "full",
+                      h: "full",
+                      objectFit: "cover"
+                    })}
+                  />
+                ) : (
+                  getAvatarInitial()
+                )}
+              </div>
+              <span className={css({
+                fontSize: "sm",
+                fontWeight: "medium",
+                display: { base: "none", md: "block" }
+              })}>
+                {getDisplayName()}
+              </span>
             </Link>
             
             {/* ログアウトボタン */}
