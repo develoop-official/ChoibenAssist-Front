@@ -1,16 +1,94 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { css } from "../../styled-system/css";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
+import { supabase } from "../../lib/supabase";
+
+interface UserProfile {
+  user_id: string;
+  username?: string;
+  full_name?: string;
+  icon_url?: string;
+  bio?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function MobileHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { user } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const isActive = (path: string) => pathname === path;
+
+  // ユーザープロフィールを取得
+  useEffect(() => {
+    if (user && supabase) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    if (!supabase || !user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!error && data) {
+        setProfile(data);
+      }
+    } catch (err) {
+      console.error('プロフィール取得エラー:', err);
+    }
+  };
+
+  // アバターURLを取得する関数
+  const getAvatarUrl = () => {
+    // 1. カスタムアバター（user_profiles.icon_url）を優先
+    if (profile?.icon_url) {
+      return profile.icon_url;
+    }
+    // 2. OAuthアバター（user_metadata.avatar_url）をフォールバック
+    if (user?.user_metadata?.avatar_url) {
+      return user.user_metadata.avatar_url;
+    }
+    return null;
+  };
+
+  // アバターの初期文字を取得する関数
+  const getAvatarInitial = () => {
+    const avatarUrl = getAvatarUrl();
+    if (avatarUrl) return null; // アバター画像がある場合は初期文字を表示しない
+
+    // カスタムユーザー名の最初の文字
+    if (profile?.username?.[0]) {
+      return profile.username[0].toUpperCase();
+    }
+    // カスタムフルネームの最初の文字
+    if (profile?.full_name?.[0]) {
+      return profile.full_name[0].toUpperCase();
+    }
+    // OAuthユーザー名の最初の文字
+    if (user?.user_metadata?.username?.[0]) {
+      return user.user_metadata.username[0].toUpperCase();
+    }
+    // OAuthフルネームの最初の文字
+    if (user?.user_metadata?.full_name?.[0]) {
+      return user.user_metadata.full_name[0].toUpperCase();
+    }
+    // メールアドレスの最初の文字
+    if (user?.email?.[0]) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
 
   return (
     <header className={css({
@@ -64,9 +142,9 @@ export default function MobileHeader() {
             textDecoration: "none",
             overflow: "hidden"
           })}>
-            {user.user_metadata?.icon_url ? (
+            {getAvatarUrl() ? (
               <img
-                src={user.user_metadata.icon_url}
+                src={getAvatarUrl()}
                 alt="アバター"
                 className={css({
                   w: "full",
@@ -75,7 +153,7 @@ export default function MobileHeader() {
                 })}
               />
             ) : (
-              user.user_metadata?.username?.[0] || user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || "U"
+              getAvatarInitial()
             )}
           </Link>
         )}
