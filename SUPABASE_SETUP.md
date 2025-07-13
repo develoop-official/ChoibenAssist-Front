@@ -52,11 +52,12 @@ CREATE POLICY "Users can insert own records" ON study_records
 CREATE POLICY "Users can delete own records" ON study_records
   FOR DELETE USING (auth.uid() = user_id);
 
--- プロフィールテーブル（オプション）
+-- プロフィールテーブル
 CREATE TABLE profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT,
   full_name TEXT,
+  avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -69,16 +70,54 @@ CREATE POLICY "Users can view own profile" ON profiles
 
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile" ON profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
 ```
 
-## 4. 認証設定
+## 4. Storageバケットの設定
+
+### 4.1. アバター用バケットの作成
+
+1. Supabaseダッシュボードで「Storage」を開く
+2. 「New bucket」をクリック
+3. バケット名: `avatars`
+4. Public bucket: チェックを入れる
+5. 「Create bucket」をクリック
+
+### 4.2. Storageポリシーの設定
+
+以下のSQLを実行して、ユーザーが自分のアバター画像のみアップロード・削除できるようにする：
+
+```sql
+-- アバター画像のアップロードポリシー
+CREATE POLICY "Users can upload own avatar" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'avatars' AND 
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- アバター画像の表示ポリシー
+CREATE POLICY "Users can view avatars" ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+
+-- アバター画像の削除ポリシー
+CREATE POLICY "Users can delete own avatar" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'avatars' AND 
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+```
+```
+
+## 5. 認証設定
 
 1. Supabaseダッシュボードで「Authentication」→「Settings」を開く
 2. Site URLに`http://localhost:3000`を追加
 3. Redirect URLsに`http://localhost:3000/redirect`を追加
 4. 必要に応じてOAuthプロバイダー（Google、GitHub、Twitter）を設定
 
-## 5. 開発サーバーの再起動
+## 6. 開発サーバーの再起動
 
 環境変数を設定した後、開発サーバーを再起動：
 
