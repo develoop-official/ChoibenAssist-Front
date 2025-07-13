@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -31,6 +32,15 @@ if (process.env.NODE_ENV === 'development' && (!supabaseUrl || !supabaseAnonKey)
 export const supabase = supabaseUrl && supabaseAnonKey 
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
+
+// クライアントコンポーネント用のSupabaseクライアント
+export const createSupabaseClient = () => {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Supabase環境変数が設定されていません');
+    return null;
+  }
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+};
 
 // クライアントの状態をログ出力
 if (process.env.NODE_ENV === 'development') {

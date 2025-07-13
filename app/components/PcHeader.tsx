@@ -81,8 +81,71 @@ export default function PcHeader() {
           </li>
         </ul>
         {user && (
-          <div style={{ marginLeft: "auto" }}>
-            <Link href="/logout" className={buttonStyles.outline}>ログアウト</Link>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "16px" }}>
+            {/* ユーザーアイコン */}
+            <Link href="/myPage" className={css({
+              display: "flex",
+              alignItems: "center",
+              gap: "2",
+              textDecoration: "none",
+              color: "gray.700",
+              _hover: {
+                color: "blue.600"
+              }
+            })}>
+              <div className={css({
+                w: "8",
+                h: "8",
+                rounded: "full",
+                bg: "blue.100",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "sm",
+                fontWeight: "medium",
+                color: "blue.600",
+                overflow: "hidden"
+              })}>
+                {user.user_metadata?.icon_url ? (
+                  <img
+                    src={user.user_metadata.icon_url}
+                    alt="アバター"
+                    className={css({
+                      w: "full",
+                      h: "full",
+                      objectFit: "cover"
+                    })}
+                  />
+                ) : (
+                  user.user_metadata?.username?.[0] || user.user_metadata?.full_name?.[0] || user.email?.[0]?.toUpperCase() || "U"
+                )}
+              </div>
+                             <span className={css({
+                 fontSize: "sm",
+                 fontWeight: "medium",
+                 display: { base: "none", md: "block" }
+               })}>
+                 {user.user_metadata?.username || user.user_metadata?.full_name || user.email}
+               </span>
+            </Link>
+            
+            {/* ログアウトボタン */}
+            <Link href="/logout" className={css({
+              color: "red.600",
+              textDecoration: "none",
+              fontSize: "sm",
+              fontWeight: "medium",
+              px: "4",
+              py: "2",
+              borderRadius: "md",
+              border: "1px solid",
+              borderColor: "red.600",
+              transition: "all 0.2s",
+              _hover: {
+                bg: "red.600",
+                color: "white"
+              }
+            })}>ログアウト</Link>
           </div>
         )}
       </nav>

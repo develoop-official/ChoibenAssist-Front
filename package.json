@@ -16,6 +16,8 @@
     "lint:fix": "next lint --fix"
   },
   "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.5",
     "next": "15.3.5",
     "react": "^19.1.0",
