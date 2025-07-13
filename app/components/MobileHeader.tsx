@@ -19,7 +19,7 @@ export default function MobileHeader() {
       left: 0,
       right: 0,
       zIndex: 50,
-      bg: "blue.500",
+      bg: "primary.700",
       color: "white",
       p: "4",
       boxShadow: "md",
@@ -47,7 +47,7 @@ export default function MobileHeader() {
         </button>
         <Link href="/" className={css({ textDecoration: "none", display: "flex", alignItems: "center", gap: "2" })}>
           <Image src="/logo.svg" alt="ロゴ" width={32} height={32} className={css({ w: "8", h: "8" })} priority />
-          <span className={css({ fontSize: "xl", fontWeight: "extrabold", color: "#2563eb", letterSpacing: "wide", textShadow: "0 1px 4px rgba(37,99,235,0.10)" })}>ちょい勉アシスト</span>
+          <span className={css({ fontSize: "xl", fontWeight: "extrabold", color: "#3D8D7A", letterSpacing: "wide", textShadow: "0 1px 4px rgba(61,141,122,0.10)" })}>ちょい勉アシスト</span>
         </Link>
         {user && (
           <Link href="/myPage" className={css({
@@ -90,7 +90,7 @@ export default function MobileHeader() {
           maxW: "320px",
           h: "100vh",
           bg: "white",
-          color: "blue.900",
+          color: "primary.900",
           boxShadow: "xl",
           zIndex: 9999,
           display: "flex",
@@ -98,11 +98,11 @@ export default function MobileHeader() {
         })}>
           {/* Xボタン */}
           <div className={css({ display: "flex", justifyContent: "flex-end", p: "4" })}>
-            <button onClick={() => setOpen(false)} className={css({ fontSize: "2xl", fontWeight: "bold", color: "blue.900", bg: "transparent", border: "none", cursor: "pointer" })}>&times;</button>
+            <button onClick={() => setOpen(false)} className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.900", bg: "transparent", border: "none", cursor: "pointer" })}>&times;</button>
           </div>
           <div className={css({ px: "6", pt: "10", fontWeight: "bold", display: "flex", flexDirection: "column", gap: "6" })}>
-            <Link href="/studyList" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/studyList") ? "blue.700" : "blue.900", fontSize: "lg", borderBottom: isActive("/studyList") ? "2px solid #2563eb" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "blue.600" } })}>学習記録一覧</Link>
-            <Link href="/post" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/post") ? "blue.700" : "blue.900", fontSize: "lg", borderBottom: isActive("/post") ? "2px solid #2563eb" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "blue.600" } })}>新規投稿</Link>
+            <Link href="/studyList" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/studyList") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>学習記録一覧</Link>
+            <Link href="/post" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/post") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/post") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>新規投稿</Link>
             {user && (
               <div className={css({ borderTop: "1px solid", borderColor: "gray.200", pt: "4", mt: "4", display: "flex", flexDirection: "column", gap: "4" })}>
                 <Link href="/myPage" onClick={() => setOpen(false)} className={css({ color: "blue.600", fontSize: "lg", transition: "all 0.2s", _hover: { color: "blue.700" } })}>マイページ</Link>

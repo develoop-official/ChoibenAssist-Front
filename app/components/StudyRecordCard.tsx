@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { css } from '../../styled-system/css';
 import { StudyRecord } from '../types/study-record';
+import { cardStyles, buttonStyles } from '../styles/components';
 
 interface StudyRecordCardProps {
   record: StudyRecord;
@@ -46,36 +47,21 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
 
   const getSubjectColor = (subject: string) => {
     const colors = {
-      '数学': { bg: 'blue.100', text: 'blue.700' },
-      '英語': { bg: 'green.100', text: 'green.700' },
+      '数学': { bg: 'primary.100', text: 'accent.math' },
+      '英語': { bg: 'primary.100', text: 'accent.english' },
       '国語': { bg: 'red.100', text: 'red.700' },
-      '理科': { bg: 'purple.100', text: 'purple.700' },
-      '社会': { bg: 'orange.100', text: 'orange.700' },
-      'プログラミング': { bg: 'indigo.100', text: 'indigo.700' },
+      '理科': { bg: 'primary.100', text: 'accent.science' },
+      '社会': { bg: 'primary.100', text: 'accent.social' },
+      'プログラミング': { bg: 'primary.100', text: 'accent.programming' },
     };
     
-    return colors[subject as keyof typeof colors] || { bg: 'gray.100', text: 'gray.700' };
+    return colors[subject as keyof typeof colors] || { bg: 'primary.100', text: 'accent.other' };
   };
 
   const subjectColor = getSubjectColor(record.subject);
 
   return (
-    <div className={css({
-      bg: 'white',
-      rounded: '2xl',
-      shadow: 'sm',
-      border: '1px solid',
-      borderColor: 'gray.100',
-      p: '6',
-      transition: 'all 0.2s ease-in-out',
-      _hover: {
-        shadow: 'lg',
-        transform: 'translateY(-2px)',
-        borderColor: 'gray.200'
-      },
-      position: 'relative',
-      overflow: 'hidden'
-    })}>
+    <div className={cardStyles.base}>
       {/* Top accent line */}
       <div className={css({
         position: 'absolute',
@@ -84,7 +70,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
         right: '0',
         height: '3px',
         bg: 'gradient-to-r',
-        bgGradient: 'from-blue.500 to-purple.600'
+        bgGradient: 'from-primary.600 to-primary.800'
       })} />
       
       <div className={css({
@@ -168,7 +154,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
           <span className={css({
             fontSize: 'lg',
             fontWeight: 'bold',
-            color: 'blue.600'
+            color: 'primary.700'
           })}>
             {record.duration}分
           </span>
@@ -257,6 +243,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
                   fontWeight: 'medium',
                   border: '1px solid',
                   borderColor: 'red.200',
+                  cursor: 'pointer',
                   transition: 'all 0.2s',
                   _hover: {
                     bg: 'red.100',

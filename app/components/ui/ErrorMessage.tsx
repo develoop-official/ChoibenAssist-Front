@@ -1,4 +1,5 @@
 import { css } from '../../../styled-system/css';
+import { buttonStyles } from '../../styles/components';
 
 interface ErrorMessageProps {
   title?: string;
@@ -22,7 +23,7 @@ export default function ErrorMessage({
       textAlign: 'center',
       py: '16',
       px: '6'
-    }, className)}>
+    }) + (className ? ` ${className}` : '')}>
       <div className={css({
         p: '6',
         bg: `${colorScheme}.50`,
