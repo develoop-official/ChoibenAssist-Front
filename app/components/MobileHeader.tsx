@@ -4,10 +4,12 @@ import { css } from "../../styled-system/css";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useAuth } from "../hooks/useAuth";
 
 export default function MobileHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { user } = useAuth();
   const isActive = (path: string) => pathname === path;
 
   return (
@@ -69,8 +71,13 @@ export default function MobileHeader() {
             <button onClick={() => setOpen(false)} className={css({ fontSize: "2xl", fontWeight: "bold", color: "blue.900", bg: "transparent", border: "none", cursor: "pointer" })}>&times;</button>
           </div>
           <div className={css({ px: "6", pt: "10", fontWeight: "bold", display: "flex", flexDirection: "column", gap: "6" })}>
-            <Link href="/" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/") ? "blue.700" : "blue.900", fontSize: "lg", borderBottom: isActive("/") ? "2px solid #2563eb" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "blue.600" } })}>学習記録一覧</Link>
+            <Link href="/studyList" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/studyList") ? "blue.700" : "blue.900", fontSize: "lg", borderBottom: isActive("/studyList") ? "2px solid #2563eb" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "blue.600" } })}>学習記録一覧</Link>
             <Link href="/post" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/post") ? "blue.700" : "blue.900", fontSize: "lg", borderBottom: isActive("/post") ? "2px solid #2563eb" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "blue.600" } })}>新規投稿</Link>
+            {user && (
+              <div className={css({ borderTop: "1px solid", borderColor: "gray.200", pt: "4", mt: "4" })}>
+                <Link href="/logout" onClick={() => setOpen(false)} className={css({ color: "red.600", fontSize: "lg", transition: "all 0.2s", _hover: { color: "red.700" } })}>ログアウト</Link>
+              </div>
+            )}
           </div>
         </div>
       )}
