@@ -11,10 +11,10 @@ export default function LoadingSpinner({
   text = '読み込み中...',
   className 
 }: LoadingSpinnerProps) {
-  const sizeMap = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12'
+  const sizeStyles = {
+    sm: { w: '4', h: '4' },
+    md: { w: '8', h: '8' },
+    lg: { w: '12', h: '12' }
   };
 
   return (
@@ -22,12 +22,12 @@ export default function LoadingSpinner({
       textAlign: 'center',
       py: '16',
       px: '6'
-    }, className)}>
+    }) + (className ? ` ${className}` : '')}>
       <div className={css({
-        [sizeMap[size]]: true,
+        ...sizeStyles[size],
         border: '4px solid',
-        borderColor: 'blue.200',
-        borderTopColor: 'blue.600',
+        borderColor: 'primary.200',
+        borderTopColor: 'primary.700',
         rounded: 'full',
         animation: 'spin 1s linear infinite',
         mx: 'auto',

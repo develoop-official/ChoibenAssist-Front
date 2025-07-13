@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { css } from '../../styled-system/css';
 import { CreateStudyRecord } from '../types/study-record';
+import { cardStyles, buttonStyles, formStyles } from '../styles/components';
 
 interface StudyRecordFormProps {
   onSubmit: (record: CreateStudyRecord) => Promise<void>;
@@ -53,10 +54,9 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
       bg: 'white',
       rounded: '2xl',
       shadow: 'lg',
-      border: '1px solid',
-      borderColor: 'gray.100',
       p: '6',
       position: 'relative',
+      overflow: 'hidden',
       _before: {
         content: '""',
         position: 'absolute',
@@ -65,7 +65,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
         right: '0',
         height: '4px',
         bg: 'gradient-to-r',
-        bgGradient: 'from-blue.500 to-purple.600',
+        bgGradient: 'from-primary.600 to-primary.800',
         roundedTop: '2xl'
       }
     })}>
@@ -104,13 +104,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
         spaceY: '5'
       })}>
         <div>
-          <label htmlFor="subject" className={css({
-            display: 'block',
-            fontSize: 'sm',
-            fontWeight: '600',
-            color: 'gray.700',
-            mb: '2'
-          })}>
+          <label htmlFor="subject" className={formStyles.label}>
             科目
           </label>
           <input
@@ -119,35 +113,12 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="例: 数学、英語、プログラミング..."
-            className={css({
-              w: 'full',
-              px: '4',
-              py: '3',
-              border: '2px solid',
-              borderColor: 'gray.200',
-              rounded: 'xl',
-              fontSize: 'sm',
-              transition: 'all 0.2s',
-              _focus: {
-                outline: 'none',
-                borderColor: 'blue.500',
-                shadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
-              },
-              _placeholder: {
-                color: 'gray.400'
-              }
-            })}
+            className={formStyles.input}
           />
         </div>
 
         <div>
-          <label htmlFor="duration" className={css({
-            display: 'block',
-            fontSize: 'sm',
-            fontWeight: '600',
-            color: 'gray.700',
-            mb: '2'
-          })}>
+          <label htmlFor="duration" className={formStyles.label}>
             学習時間（分）
           </label>
           <input
@@ -157,35 +128,12 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
             placeholder="例: 30"
-            className={css({
-              w: 'full',
-              px: '4',
-              py: '3',
-              border: '2px solid',
-              borderColor: 'gray.200',
-              rounded: 'xl',
-              fontSize: 'sm',
-              transition: 'all 0.2s',
-              _focus: {
-                outline: 'none',
-                borderColor: 'blue.500',
-                shadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
-              },
-              _placeholder: {
-                color: 'gray.400'
-              }
-            })}
+            className={formStyles.input}
           />
         </div>
 
         <div>
-          <label htmlFor="notes" className={css({
-            display: 'block',
-            fontSize: 'sm',
-            fontWeight: '600',
-            color: 'gray.700',
-            mb: '2'
-          })}>
+          <label htmlFor="notes" className={formStyles.label}>
             メモ（任意）
           </label>
           <textarea
@@ -194,25 +142,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
             onChange={(e) => setNotes(e.target.value)}
             placeholder="学習した内容のメモや感想を書いてください..."
             rows={4}
-            className={css({
-              w: 'full',
-              px: '4',
-              py: '3',
-              border: '2px solid',
-              borderColor: 'gray.200',
-              rounded: 'xl',
-              fontSize: 'sm',
-              resize: 'vertical',
-              transition: 'all 0.2s',
-              _focus: {
-                outline: 'none',
-                borderColor: 'blue.500',
-                shadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
-              },
-              _placeholder: {
-                color: 'gray.400'
-              }
-            })}
+            className={formStyles.textarea}
           />
         </div>
 
@@ -222,7 +152,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
           className={css({
             w: 'full',
             bg: 'gradient-to-r',
-            bgGradient: 'from-blue.500 to-purple.600',
+            bgGradient: 'from-primary.600 to-primary.800',
             color: 'white',
             py: '3',
             px: '6',
