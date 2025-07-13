@@ -5,32 +5,47 @@ import { css } from '../../styled-system/css';
 import { CreateStudyRecord } from '../types/study-record';
 
 interface StudyRecordFormProps {
-  onSubmit: (record: CreateStudyRecord) => void;
+  onSubmit: (record: CreateStudyRecord) => Promise<void>;
 }
 
 export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
   const [subject, setSubject] = useState('');
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [duration, setDuration] = useState('');
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!subject.trim() || !title.trim() || !content.trim()) {
-      alert('すべての項目を入力してください');
+    if (!subject.trim() || !duration.trim()) {
+      alert('科目と学習時間を入力してください');
       return;
     }
 
-    onSubmit({
-      subject: subject.trim(),
-      title: title.trim(),
-      content: content.trim(),
-    });
+    const durationNum = parseInt(duration);
+    if (isNaN(durationNum) || durationNum <= 0) {
+      alert('学習時間は正の数で入力してください');
+      return;
+    }
 
-    // フォームをリセット
-    setSubject('');
-    setTitle('');
-    setContent('');
+    setLoading(true);
+    try {
+      await onSubmit({
+        subject: subject.trim(),
+        duration: durationNum,
+        notes: notes.trim(),
+      });
+
+      // フォームをリセット
+      setSubject('');
+      setDuration('');
+      setNotes('');
+    } catch (error) {
+      console.error('記録の保存に失敗しました:', error);
+      alert('記録の保存に失敗しました');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -126,21 +141,22 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
         </div>
 
         <div>
-          <label htmlFor="title" className={css({
+          <label htmlFor="duration" className={css({
             display: 'block',
             fontSize: 'sm',
             fontWeight: '600',
             color: 'gray.700',
             mb: '2'
           })}>
-            タイトル
+            学習時間（分）
           </label>
           <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="学習した内容のタイトル"
+            id="duration"
+            type="number"
+            min="1"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            placeholder="例: 30"
             className={css({
               w: 'full',
               px: '4',
@@ -163,20 +179,20 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
         </div>
 
         <div>
-          <label htmlFor="content" className={css({
+          <label htmlFor="notes" className={css({
             display: 'block',
             fontSize: 'sm',
             fontWeight: '600',
             color: 'gray.700',
             mb: '2'
           })}>
-            感想・メモ
+            メモ（任意）
           </label>
           <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="学習した内容の感想やメモを書いてください..."
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="学習した内容のメモや感想を書いてください..."
             rows={4}
             className={css({
               w: 'full',
@@ -202,6 +218,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
 
         <button
           type="submit"
+          disabled={loading}
           className={css({
             w: 'full',
             bg: 'gradient-to-r',
@@ -219,10 +236,15 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
             },
             _active: {
               transform: 'translateY(0)'
+            },
+            _disabled: {
+              opacity: '0.6',
+              cursor: 'not-allowed',
+              transform: 'none'
             }
           })}
         >
-          記録を保存
+          {loading ? '保存中...' : '記録を保存'}
         </button>
       </form>
     </div>
