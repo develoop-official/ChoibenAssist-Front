@@ -180,6 +180,15 @@ export default function PcHeader() {
               transition: "all 0.2s"
             }}>新規投稿</Link>
           </li>
+          <li style={{ display: "inline-block" }}>
+            <Link href="/studyGraph" style={{ 
+              color: isActive("/studyGraph") ? "#1d4ed8" : "#1e3a8a", 
+              borderBottom: isActive("/studyGraph") ? "2px solid #3D8D7A" : "none", 
+              paddingBottom: "4px", 
+              textDecoration: "none",
+              transition: "all 0.2s"
+            }}>学習グラフ</Link>
+          </li>
         </ul>
         {user && (
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "16px" }}>
