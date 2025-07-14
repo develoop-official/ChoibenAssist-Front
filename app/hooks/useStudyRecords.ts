@@ -127,6 +127,13 @@ export function useStudyRecords() {
         throw error;
       }
 
+      // ユーザープロフィール情報を取得
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('username, full_name')
+        .eq('user_id', user.id)
+        .single();
+
       // Supabaseのデータ形式をアプリケーションの型に変換
       const formattedRecords: StudyRecord[] = (data || []).map(record => ({
         id: record.id,
@@ -137,7 +144,7 @@ export function useStudyRecords() {
         updatedAt: new Date(record.updated_at),
         user_id: record.user_id,
         user_email: user.email,
-        user_name: user.user_metadata?.full_name
+        user_name: profileData?.username || profileData?.full_name || user.user_metadata?.full_name
       }));
 
       setRecords(formattedRecords);
@@ -207,6 +214,13 @@ export function useStudyRecords() {
         throw error;
       }
 
+      // ユーザープロフィール情報を取得
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('username, full_name')
+        .eq('user_id', user.id)
+        .single();
+
       // 新しいレコードをアプリケーションの型に変換
       const formattedRecord: StudyRecord = {
         id: data.id,
@@ -217,7 +231,7 @@ export function useStudyRecords() {
         updatedAt: new Date(data.updated_at),
         user_id: data.user_id,
         user_email: user.email,
-        user_name: user.user_metadata?.full_name
+        user_name: profileData?.username || profileData?.full_name || user.user_metadata?.full_name
       };
 
       // ローカル状態を更新

@@ -121,7 +121,7 @@ export default function StudyListPage() {
         <div className={css({
           display: 'flex',
           alignItems: 'center',
-          gap: '2'
+          gap: '4'
         })}>
           <span className={css({
             fontSize: 'sm',
@@ -129,6 +129,26 @@ export default function StudyListPage() {
           })}>
             最新順
           </span>
+          <button
+            onClick={() => router.push('/post')}
+            className={css({
+              px: '4',
+              py: '2',
+              bg: '#90EE90', // 薄緑色
+              color: 'white',
+              rounded: 'md',
+              fontSize: 'sm',
+              fontWeight: 'medium',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              _hover: {
+                bg: '#7FDD7F' // 少し濃い薄緑色
+              }
+            })}
+          >
+            📝 新規投稿
+          </button>
         </div>
       </div>
       <StudyRecordList records={records} loading={recordsLoading} error={error} onDelete={deleteRecord} />
