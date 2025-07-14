@@ -145,16 +145,25 @@ export default function StudyRecordDetailPage() {
   };
 
   const getSubjectColor = (subject: string) => {
-    const colors = {
-      '数学': { bg: 'primary.100', text: 'accent.math' },
-      '英語': { bg: 'primary.100', text: 'accent.english' },
-      '国語': { bg: 'red.100', text: 'red.700' },
-      '理科': { bg: 'primary.100', text: 'accent.science' },
-      '社会': { bg: 'primary.100', text: 'accent.social' },
-      'プログラミング': { bg: 'primary.100', text: 'accent.programming' },
-    };
+    // 科目名からハッシュ値を生成して色を決定
+    const hash = subject.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
     
-    return colors[subject as keyof typeof colors] || { bg: 'primary.100', text: 'accent.other' };
+    // ハッシュ値から色のインデックスを決定
+    const colorIndex = Math.abs(hash) % 6;
+    
+    // 色のパレット（6色）
+    const colorPalette = [
+      { bg: 'blue.100', text: 'blue.700' },
+      { bg: 'green.100', text: 'green.700' },
+      { bg: 'purple.100', text: 'purple.700' },
+      { bg: 'orange.100', text: 'orange.700' },
+      { bg: 'pink.100', text: 'pink.700' },
+      { bg: 'teal.100', text: 'teal.700' }
+    ];
+    
+    return colorPalette[colorIndex];
   };
 
   // 投稿者の表示名を取得
@@ -507,8 +516,8 @@ export default function StudyRecordDetailPage() {
                 })}>
                   {getAuthorAvatarUrl() ? (
                     <img
-                      src={getAuthorAvatarUrl()}
-                      alt="投稿者アバター"
+                      src={getAuthorAvatarUrl() || ''}
+                      alt="投稿者アバター" 
                       className={css({
                         w: 'full',
                         h: 'full',
