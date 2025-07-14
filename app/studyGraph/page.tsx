@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "../../lib/supabase";
 import {
   ResponsiveContainer,
   LineChart,
@@ -28,7 +28,6 @@ interface ChartData {
 }
 
 export default function StudyGraphPage() {
-  const supabase = createClientComponentClient();
   const [data, setData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -36,6 +35,10 @@ export default function StudyGraphPage() {
   useEffect(() => {
     async function fetchRecords() {
       setLoading(true);
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
       const { data: records, error } = await supabase
         .from("study_records")
         .select("created_at, duration")
