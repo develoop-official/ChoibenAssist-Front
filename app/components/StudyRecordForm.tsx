@@ -64,8 +64,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
         left: '0',
         right: '0',
         height: '4px',
-        bg: 'gradient-to-r',
-        bgGradient: 'from-primary.600 to-primary.800',
+        bg: 'primary.700',
         roundedTop: '2xl'
       }
     })}>
@@ -151,8 +150,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
           disabled={loading}
           className={css({
             w: 'full',
-            bg: 'gradient-to-r',
-            bgGradient: 'from-primary.600 to-primary.800',
+            bg: 'primary.700',
             color: 'white',
             py: '3',
             px: '6',
@@ -161,6 +159,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
             fontSize: 'sm',
             transition: 'all 0.2s',
             _hover: {
+              bg: 'primary.800',
               transform: 'translateY(-1px)',
               shadow: 'lg'
             },

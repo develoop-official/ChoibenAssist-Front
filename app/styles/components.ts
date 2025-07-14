@@ -128,8 +128,8 @@ export const formStyles = {
     transition: 'all 0.2s',
     _focus: {
       outline: 'none',
-      borderColor: 'primary.500',
-      shadow: '0 0 0 3px rgba(123, 185, 130, 0.1)'
+      borderColor: 'primary.600',
+      shadow: '0 0 0 3px rgba(127, 181, 130, 0.1)'
     },
     _placeholder: {
       color: 'gray.400'
@@ -140,7 +140,7 @@ export const formStyles = {
     display: 'block',
     fontSize: 'sm',
     fontWeight: 'bold',
-    color: 'primary.800',
+    color: 'primary.700',
     mb: '2'
   }),
 
@@ -156,8 +156,8 @@ export const formStyles = {
     transition: 'all 0.2s',
     _focus: {
       outline: 'none',
-      borderColor: 'primary.500',
-      shadow: '0 0 0 3px rgba(123, 185, 130, 0.1)'
+      borderColor: 'primary.600',
+      shadow: '0 0 0 3px rgba(127, 181, 130, 0.1)'
     },
     _placeholder: {
       color: 'gray.400'
