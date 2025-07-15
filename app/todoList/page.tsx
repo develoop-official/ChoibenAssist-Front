@@ -105,17 +105,17 @@ export default function TodoListPage() {
                   className={css({
                     px: "3",
                     py: "1",
-                    bg: "red.400",
+                    bg: "yellow.400",
                     color: "white",
                     rounded: "md",
                     fontSize: "xs",
                     fontWeight: "bold",
-                    _hover: { bg: "red.500" },
+                    _hover: { bg: "yellow.500" },
                     transition: "all 0.2s"
                   })}
-                  onClick={() => deleteTodo(todo.id)}
+                  onClick={() => router.push(`/todoList/${todo.id}/edit`)}
                 >
-                  削除
+                  編集
                 </button>
               </div>
             </li>
