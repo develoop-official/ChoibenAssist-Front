@@ -127,9 +127,6 @@ export default function MobileHeader() {
           <Image src="/logo.svg" alt="ロゴ" width={32} height={32} className={css({ w: "8", h: "8" })} priority />
           <span className={css({ fontSize: "xl", fontWeight: "extrabold", color: "#3D8D7A", letterSpacing: "wide", textShadow: "0 1px 4px rgba(61,141,122,0.10)" })}>ちょい勉アシスト</span>
         </Link>
-        <Link href="/todoList" className={css({ color: isActive("/todoList") ? "primary.700" : "gray.700", fontWeight: "bold", fontSize: "md", _hover: { color: "primary.600" } })}>
-          TODOリスト
-        </Link>
         {user && (
           <Link href="/myPage" className={css({
             w: "8",
@@ -185,6 +182,7 @@ export default function MobileHeader() {
             <Link href="/studyList" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/studyList") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>学習記録一覧</Link>
             <Link href="/post" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/post") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/post") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>新規投稿</Link>
             <Link href="/studyGraph" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/studyGraph") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/studyGraph") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>学習グラフ</Link>
+            <Link href="/todoList" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/todoList") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/todoList") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>TODOリスト</Link>
             {user && (
               <div className={css({ borderTop: "1px solid", borderColor: "gray.200", pt: "4", mt: "4", display: "flex", flexDirection: "column", gap: "4" })}>
                 <Link href="/myPage" onClick={() => setOpen(false)} className={css({ color: "blue.600", fontSize: "lg", transition: "all 0.2s", _hover: { color: "blue.700" } })}>マイページ</Link>
