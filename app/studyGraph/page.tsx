@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -20,15 +20,18 @@ import dayjs from "dayjs";
 interface RecordItem {
   created_at: string;
   duration: number;
+  subject: string;
 }
 
-interface ChartData {
+// 日付ごとに各科目の合計を持つ
+type ChartData = {
   date: string;
-  total: number;
-}
+  [subject: string]: string | number;
+};
 
 export default function StudyGraphPage() {
   const [data, setData] = useState<ChartData[]>([]);
+  const [subjects, setSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -41,7 +44,7 @@ export default function StudyGraphPage() {
       }
       const { data: records, error } = await supabase
         .from("study_records")
-        .select("created_at, duration")
+        .select("created_at, duration, subject")
         .returns<RecordItem[]>()
         .order("created_at", { ascending: true });
 
@@ -60,18 +63,28 @@ export default function StudyGraphPage() {
         allDates.push(startOfMonth.date(i).format("YYYY-MM-DD"));
       }
 
-      // --- 日付ごとに合計 duration を集計 ---
-      const grouped = records?.reduce<Record<string, number>>((acc, r) => {
+      // --- 科目一覧を抽出 ---
+      const subjectSet = new Set<string>();
+      records?.forEach(r => subjectSet.add(r.subject));
+      const subjectList = Array.from(subjectSet);
+      setSubjects(subjectList);
+
+      // --- 日付×科目ごとにdurationを集計 ---
+      const grouped: Record<string, Record<string, number>> = {};
+      records?.forEach(r => {
         const date = dayjs(r.created_at).format("YYYY-MM-DD");
-        acc[date] = (acc[date] || 0) + r.duration;
-        return acc;
-      }, {});
+        if (!grouped[date]) grouped[date] = {};
+        grouped[date][r.subject] = (grouped[date][r.subject] || 0) + r.duration;
+      });
 
       // --- すべての日付でChartDataを作成（0埋め）---
-      const chartData: ChartData[] = allDates.map(date => ({
-        date,
-        total: grouped?.[date] || 0
-      }));
+      const chartData: ChartData[] = allDates.map(date => {
+        const row: ChartData = { date };
+        subjectList.forEach(sub => {
+          row[sub] = grouped[date]?.[sub] || 0;
+        });
+        return row;
+      });
 
       setData(chartData);
       setLoading(false);
@@ -86,7 +99,11 @@ export default function StudyGraphPage() {
       return (
         <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 8, padding: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
           <div style={{ fontWeight: "bold", marginBottom: 4 }}>{d.format("M/D")}</div>
-          <div style={{ color: "#3b82f6" }}>{payload[0].value} 分</div>
+          {payload.map((p: any) => (
+            <div key={p.dataKey} style={{ color: p.fill, fontWeight: 600 }}>
+              {p.value} 分 <span style={{ fontSize: 12, marginLeft: 8 }}>{p.dataKey}</span>
+            </div>
+          ))}
         </div>
       );
     }
@@ -103,6 +120,20 @@ export default function StudyGraphPage() {
       </div>
     );
   }
+
+  // --- 科目ごとに色を決める ---
+  const getSubjectColor = (subject: string) => {
+    const hash = subject.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+    const colorPalette = [
+      "#3b82f6", // blue
+      "#22c55e", // green
+      "#a21caf", // purple
+      "#f59e42", // orange
+      "#ec4899", // pink
+      "#14b8a6"  // teal
+    ];
+    return colorPalette[Math.abs(hash) % colorPalette.length];
+  };
 
   return (
     <main className={css({ maxW: "full", mx: "auto", px: "2", py: "4" })}>
@@ -126,23 +157,16 @@ export default function StudyGraphPage() {
         </div>
         <div className={css({ flex: 1, minH: "12rem", minWidth: { base: "600px", md: "1000px" } })}>
           {data.length > 0 ? (
-            <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+            <ResponsiveContainer width={data.length * 60} height={320}>
+              <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="date" tickFormatter={formatXAxis} minTickGap={10} />
                 <YAxis label={{ value: "分", angle: -90, position: "insideLeft" }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="total"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  dot={{ r: 5, stroke: "#3b82f6", strokeWidth: 2, fill: "#fff" }}
-                  activeDot={{ r: 7, fill: "#3b82f6" }}
-                  isAnimationActive={true}
-                  animationDuration={800}
-                />
-              </LineChart>
+                {subjects.map(sub => (
+                  <Bar key={sub} dataKey={sub} stackId="a" fill={getSubjectColor(sub)} />
+                ))}
+              </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className={css({ textAlign: "center", py: "8", color: "gray.500" })}>学習記録がありません</div>
