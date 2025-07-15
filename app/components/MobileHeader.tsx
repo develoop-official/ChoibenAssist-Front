@@ -127,6 +127,9 @@ export default function MobileHeader() {
           <Image src="/logo.svg" alt="ロゴ" width={32} height={32} className={css({ w: "8", h: "8" })} priority />
           <span className={css({ fontSize: "xl", fontWeight: "extrabold", color: "#3D8D7A", letterSpacing: "wide", textShadow: "0 1px 4px rgba(61,141,122,0.10)" })}>ちょい勉アシスト</span>
         </Link>
+        <Link href="/todoList" className={css({ color: isActive("/todoList") ? "primary.700" : "gray.700", fontWeight: "bold", fontSize: "md", _hover: { color: "primary.600" } })}>
+          TODOリスト
+        </Link>
         {user && (
           <Link href="/myPage" className={css({
             w: "8",
