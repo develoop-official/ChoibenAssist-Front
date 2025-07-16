@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { css } from '../../styled-system/css';
 import { StudyRecord } from '../types/study-record';
-import { cardStyles, buttonStyles } from '../styles/components';
+import { cardStyles} from '../styles/components';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 
