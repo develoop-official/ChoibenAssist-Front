@@ -1,5 +1,4 @@
 import { css } from '../../../styled-system/css';
-import { buttonStyles } from '../../styles/components';
 
 interface ErrorMessageProps {
   title?: string;

@@ -6,7 +6,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
-import { buttonStyles, layoutStyles } from "../styles/components";
 
 interface UserProfile {
   user_id: string;
@@ -188,6 +187,15 @@ export default function PcHeader() {
               textDecoration: "none",
               transition: "all 0.2s"
             }}>学習グラフ</Link>
+          </li>
+          <li style={{ display: "inline-block" }}>
+            <Link href="/todoList" style={{ 
+              color: isActive("/todoList") ? "#1d4ed8" : "#1e3a8a", 
+              borderBottom: isActive("/todoList") ? "2px solid #3D8D7A" : "none", 
+              paddingBottom: "4px", 
+              textDecoration: "none",
+              transition: "all 0.2s"
+            }}>TODOリスト</Link>
           </li>
         </ul>
         {user && (

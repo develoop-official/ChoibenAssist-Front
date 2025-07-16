@@ -71,7 +71,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
               fontSize: "sm",
               color: "gray.600"
             })}>
-              © 2024 ちょい勉アシスト. 学習の記録で成長を加速させよう。
+              © 2025 ちょい勉アシスト. 学習の記録で成長を加速させよう。
             </p>
           </div>
         </footer>

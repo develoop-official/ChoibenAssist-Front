@@ -157,7 +157,7 @@ export default function StudyGraphPage() {
         </div>
         <div className={css({ flex: 1, minH: "12rem", minWidth: { base: "600px", md: "1000px" } })}>
           {data.length > 0 ? (
-            <ResponsiveContainer width={data.length * 60} height={320}>
+            <ResponsiveContainer width="100%" height={320}>
               <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="date" tickFormatter={formatXAxis} minTickGap={10} />

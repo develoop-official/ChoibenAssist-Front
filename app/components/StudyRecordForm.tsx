@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { css } from '../../styled-system/css';
 import { CreateStudyRecord } from '../types/study-record';
-import { cardStyles, buttonStyles, formStyles } from '../styles/components';
+import { formStyles } from '../styles/components';
 
 interface StudyRecordFormProps {
   onSubmit: (record: CreateStudyRecord) => Promise<void>;

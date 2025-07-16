@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { User, AuthError } from '@supabase/supabase-js';
+import { User} from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 
 export const useAuth = () => {
@@ -18,7 +18,9 @@ export const useAuth = () => {
     // 現在のセッションを取得
     const getSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const response = await supabase?.auth.getSession();
+        const session = response?.data?.session;
+        const error = response?.error;
         
         // デバッグ情報を出力
         console.log('🔐 認証セッション情報:', {
