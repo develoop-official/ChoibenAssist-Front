@@ -6,7 +6,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
-import { buttonStyles, layoutStyles } from "../styles/components";
 
 interface UserProfile {
   user_id: string;
@@ -239,13 +238,6 @@ export default function PcHeader() {
                   getAvatarInitial()
                 )}
               </div>
-              <span className={css({
-                fontSize: "sm",
-                fontWeight: "medium",
-                display: { base: "none", md: "block" }
-              })}>
-                {getDisplayName()}
-              </span>
             </Link>
             
             {/* ログアウトボタン */}
