@@ -238,6 +238,13 @@ export default function PcHeader() {
                   getAvatarInitial()
                 )}
               </div>
+              <span className={css({
+                fontSize: "sm",
+                fontWeight: "medium",
+                display: { base: "none", md: "block" }
+              })}>
+                {getDisplayName()}
+              </span>
             </Link>
             
             {/* ログアウトボタン */}
