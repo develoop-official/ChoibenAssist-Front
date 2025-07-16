@@ -101,22 +101,6 @@ export default function TodoListPage() {
                 >
                   {todo.status === "completed" ? "完了" : "完了(泡で消す)"}
                 </button>
-                <button
-                  className={css({
-                    px: "3",
-                    py: "1",
-                    bg: "yellow.400",
-                    color: "white",
-                    rounded: "md",
-                    fontSize: "xs",
-                    fontWeight: "bold",
-                    _hover: { bg: "yellow.500" },
-                    transition: "all 0.2s"
-                  })}
-                  onClick={() => router.push(`/todoList/${todo.id}/edit`)}
-                >
-                  編集
-                </button>
               </div>
             </li>
           ))}
