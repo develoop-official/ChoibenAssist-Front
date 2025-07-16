@@ -1,5 +1,4 @@
 "use client";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { css } from "../../styled-system/css";
 import { useTodos } from "../hooks/useTodos";
