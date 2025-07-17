@@ -52,15 +52,7 @@ export default function PcHeader() {
 
   // アバターURLを取得する関数
   const getAvatarUrl = () => {
-    // 1. カスタムアバター（user_profiles.icon_url）を優先
-    if (profile?.icon_url) {
-      return profile.icon_url;
-    }
-    // 2. OAuthアバター（user_metadata.avatar_url）をフォールバック
-    if (user?.user_metadata?.avatar_url) {
-      return user.user_metadata.avatar_url;
-    }
-    return null;
+    return profile?.icon_url || undefined;
   };
 
   // 表示名を取得する関数
