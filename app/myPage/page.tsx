@@ -30,6 +30,8 @@ interface FormData {
 
 interface TodoSuggestionForm {
   time_available: number;
+  recent_progress: string;
+  weak_areas: string; // カンマ区切りで入力
   daily_goal: string;
 }
 
@@ -58,6 +60,8 @@ export default function MyPage() {
   // TODO提案フォーム用の状態
   const [todoSuggestionForm, setTodoSuggestionForm] = useState<TodoSuggestionForm>({
     time_available: 60,
+    recent_progress: '',
+    weak_areas: '',
     daily_goal: ''
   });
   const [todoSuggestionLoading, setTodoSuggestionLoading] = useState(false);
@@ -262,37 +266,34 @@ export default function MyPage() {
 
   const handleTodoSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!profile?.scrapbox_project_name) {
-      setTodoSuggestionError('Scrapboxプロジェクト名が設定されていません。プロフィール編集で設定してください。');
+    if (!todoSuggestionForm.time_available || todoSuggestionForm.time_available < 1 || todoSuggestionForm.time_available > 480) {
+      setTodoSuggestionError('勉強時間は1分〜480分の間で指定してください。');
       return;
     }
-    
-    if (!todoSuggestionForm.daily_goal.trim()) {
-      setTodoSuggestionError('今日の目標を入力してください。');
-      return;
-    }
-
     try {
       setTodoSuggestionLoading(true);
       setTodoSuggestionError('');
       setTodoSuggestionResult(null);
-
-      const response = await fetch(`/api/ai/scrapbox-todo/${encodeURIComponent(profile.scrapbox_project_name)}`, {
+      // weak_areasを配列化
+      const weakAreasArray = todoSuggestionForm.weak_areas
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+      const response = await fetch(`/api/ai/scrapbox-todo/${encodeURIComponent(profile?.scrapbox_project_name || '')}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           time_available: todoSuggestionForm.time_available,
-          daily_goal: todoSuggestionForm.daily_goal
+          recent_progress: todoSuggestionForm.recent_progress || undefined,
+          weak_areas: weakAreasArray.length > 0 ? weakAreasArray : undefined,
+          daily_goal: todoSuggestionForm.daily_goal || undefined
         }),
       });
-
       if (!response.ok) {
         throw new Error(`APIエラー: ${response.status}`);
       }
-
       const result: TodoSuggestionResponse = await response.json();
       setTodoSuggestionResult(result);
     } catch (err) {
@@ -859,87 +860,68 @@ export default function MyPage() {
                 ) : (
                   <form onSubmit={handleTodoSuggestion} className={css({ spaceY: '4' })}>
                     <div>
-                      <label className={css({
-                        display: 'block',
-                        fontSize: 'sm',
-                        fontWeight: '600',
-                        color: 'gray.700',
-                        mb: '2'
-                      })}>
-                        今日使える勉強時間（分）
+                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                        勉強に使える時間（分）<span className={css({ color: 'red.500' })}>*</span>
                       </label>
                       <input
                         type="number"
-                        min="15"
+                        min="1"
                         max="480"
-                        step="15"
+                        step="1"
                         value={todoSuggestionForm.time_available}
-                        onChange={(e) => setTodoSuggestionForm(prev => ({ 
-                          ...prev, 
-                          time_available: parseInt(e.target.value) || 60 
-                        }))}
+                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, time_available: parseInt(e.target.value) || 1 }))}
                         className={formStyles.input}
                         required
                       />
                     </div>
-
                     <div>
-                      <label className={css({
-                        display: 'block',
-                        fontSize: 'sm',
-                        fontWeight: '600',
-                        color: 'gray.700',
-                        mb: '2'
-                      })}>
-                        今日の目標
+                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                        最近の課題・進捗（任意）
                       </label>
                       <textarea
-                        placeholder="例: 数学の微分を理解する、英語の単語を50個覚える"
-                        value={todoSuggestionForm.daily_goal}
-                        onChange={(e) => setTodoSuggestionForm(prev => ({ 
-                          ...prev, 
-                          daily_goal: e.target.value 
-                        }))}
-                        rows={3}
+                        placeholder="例: 英単語の暗記が進んだ、数学の微分が苦手"
+                        value={todoSuggestionForm.recent_progress}
+                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, recent_progress: e.target.value }))}
+                        rows={2}
                         className={formStyles.textarea}
-                        required
                       />
                     </div>
-
+                    <div>
+                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                        弱点（カンマ区切りで複数入力可・任意）
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="例: リスニング, 文法, 計算ミス"
+                        value={todoSuggestionForm.weak_areas}
+                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, weak_areas: e.target.value }))}
+                        className={formStyles.input}
+                      />
+                      <div className={css({ fontSize: 'xs', color: 'gray.500', mt: '1' })}>
+                        カンマ区切りで複数入力できます（例: リスニング, 文法, 計算ミス）
+                      </div>
+                    </div>
+                    <div>
+                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                        今日の目標（任意）
+                      </label>
+                      <textarea
+                        placeholder="例: リスニング問題を10問解く"
+                        value={todoSuggestionForm.daily_goal}
+                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, daily_goal: e.target.value }))}
+                        rows={2}
+                        className={formStyles.textarea}
+                      />
+                    </div>
                     {todoSuggestionError && (
-                      <div className={css({
-                        p: '3',
-                        bg: 'red.50',
-                        border: '1px solid',
-                        borderColor: 'red.200',
-                        rounded: 'md',
-                        color: 'red.700',
-                        fontSize: 'sm'
-                      })}>
+                      <div className={css({ p: '3', bg: 'red.50', border: '1px solid', borderColor: 'red.200', rounded: 'md', color: 'red.700', fontSize: 'sm' })}>
                         {todoSuggestionError}
                       </div>
                     )}
-
                     <button
                       type="submit"
-                      disabled={todoSuggestionLoading || !todoSuggestionForm.daily_goal.trim()}
-                      className={css({
-                        w: 'full',
-                        py: '3',
-                        px: '4',
-                        bg: 'primary.600',
-                        color: 'white',
-                        rounded: 'md',
-                        fontSize: 'sm',
-                        fontWeight: 'medium',
-                        _hover: {
-                          bg: 'primary.700'
-                        },
-                        _disabled: {
-                          opacity: '0.5',
-                          cursor: 'not-allowed'
-                        }
-                      })}
+                      disabled={todoSuggestionLoading || !todoSuggestionForm.time_available}
+                      className={css({ w: 'full', py: '3', px: '4', bg: 'primary.600', color: 'white', rounded: 'md', fontSize: 'sm', fontWeight: 'medium', _hover: { bg: 'primary.700' }, _disabled: { opacity: '0.5', cursor: 'not-allowed' } })}
                     >
                       {todoSuggestionLoading ? '提案生成中...' : 'TODOリストを提案してもらう'}
                     </button>
