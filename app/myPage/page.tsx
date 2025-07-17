@@ -67,6 +67,16 @@ export default function MyPage() {
   const [todoSuggestionLoading, setTodoSuggestionLoading] = useState(false);
   const [todoSuggestionResult, setTodoSuggestionResult] = useState<TodoSuggestionResponse | null>(null);
   const [todoSuggestionError, setTodoSuggestionError] = useState('');
+  const [useScrapbox, setUseScrapbox] = useState<boolean>(false);
+
+  // Scrapboxプロジェクト名が設定されていれば初期値true、なければfalse
+  useEffect(() => {
+    if (profile?.scrapbox_project_name) {
+      setUseScrapbox(true);
+    } else {
+      setUseScrapbox(false);
+    }
+  }, [profile?.scrapbox_project_name]);
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -107,7 +117,7 @@ export default function MyPage() {
         setFormData({
           username: data.username || '',
           full_name: data.full_name || '',
-          icon_url: data.icon_url || '',
+          icon_url: data.icon_url || formData.icon_url || profile?.icon_url || '',
           bio: data.bio || '',
           scrapbox_project_name: data.scrapbox_project_name || ''
         });
@@ -137,7 +147,7 @@ export default function MyPage() {
         user_id: user.id,
         username: user.user_metadata?.username || user.email?.split('@')[0] || 'user',
         full_name: user.user_metadata?.full_name || '',
-        icon_url: user.user_metadata?.avatar_url || '',
+        icon_url: formData.icon_url || profile?.icon_url || '',
         bio: '',
         scrapbox_project_name: '',
         created_at: new Date().toISOString(),
@@ -243,17 +253,25 @@ export default function MyPage() {
       setUploading(true);
       
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      
+      // デバッグ用ログ
+      console.log('アップロードユーザーID:', user.id);
+      console.log('ファイルパス:', filePath);
       
       const { error: uploadError } = await supabase!.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase!.storage
         .from('avatars')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       setFormData(prev => ({ ...prev, icon_url: publicUrl }));
     } catch (err) {
@@ -279,17 +297,23 @@ export default function MyPage() {
         .split(',')
         .map(s => s.trim())
         .filter(Boolean);
+      // APIリクエストbodyを切り替え
+      const body: any = {
+        time_available: todoSuggestionForm.time_available,
+      };
+      if (useScrapbox) {
+        if (todoSuggestionForm.daily_goal) body.daily_goal = todoSuggestionForm.daily_goal;
+      } else {
+        if (todoSuggestionForm.recent_progress) body.recent_progress = todoSuggestionForm.recent_progress;
+        if (weakAreasArray.length > 0) body.weak_areas = weakAreasArray;
+        if (todoSuggestionForm.daily_goal) body.daily_goal = todoSuggestionForm.daily_goal;
+      }
       const response = await fetch(`/api/ai/scrapbox-todo/${encodeURIComponent(profile?.scrapbox_project_name || '')}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          time_available: todoSuggestionForm.time_available,
-          recent_progress: todoSuggestionForm.recent_progress || undefined,
-          weak_areas: weakAreasArray.length > 0 ? weakAreasArray : undefined,
-          daily_goal: todoSuggestionForm.daily_goal || undefined
-        }),
+        body: JSON.stringify(body),
       });
       if (!response.ok) {
         throw new Error(`APIエラー: ${response.status}`);
@@ -661,7 +685,7 @@ export default function MyPage() {
                       <div className={css({
                         spaceY: '2'
                       })}>
-                        <label className={css({
+                        <label htmlFor="icon_url_input" className={css({
                           display: 'block',
                           fontSize: 'sm',
                           fontWeight: '600',
@@ -670,6 +694,7 @@ export default function MyPage() {
                           または、画像URLを直接入力
                         </label>
                         <input
+                          id="icon_url_input"
                           type="url"
                           placeholder="https://example.com/image.jpg"
                           value={formData.icon_url}
@@ -687,7 +712,7 @@ export default function MyPage() {
                       mb: '6'
                     })}>
                       <div>
-                        <label className={css({
+                        <label htmlFor="username_input" className={css({
                           display: 'block',
                           fontSize: 'sm',
                           fontWeight: '600',
@@ -697,6 +722,7 @@ export default function MyPage() {
                           ユーザー名 *
                         </label>
                         <input
+                          id="username_input"
                           type="text"
                           value={formData.username}
                           onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
@@ -706,7 +732,7 @@ export default function MyPage() {
                       </div>
 
                       <div>
-                        <label className={css({
+                        <label htmlFor="full_name_input" className={css({
                           display: 'block',
                           fontSize: 'sm',
                           fontWeight: '600',
@@ -716,6 +742,7 @@ export default function MyPage() {
                           フルネーム
                         </label>
                         <input
+                          id="full_name_input"
                           type="text"
                           value={formData.full_name}
                           onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
@@ -749,7 +776,7 @@ export default function MyPage() {
                       </div>
 
                       <div className={css({ gridColumn: 'span 2' })}>
-                        <label className={css({
+                        <label htmlFor="bio_input" className={css({
                           display: 'block',
                           fontSize: 'sm',
                           fontWeight: '600',
@@ -759,6 +786,7 @@ export default function MyPage() {
                           自己紹介
                         </label>
                         <textarea
+                          id="bio_input"
                           placeholder="自己紹介を入力してください"
                           value={formData.bio}
                           onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
@@ -768,7 +796,7 @@ export default function MyPage() {
                       </div>
 
                       <div className={css({ gridColumn: 'span 2' })}>
-                        <label className={css({
+                        <label htmlFor="scrapbox_project_name_input" className={css({
                           display: 'block',
                           fontSize: 'sm',
                           fontWeight: '600',
@@ -778,6 +806,7 @@ export default function MyPage() {
                           Scrapboxプロジェクト名（任意）
                         </label>
                         <input
+                          id="scrapbox_project_name_input"
                           type="text"
                           placeholder="例: my-study-project"
                           value={formData.scrapbox_project_name}
@@ -840,93 +869,106 @@ export default function MyPage() {
                   今日のTODOリスト提案
                 </h2>
 
-                {!profile?.scrapbox_project_name ? (
-                  <div className={css({
-                    p: '4',
-                    bg: 'yellow.50',
-                    border: '1px solid',
-                    borderColor: 'yellow.200',
-                    rounded: 'md',
-                    color: 'yellow.800',
-                    fontSize: 'sm'
-                  })}>
-                    <p className={css({ mb: '2' })}>
-                      <strong>Scrapboxプロジェクト名が設定されていません</strong>
-                    </p>
-                    <p>
-                      プロフィール編集でScrapboxプロジェクト名を設定すると、AIがあなたの学習内容に基づいてTODOリストを提案できます。
-                    </p>
+                {useScrapbox && profile?.scrapbox_project_name ? (
+                  <div className={css({ mb: '4', display: 'flex', alignItems: 'center', gap: '3' })}>
+                    <span className={css({ bg: 'green.100', color: 'green.700', px: '3', py: '1', rounded: 'full', fontSize: 'xs', fontWeight: 'bold' })}>
+                      Scrapbox連携中
+                    </span>
+                    <button type="button" onClick={() => setUseScrapbox(false)} className={css({ ml: 'auto', fontSize: 'xs', color: 'blue.600', bg: 'blue.50', px: '2', py: '1', rounded: 'md', border: 'none', cursor: 'pointer', _hover: { bg: 'blue.100' } })}>
+                      Scrapboxを使わないで詳細入力する
+                    </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleTodoSuggestion} className={css({ spaceY: '4' })}>
-                    <div>
-                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
-                        勉強に使える時間（分）<span className={css({ color: 'red.500' })}>*</span>
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="480"
-                        step="1"
-                        value={todoSuggestionForm.time_available}
-                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, time_available: parseInt(e.target.value) || 1 }))}
-                        className={formStyles.input}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
-                        最近の課題・進捗（任意）
-                      </label>
-                      <textarea
-                        placeholder="例: 英単語の暗記が進んだ、数学の微分が苦手"
-                        value={todoSuggestionForm.recent_progress}
-                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, recent_progress: e.target.value }))}
-                        rows={2}
-                        className={formStyles.textarea}
-                      />
-                    </div>
-                    <div>
-                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
-                        弱点（カンマ区切りで複数入力可・任意）
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="例: リスニング, 文法, 計算ミス"
-                        value={todoSuggestionForm.weak_areas}
-                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, weak_areas: e.target.value }))}
-                        className={formStyles.input}
-                      />
-                      <div className={css({ fontSize: 'xs', color: 'gray.500', mt: '1' })}>
-                        カンマ区切りで複数入力できます（例: リスニング, 文法, 計算ミス）
-                      </div>
-                    </div>
-                    <div>
-                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
-                        今日の目標（任意）
-                      </label>
-                      <textarea
-                        placeholder="例: リスニング問題を10問解く"
-                        value={todoSuggestionForm.daily_goal}
-                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, daily_goal: e.target.value }))}
-                        rows={2}
-                        className={formStyles.textarea}
-                      />
-                    </div>
-                    {todoSuggestionError && (
-                      <div className={css({ p: '3', bg: 'red.50', border: '1px solid', borderColor: 'red.200', rounded: 'md', color: 'red.700', fontSize: 'sm' })}>
-                        {todoSuggestionError}
-                      </div>
+                  <div className={css({ mb: '4', display: 'flex', alignItems: 'center', gap: '3' })}>
+                    <span className={css({ bg: 'gray.100', color: 'gray.700', px: '3', py: '1', rounded: 'full', fontSize: 'xs', fontWeight: 'bold' })}>
+                      詳細入力モード
+                    </span>
+                    <span className={css({ fontSize: 'xs', color: 'gray.500' })}>
+                      Scrapboxを設定すると「時間」と「今日の目標」だけでTODOリストを提案できます
+                    </span>
+                    {profile?.scrapbox_project_name && (
+                      <button type="button" onClick={() => setUseScrapbox(true)} className={css({ ml: 'auto', fontSize: 'xs', color: 'green.700', bg: 'green.50', px: '2', py: '1', rounded: 'md', border: 'none', cursor: 'pointer', _hover: { bg: 'green.100' } })}>
+                        Scrapboxを使う
+                      </button>
                     )}
-                    <button
-                      type="submit"
-                      disabled={todoSuggestionLoading || !todoSuggestionForm.time_available}
-                      className={css({ w: 'full', py: '3', px: '4', bg: 'primary.600', color: 'white', rounded: 'md', fontSize: 'sm', fontWeight: 'medium', _hover: { bg: 'primary.700' }, _disabled: { opacity: '0.5', cursor: 'not-allowed' } })}
-                    >
-                      {todoSuggestionLoading ? '提案生成中...' : 'TODOリストを提案してもらう'}
-                    </button>
-                  </form>
+                  </div>
                 )}
+                <form onSubmit={handleTodoSuggestion} className={css({ spaceY: '4' })}>
+                  <div>
+                    <label htmlFor="todo_time_available" className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                      勉強に使える時間（分）<span className={css({ color: 'red.500' })}>*</span>
+                    </label>
+                    <input
+                      id="todo_time_available"
+                      type="number"
+                      min="1"
+                      max="480"
+                      step="1"
+                      value={todoSuggestionForm.time_available}
+                      onChange={e => setTodoSuggestionForm(prev => ({ ...prev, time_available: parseInt(e.target.value) || 1 }))}
+                      className={formStyles.input}
+                      required
+                    />
+                  </div>
+                  {(!useScrapbox || !profile?.scrapbox_project_name) && (
+                    <>
+                      <div>
+                        <label htmlFor="todo_recent_progress" className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                          最近の課題・進捗（任意）
+                        </label>
+                        <textarea
+                          id="todo_recent_progress"
+                          placeholder="例: 英単語の暗記が進んだ、数学の微分が苦手"
+                          value={todoSuggestionForm.recent_progress}
+                          onChange={e => setTodoSuggestionForm(prev => ({ ...prev, recent_progress: e.target.value }))}
+                          rows={2}
+                          className={formStyles.textarea}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="todo_weak_areas" className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                          弱点（カンマ区切りで複数入力可・任意）
+                        </label>
+                        <input
+                          id="todo_weak_areas"
+                          type="text"
+                          placeholder="例: リスニング, 文法, 計算ミス"
+                          value={todoSuggestionForm.weak_areas}
+                          onChange={e => setTodoSuggestionForm(prev => ({ ...prev, weak_areas: e.target.value }))}
+                          className={formStyles.input}
+                        />
+                        <div className={css({ fontSize: 'xs', color: 'gray.500', mt: '1' })}>
+                          カンマ区切りで複数入力できます（例: リスニング, 文法, 計算ミス）
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  <div>
+                    <label htmlFor="todo_daily_goal" className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                      今日の目標（任意）
+                    </label>
+                    <textarea
+                      id="todo_daily_goal"
+                      placeholder="例: リスニング問題を10問解く"
+                      value={todoSuggestionForm.daily_goal}
+                      onChange={e => setTodoSuggestionForm(prev => ({ ...prev, daily_goal: e.target.value }))}
+                      rows={2}
+                      className={formStyles.textarea}
+                    />
+                  </div>
+                  {todoSuggestionError && (
+                    <div className={css({ p: '3', bg: 'red.50', border: '1px solid', borderColor: 'red.200', rounded: 'md', color: 'red.700', fontSize: 'sm' })}>
+                      {todoSuggestionError}
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={todoSuggestionLoading || !todoSuggestionForm.time_available}
+                    className={css({ w: 'full', py: '3', px: '4', bg: 'primary.600', color: 'white', rounded: 'md', fontSize: 'sm', fontWeight: 'medium', _hover: { bg: 'primary.700' }, _disabled: { opacity: '0.5', cursor: 'not-allowed' } })}
+                  >
+                    {todoSuggestionLoading ? '提案生成中...' : 'TODOリストを提案してもらう'}
+                  </button>
+                </form>
 
                 {/* 提案結果表示 */}
                 {todoSuggestionResult && (
