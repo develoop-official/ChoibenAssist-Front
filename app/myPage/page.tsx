@@ -15,6 +15,7 @@ interface UserProfile {
   full_name?: string;
   icon_url?: string;
   bio?: string;
+  scrapbox_project_name?: string;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +25,20 @@ interface FormData {
   full_name: string;
   icon_url: string;
   bio: string;
+  scrapbox_project_name: string;
+}
+
+interface TodoSuggestionForm {
+  time_available: number;
+  recent_progress: string;
+  weak_areas: string; // カンマ区切りで入力
+  daily_goal: string;
+}
+
+interface TodoSuggestionResponse {
+  success: boolean;
+  content: string;
+  response_type: string;
 }
 
 export default function MyPage() {
@@ -33,13 +48,25 @@ export default function MyPage() {
     username: '',
     full_name: '',
     icon_url: '',
-    bio: ''
+    bio: '',
+    scrapbox_project_name: ''
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [editMode, setEditMode] = useState(false);
+  
+  // TODO提案フォーム用の状態
+  const [todoSuggestionForm, setTodoSuggestionForm] = useState<TodoSuggestionForm>({
+    time_available: 60,
+    recent_progress: '',
+    weak_areas: '',
+    daily_goal: ''
+  });
+  const [todoSuggestionLoading, setTodoSuggestionLoading] = useState(false);
+  const [todoSuggestionResult, setTodoSuggestionResult] = useState<TodoSuggestionResponse | null>(null);
+  const [todoSuggestionError, setTodoSuggestionError] = useState('');
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -81,7 +108,8 @@ export default function MyPage() {
           username: data.username || '',
           full_name: data.full_name || '',
           icon_url: data.icon_url || '',
-          bio: data.bio || ''
+          bio: data.bio || '',
+          scrapbox_project_name: data.scrapbox_project_name || ''
         });
       }
     } catch (err) {
@@ -111,6 +139,7 @@ export default function MyPage() {
         full_name: user.user_metadata?.full_name || '',
         icon_url: user.user_metadata?.avatar_url || '',
         bio: '',
+        scrapbox_project_name: '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -134,11 +163,17 @@ export default function MyPage() {
         username: data.username || '',
         full_name: data.full_name || '',
         icon_url: data.icon_url || '',
-        bio: data.bio || ''
+        bio: data.bio || '',
+        scrapbox_project_name: data.scrapbox_project_name || ''
       });
     } catch (err) {
       console.error('プロフィール作成エラー:', err);
-      setError('プロフィールの作成に失敗しました');
+      // より詳細なエラー情報を表示
+      if (err instanceof Error) {
+        setError(`プロフィールの作成に失敗しました: ${err.message}`);
+      } else {
+        setError(`プロフィールの作成に失敗しました: ${JSON.stringify(err)}`);
+      }
     }
   };
 
@@ -161,6 +196,7 @@ export default function MyPage() {
           full_name: formData.full_name,
           icon_url: formData.icon_url,
           bio: formData.bio,
+          scrapbox_project_name: formData.scrapbox_project_name,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -173,6 +209,7 @@ export default function MyPage() {
         full_name: formData.full_name,
         icon_url: formData.icon_url,
         bio: formData.bio,
+        scrapbox_project_name: formData.scrapbox_project_name,
         updated_at: new Date().toISOString()
       } : null);
 
@@ -191,7 +228,8 @@ export default function MyPage() {
         username: profile.username || '',
         full_name: profile.full_name || '',
         icon_url: profile.icon_url || '',
-        bio: profile.bio || ''
+        bio: profile.bio || '',
+        scrapbox_project_name: profile.scrapbox_project_name || ''
       });
     }
     setEditMode(false);
@@ -223,6 +261,46 @@ export default function MyPage() {
       setError('画像のアップロードに失敗しました');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleTodoSuggestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!todoSuggestionForm.time_available || todoSuggestionForm.time_available < 1 || todoSuggestionForm.time_available > 480) {
+      setTodoSuggestionError('勉強時間は1分〜480分の間で指定してください。');
+      return;
+    }
+    try {
+      setTodoSuggestionLoading(true);
+      setTodoSuggestionError('');
+      setTodoSuggestionResult(null);
+      // weak_areasを配列化
+      const weakAreasArray = todoSuggestionForm.weak_areas
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+      const response = await fetch(`/api/ai/scrapbox-todo/${encodeURIComponent(profile?.scrapbox_project_name || '')}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          time_available: todoSuggestionForm.time_available,
+          recent_progress: todoSuggestionForm.recent_progress || undefined,
+          weak_areas: weakAreasArray.length > 0 ? weakAreasArray : undefined,
+          daily_goal: todoSuggestionForm.daily_goal || undefined
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`APIエラー: ${response.status}`);
+      }
+      const result: TodoSuggestionResponse = await response.json();
+      setTodoSuggestionResult(result);
+    } catch (err) {
+      console.error('TODO提案エラー:', err);
+      setTodoSuggestionError('TODO提案の取得に失敗しました。');
+    } finally {
+      setTodoSuggestionLoading(false);
     }
   };
 
@@ -318,384 +396,568 @@ export default function MyPage() {
           })}>
             <LoadingSpinner />
           </div>
-        ) : !editMode && profile ? (
-          // 非編集時のコンパクト表示
+        ) : (
           <div className={css({
-            bg: 'white',
-            borderRadius: 'xl',
-            p: '6',
-            shadow: 'md',
-            border: '1px solid',
-            borderColor: 'primary.100',
-            maxW: '2xl',
+            display: 'grid',
+            gridTemplateColumns: { base: '1fr', lg: '1fr 1fr' },
+            gap: '8',
+            maxW: '6xl',
             mx: 'auto'
           })}>
-            <div className={css({
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              mb: '4'
-            })}>
-              <h2 className={css({
-                fontSize: '2xl',
-                fontWeight: 'bold',
-                color: 'primary.800'
-              })}>
-                プロフィール
-              </h2>
-              <button
-                type="button"
-                onClick={() => setEditMode(true)}
-                className={buttonStyles.secondary}
-              >
-                編集
-              </button>
-            </div>
-            
-            <div className={css({
-              display: 'flex',
-              alignItems: 'start',
-              gap: '6'
-            })}>
-              {/* プロフィール画像 */}
-              <div className={css({
-                w: '20',
-                h: '20',
-                rounded: 'full',
-                overflow: 'hidden',
-                bg: 'primary.50',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px solid',
-                borderColor: 'primary.200',
-                flexShrink: '0'
-              })}>
-                {profile.icon_url ? (
-                  <img
-                    src={profile.icon_url}
-                    alt="プロフィール画像"
-                    className={css({
-                      w: 'full',
-                      h: 'full',
-                      objectFit: 'cover'
-                    })}
-                  />
-                ) : (
-                  <span className={css({
-                    fontSize: '3xl',
-                    color: 'primary.300'
-                  })}>
-                    👤
-                  </span>
-                )}
-              </div>
-              
-              {/* プロフィール情報 */}
-              <div className={css({ flex: '1' })}>
-                <h3 className={css({
-                  fontSize: '2xl',
-                  fontWeight: 'bold',
-                  color: 'gray.900',
-                  mb: '2'
-                })}>
-                  {profile.username}
-                </h3>
-                
-                {profile.full_name && (
-                  <p className={css({
-                    fontSize: 'lg',
-                    color: 'primary.600',
-                    mb: '2'
-                  })}>
-                    {profile.full_name}
-                  </p>
-                )}
-                
-                {profile.bio && (
-                  <p className={css({
-                    color: 'gray.700',
-                    lineHeight: '1.5',
-                    mb: '3'
-                  })}>
-                    {profile.bio}
-                  </p>
-                )}
-                
+            {/* プロフィールセクション */}
+            <div>
+              {!editMode && profile ? (
+                // 非編集時のコンパクト表示
                 <div className={css({
-                  display: 'flex',
-                  gap: '4',
-                  fontSize: 'sm',
-                  color: 'gray.500'
-                })}>
-                  <span>
-                    作成日: {new Date(profile.created_at).toLocaleDateString('ja-JP')}
-                  </span>
-                  {profile.updated_at && profile.updated_at !== profile.created_at && (
-                    <span>
-                      更新日: {new Date(profile.updated_at).toLocaleDateString('ja-JP')}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          // 編集時の詳細フォーム表示
-          <div className={css({
-            bg: 'white',
-            rounded: '2xl',
-            shadow: 'lg',
-            border: '1px solid',
-            borderColor: 'gray.100',
-            p: '8'
-          })}>
-            <div className={css({
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              mb: '6',
-              pb: '4',
-              borderBottom: '1px solid',
-              borderBottomColor: 'gray.200'
-            })}>
-              <h2 className={css({
-                fontSize: '2xl',
-                fontWeight: 'bold',
-                color: 'primary.800'
-              })}>
-                プロフィール編集
-              </h2>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              {/* プロフィール画像編集 */}
-              <div className={css({
-                textAlign: 'center',
-                mb: '8'
-              })}>
-                <div className={css({
-                  position: 'relative',
-                  w: '24',
-                  h: '24',
-                  mx: 'auto',
-                  mb: '4'
+                  bg: 'white',
+                  borderRadius: 'xl',
+                  p: '6',
+                  shadow: 'md',
+                  border: '1px solid',
+                  borderColor: 'primary.100',
+                  h: 'fit-content'
                 })}>
                   <div className={css({
-                    w: '24',
-                    h: '24',
-                    rounded: 'full',
-                    overflow: 'hidden',
-                    bg: 'primary.50',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '2px solid',
-                    borderColor: 'primary.200'
-                  })}>
-                    {formData.icon_url ? (
-                      <img
-                        src={formData.icon_url}
-                        alt="プロフィール画像"
-                        className={css({
-                          w: 'full',
-                          h: 'full',
-                          objectFit: 'cover'
-                        })}
-                      />
-                    ) : (
-                      <span className={css({
-                        fontSize: '3xl',
-                        color: 'primary.300'
-                      })}>
-                        👤
-                      </span>
-                    )}
-                  </div>
-                  
-                  <label className={css({
-                    position: 'absolute',
-                    bottom: '0',
-                    right: '0',
-                    w: '8',
-                    h: '8',
-                    bg: 'primary.600',
-                    color: 'white',
-                    rounded: 'full',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    fontSize: 'sm',
-                    border: '2px solid',
-                    borderColor: 'white',
-                    shadow: 'sm',
-                    _hover: {
-                      bg: 'primary.700'
-                    }
-                  })}>
-                    📷
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className={css({
-                        position: 'absolute',
-                        opacity: '0',
-                        w: 'full',
-                        h: 'full',
-                        cursor: 'pointer'
-                      })}
-                    />
-                  </label>
-                </div>
-
-                {uploading && (
-                  <div className={css({
-                    color: 'primary.600',
-                    fontSize: 'sm',
+                    justifyContent: 'space-between',
                     mb: '4'
                   })}>
-                    アップロード中...
+                    <h2 className={css({
+                      fontSize: '2xl',
+                      fontWeight: 'bold',
+                      color: 'primary.800'
+                    })}>
+                      プロフィール
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setEditMode(true)}
+                      className={buttonStyles.secondary}
+                    >
+                      編集
+                    </button>
+                  </div>
+                  
+                  <div className={css({
+                    display: 'flex',
+                    alignItems: 'start',
+                    gap: '6'
+                  })}>
+                    {/* プロフィール画像 */}
+                    <div className={css({
+                      w: '20',
+                      h: '20',
+                      rounded: 'full',
+                      overflow: 'hidden',
+                      bg: 'primary.50',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '2px solid',
+                      borderColor: 'primary.200',
+                      flexShrink: '0'
+                    })}>
+                      {profile.icon_url ? (
+                        <img
+                          src={profile.icon_url}
+                          alt="プロフィール画像"
+                          className={css({
+                            w: 'full',
+                            h: 'full',
+                            objectFit: 'cover'
+                          })}
+                        />
+                      ) : (
+                        <span className={css({
+                          fontSize: '3xl',
+                          color: 'primary.300'
+                        })}>
+                          👤
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* プロフィール情報 */}
+                    <div className={css({ flex: '1' })}>
+                      <h3 className={css({
+                        fontSize: '2xl',
+                        fontWeight: 'bold',
+                        color: 'gray.900',
+                        mb: '2'
+                      })}>
+                        {profile.username}
+                      </h3>
+                      
+                      {profile.full_name && (
+                        <p className={css({
+                          fontSize: 'lg',
+                          color: 'primary.600',
+                          mb: '2'
+                        })}>
+                          {profile.full_name}
+                        </p>
+                      )}
+                      
+                      {profile.bio && (
+                        <p className={css({
+                          color: 'gray.700',
+                          lineHeight: '1.5',
+                          mb: '3'
+                        })}>
+                          {profile.bio}
+                        </p>
+                      )}
+                      
+                      {profile.scrapbox_project_name && (
+                        <p className={css({
+                          fontSize: 'sm',
+                          color: 'green.600',
+                          mb: '2'
+                        })}>
+                          📝 Scrapbox: {profile.scrapbox_project_name}
+                        </p>
+                      )}
+                      
+                      <div className={css({
+                        display: 'flex',
+                        gap: '4',
+                        fontSize: 'sm',
+                        color: 'gray.500'
+                      })}>
+                        <span>
+                          作成日: {new Date(profile.created_at).toLocaleDateString('ja-JP')}
+                        </span>
+                        {profile.updated_at && profile.updated_at !== profile.created_at && (
+                          <span>
+                            更新日: {new Date(profile.updated_at).toLocaleDateString('ja-JP')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // 編集時の詳細フォーム表示
+                <div className={css({
+                  bg: 'white',
+                  rounded: '2xl',
+                  shadow: 'lg',
+                  border: '1px solid',
+                  borderColor: 'gray.100',
+                  p: '8',
+                  h: 'fit-content'
+                })}>
+                  <div className={css({
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    mb: '6',
+                    pb: '4',
+                    borderBottom: '1px solid',
+                    borderBottomColor: 'gray.200'
+                  })}>
+                    <h2 className={css({
+                      fontSize: '2xl',
+                      fontWeight: 'bold',
+                      color: 'primary.800'
+                    })}>
+                      プロフィール編集
+                    </h2>
+                  </div>
+
+                  <form onSubmit={handleSubmit}>
+                    {/* プロフィール画像編集 */}
+                    <div className={css({
+                      textAlign: 'center',
+                      mb: '8'
+                    })}>
+                      <div className={css({
+                        position: 'relative',
+                        w: '24',
+                        h: '24',
+                        mx: 'auto',
+                        mb: '4'
+                      })}>
+                        <div className={css({
+                          w: '24',
+                          h: '24',
+                          rounded: 'full',
+                          overflow: 'hidden',
+                          bg: 'primary.50',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid',
+                          borderColor: 'primary.200'
+                        })}>
+                          {formData.icon_url ? (
+                            <img
+                              src={formData.icon_url}
+                              alt="プロフィール画像"
+                              className={css({
+                                w: 'full',
+                                h: 'full',
+                                objectFit: 'cover'
+                              })}
+                            />
+                          ) : (
+                            <span className={css({
+                              fontSize: '3xl',
+                              color: 'primary.300'
+                            })}>
+                              👤
+                            </span>
+                          )}
+                        </div>
+                        
+                        <label className={css({
+                          position: 'absolute',
+                          bottom: '0',
+                          right: '0',
+                          w: '8',
+                          h: '8',
+                          bg: 'primary.600',
+                          color: 'white',
+                          rounded: 'full',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          fontSize: 'sm',
+                          border: '2px solid',
+                          borderColor: 'white',
+                          shadow: 'sm',
+                          _hover: {
+                            bg: 'primary.700'
+                          }
+                        })}>
+                          📷
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            className={css({
+                              position: 'absolute',
+                              opacity: '0',
+                              w: 'full',
+                              h: 'full',
+                              cursor: 'pointer'
+                            })}
+                          />
+                        </label>
+                      </div>
+
+                      {uploading && (
+                        <div className={css({
+                          color: 'primary.600',
+                          fontSize: 'sm',
+                          mb: '4'
+                        })}>
+                          アップロード中...
+                        </div>
+                      )}
+                      
+                      <div className={css({
+                        spaceY: '2'
+                      })}>
+                        <label className={css({
+                          display: 'block',
+                          fontSize: 'sm',
+                          fontWeight: '600',
+                          color: 'gray.700'
+                        })}>
+                          または、画像URLを直接入力
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="https://example.com/image.jpg"
+                          value={formData.icon_url}
+                          onChange={(e) => setFormData(prev => ({ ...prev, icon_url: e.target.value }))}
+                          className={formStyles.input}
+                        />
+                      </div>
+                    </div>
+
+                    {/* フォームフィールド */}
+                    <div className={css({
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '6',
+                      mb: '6'
+                    })}>
+                      <div>
+                        <label className={css({
+                          display: 'block',
+                          fontSize: 'sm',
+                          fontWeight: '600',
+                          color: 'gray.700',
+                          mb: '2'
+                        })}>
+                          ユーザー名 *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.username}
+                          onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                          className={formStyles.input}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className={css({
+                          display: 'block',
+                          fontSize: 'sm',
+                          fontWeight: '600',
+                          color: 'gray.700',
+                          mb: '2'
+                        })}>
+                          フルネーム
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.full_name}
+                          onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                          className={formStyles.input}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={css({
+                          display: 'block',
+                          fontSize: 'sm',
+                          fontWeight: '600',
+                          color: 'gray.700',
+                          mb: '2'
+                        })}>
+                          メールアドレス
+                        </label>
+                        <div className={css({
+                          w: 'full',
+                          px: '3',
+                          py: '2',
+                          bg: 'gray.50',
+                          border: '1px solid',
+                          borderColor: 'gray.200',
+                          rounded: 'md',
+                          fontSize: 'sm',
+                          color: 'gray.600'
+                        })}>
+                          {user.email}
+                        </div>
+                      </div>
+
+                      <div className={css({ gridColumn: 'span 2' })}>
+                        <label className={css({
+                          display: 'block',
+                          fontSize: 'sm',
+                          fontWeight: '600',
+                          color: 'gray.700',
+                          mb: '2'
+                        })}>
+                          自己紹介
+                        </label>
+                        <textarea
+                          placeholder="自己紹介を入力してください"
+                          value={formData.bio}
+                          onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                          rows={3}
+                          className={formStyles.textarea}
+                        />
+                      </div>
+
+                      <div className={css({ gridColumn: 'span 2' })}>
+                        <label className={css({
+                          display: 'block',
+                          fontSize: 'sm',
+                          fontWeight: '600',
+                          color: 'gray.700',
+                          mb: '2'
+                        })}>
+                          Scrapboxプロジェクト名（任意）
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="例: my-study-project"
+                          value={formData.scrapbox_project_name}
+                          onChange={e => setFormData(prev => ({ ...prev, scrapbox_project_name: e.target.value }))}
+                          className={formStyles.input}
+                        />
+                        <div className={css({ fontSize: 'xs', color: 'gray.500', mt: '1' })}>
+                          Scrapboxのプロジェクト名を設定すると、AI TODO提案で活用されます
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* アクションボタン */}
+                    <div className={css({
+                      display: 'flex',
+                      gap: '3',
+                      justifyContent: 'flex-end',
+                      pt: '4',
+                      borderTop: '1px solid',
+                      borderTopColor: 'gray.200'
+                    })}>
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={saving}
+                        className={buttonStyles.secondary}
+                      >
+                        キャンセル
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={saving || !formData.username.trim()}
+                        className={buttonStyles.primary}
+                      >
+                        {saving ? '保存中...' : '保存'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+
+            {/* TODO提案セクション */}
+            <div>
+              <div className={css({
+                bg: 'white',
+                borderRadius: 'xl',
+                p: '6',
+                shadow: 'md',
+                border: '1px solid',
+                borderColor: 'primary.100',
+                h: 'fit-content'
+              })}>
+                <h2 className={css({
+                  fontSize: '2xl',
+                  fontWeight: 'bold',
+                  color: 'primary.800',
+                  mb: '4'
+                })}>
+                  今日のTODOリスト提案
+                </h2>
+
+                {!profile?.scrapbox_project_name ? (
+                  <div className={css({
+                    p: '4',
+                    bg: 'yellow.50',
+                    border: '1px solid',
+                    borderColor: 'yellow.200',
+                    rounded: 'md',
+                    color: 'yellow.800',
+                    fontSize: 'sm'
+                  })}>
+                    <p className={css({ mb: '2' })}>
+                      <strong>Scrapboxプロジェクト名が設定されていません</strong>
+                    </p>
+                    <p>
+                      プロフィール編集でScrapboxプロジェクト名を設定すると、AIがあなたの学習内容に基づいてTODOリストを提案できます。
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleTodoSuggestion} className={css({ spaceY: '4' })}>
+                    <div>
+                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                        勉強に使える時間（分）<span className={css({ color: 'red.500' })}>*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="480"
+                        step="1"
+                        value={todoSuggestionForm.time_available}
+                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, time_available: parseInt(e.target.value) || 1 }))}
+                        className={formStyles.input}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                        最近の課題・進捗（任意）
+                      </label>
+                      <textarea
+                        placeholder="例: 英単語の暗記が進んだ、数学の微分が苦手"
+                        value={todoSuggestionForm.recent_progress}
+                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, recent_progress: e.target.value }))}
+                        rows={2}
+                        className={formStyles.textarea}
+                      />
+                    </div>
+                    <div>
+                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                        弱点（カンマ区切りで複数入力可・任意）
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="例: リスニング, 文法, 計算ミス"
+                        value={todoSuggestionForm.weak_areas}
+                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, weak_areas: e.target.value }))}
+                        className={formStyles.input}
+                      />
+                      <div className={css({ fontSize: 'xs', color: 'gray.500', mt: '1' })}>
+                        カンマ区切りで複数入力できます（例: リスニング, 文法, 計算ミス）
+                      </div>
+                    </div>
+                    <div>
+                      <label className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                        今日の目標（任意）
+                      </label>
+                      <textarea
+                        placeholder="例: リスニング問題を10問解く"
+                        value={todoSuggestionForm.daily_goal}
+                        onChange={e => setTodoSuggestionForm(prev => ({ ...prev, daily_goal: e.target.value }))}
+                        rows={2}
+                        className={formStyles.textarea}
+                      />
+                    </div>
+                    {todoSuggestionError && (
+                      <div className={css({ p: '3', bg: 'red.50', border: '1px solid', borderColor: 'red.200', rounded: 'md', color: 'red.700', fontSize: 'sm' })}>
+                        {todoSuggestionError}
+                      </div>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={todoSuggestionLoading || !todoSuggestionForm.time_available}
+                      className={css({ w: 'full', py: '3', px: '4', bg: 'primary.600', color: 'white', rounded: 'md', fontSize: 'sm', fontWeight: 'medium', _hover: { bg: 'primary.700' }, _disabled: { opacity: '0.5', cursor: 'not-allowed' } })}
+                    >
+                      {todoSuggestionLoading ? '提案生成中...' : 'TODOリストを提案してもらう'}
+                    </button>
+                  </form>
+                )}
+
+                {/* 提案結果表示 */}
+                {todoSuggestionResult && (
+                  <div className={css({
+                    mt: '6',
+                    p: '4',
+                    bg: 'green.50',
+                    border: '1px solid',
+                    borderColor: 'green.200',
+                    rounded: 'md'
+                  })}>
+                    <h3 className={css({
+                      fontSize: 'lg',
+                      fontWeight: 'bold',
+                      color: 'green.800',
+                      mb: '3'
+                    })}>
+                      🤖 AI提案のTODOリスト
+                    </h3>
+                    <div className={css({
+                      whiteSpace: 'pre-wrap',
+                      color: 'green.700',
+                      lineHeight: '1.6',
+                      fontSize: 'sm'
+                    })}>
+                      {todoSuggestionResult.content}
+                    </div>
                   </div>
                 )}
-                
-                <div className={css({
-                  spaceY: '2'
-                })}>
-                  <label className={css({
-                    display: 'block',
-                    fontSize: 'sm',
-                    fontWeight: '600',
-                    color: 'gray.700'
-                  })}>
-                    または、画像URLを直接入力
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://example.com/image.jpg"
-                    value={formData.icon_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, icon_url: e.target.value }))}
-                    className={formStyles.input}
-                  />
-                </div>
               </div>
-
-              {/* フォームフィールド */}
-              <div className={css({
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '6',
-                mb: '6'
-              })}>
-                <div>
-                  <label className={css({
-                    display: 'block',
-                    fontSize: 'sm',
-                    fontWeight: '600',
-                    color: 'gray.700',
-                    mb: '2'
-                  })}>
-                    ユーザー名 *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                    className={formStyles.input}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className={css({
-                    display: 'block',
-                    fontSize: 'sm',
-                    fontWeight: '600',
-                    color: 'gray.700',
-                    mb: '2'
-                  })}>
-                    フルネーム
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-                    className={formStyles.input}
-                  />
-                </div>
-
-                <div>
-                  <label className={css({
-                    display: 'block',
-                    fontSize: 'sm',
-                    fontWeight: '600',
-                    color: 'gray.700',
-                    mb: '2'
-                  })}>
-                    メールアドレス
-                  </label>
-                  <div className={css({
-                    w: 'full',
-                    px: '3',
-                    py: '2',
-                    bg: 'gray.50',
-                    border: '1px solid',
-                    borderColor: 'gray.200',
-                    rounded: 'md',
-                    fontSize: 'sm',
-                    color: 'gray.600'
-                  })}>
-                    {user.email}
-                  </div>
-                </div>
-
-                <div className={css({ gridColumn: 'span 2' })}>
-                  <label className={css({
-                    display: 'block',
-                    fontSize: 'sm',
-                    fontWeight: '600',
-                    color: 'gray.700',
-                    mb: '2'
-                  })}>
-                    自己紹介
-                  </label>
-                  <textarea
-                    placeholder="自己紹介を入力してください"
-                    value={formData.bio}
-                    onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                    rows={3}
-                    className={formStyles.textarea}
-                  />
-                </div>
-              </div>
-
-              {/* アクションボタン */}
-              <div className={css({
-                display: 'flex',
-                gap: '3',
-                justifyContent: 'flex-end',
-                pt: '4',
-                borderTop: '1px solid',
-                borderTopColor: 'gray.200'
-              })}>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  disabled={saving}
-                  className={buttonStyles.secondary}
-                >
-                  キャンセル
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving || !formData.username.trim()}
-                  className={buttonStyles.primary}
-                >
-                  {saving ? '保存中...' : '保存'}
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         )}
       </div>

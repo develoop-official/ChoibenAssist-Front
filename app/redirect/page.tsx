@@ -30,8 +30,8 @@ export default function RedirectPage() {
         }
 
         if (data.session) {
-          // 認証成功時はstudyListにリダイレクト
-          router.push('/studyList');
+          // 認証成功時はmyPageにリダイレクト
+          router.push('/myPage');
         } else {
           // セッションがない場合はログインページにリダイレクト
           router.push('/');
