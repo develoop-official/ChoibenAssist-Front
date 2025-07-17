@@ -16,10 +16,10 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, loading: authLoading, error: authError, signInWithEmail, signUpWithEmail, signInWithProvider } = useAuth();
 
-  // ユーザーが既にログインしている場合はstudyListにリダイレクト
+  // ユーザーが既にログインしている場合はmyPageにリダイレクト
   useEffect(() => {
     if (user && !authLoading) {
-      router.push('/studyList');
+      router.push('/myPage');
     }
   }, [user, authLoading, router]);
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
       if (error) {
         setError(error.message);
       } else {
-        router.push('/studyList');
+        router.push('/myPage');
       }
     } catch (err) {
       setError('認証中にエラーが発生しました');
