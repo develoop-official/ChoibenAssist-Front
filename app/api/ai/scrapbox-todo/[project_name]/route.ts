@@ -2,13 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 interface TodoRequest {
   time_available: number;
-  daily_goal: string;
-}
-
-interface TodoResponse {
-  success: boolean;
-  content: string;
-  response_type: string;
+  recent_progress?: string;
+  weak_areas?: string[];
+  daily_goal?: string;
 }
 
 export async function POST(
@@ -16,72 +12,30 @@ export async function POST(
   { params }: { params: { project_name: string } }
 ) {
   try {
-    // プロジェクト名を取得
     const projectName = decodeURIComponent(params.project_name);
-    
-    // リクエストボディを取得
     const body: TodoRequest = await request.json();
-    const { time_available, daily_goal } = body;
+    const { time_available, recent_progress, weak_areas, daily_goal } = body;
 
-    // バリデーション
-    if (!projectName) {
+    // バリデーション: time_availableのみ必須
+    if (!time_available || time_available < 1 || time_available > 480) {
       return NextResponse.json(
-        { success: false, content: 'プロジェクト名が指定されていません', response_type: 'error' },
+        { success: false, content: '勉強時間は1分〜480分の間で指定してください', response_type: 'error' },
         { status: 400 }
       );
     }
 
-    if (!time_available || time_available < 15 || time_available > 480) {
-      return NextResponse.json(
-        { success: false, content: '勉強時間は15分〜480分の間で指定してください', response_type: 'error' },
-        { status: 400 }
-      );
-    }
+    // FastAPI等のバックエンドAPIにPOST
+    const backendRes = await fetch(`http://localhost:8000/api/ai/scrapbox-todo/${encodeURIComponent(projectName)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-From-Next': 'true',
+      },
+      body: JSON.stringify({ time_available, recent_progress, weak_areas, daily_goal }),
+    });
 
-    if (!daily_goal || daily_goal.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, content: '今日の目標を入力してください', response_type: 'error' },
-        { status: 400 }
-      );
-    }
-
-    // TODO: 実際のAI APIとの連携
-    // 現在はモックレスポンスを返す
-    const mockResponse: TodoResponse = {
-      success: true,
-      content: `📚 ${projectName} プロジェクトの今日のTODOリスト
-
-⏰ 利用可能時間: ${time_available}分
-🎯 今日の目標: ${daily_goal}
-
-## 推奨TODOリスト
-
-### 1. 準備・計画 (15分)
-- 今日の学習計画を立てる
-- 必要な教材・ツールを準備する
-- 学習環境を整える
-
-### 2. メイン学習 (${Math.floor(time_available * 0.7)}分)
-- ${daily_goal}に集中して取り組む
-- 理解度を確認しながら進める
-- 分からない点があればメモを取る
-
-### 3. 復習・整理 (${Math.floor(time_available * 0.15)}分)
-- 今日学んだ内容を振り返る
-- 重要ポイントをまとめる
-- 次回への課題を整理する
-
-### 4. 振り返り (${Math.floor(time_available * 0.15)}分)
-- 学習記録を更新する
-- 達成感を味わう
-- 明日の計画を考える
-
-💡 ヒント: 集中力が切れたら5分休憩を挟んでください。`,
-      response_type: 'todo_list'
-    };
-
-    return NextResponse.json(mockResponse);
-
+    const backendJson = await backendRes.json();
+    return NextResponse.json(backendJson, { status: backendRes.status });
   } catch (error) {
     console.error('Scrapbox TODO API エラー:', error);
     return NextResponse.json(
