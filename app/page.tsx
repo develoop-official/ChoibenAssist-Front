@@ -105,10 +105,11 @@ export default function LoginPage() {
           spaceY: '4'
         })}>
           <div>
-            <label className={formStyles.label}>
+            <label htmlFor="email" className={formStyles.label}>
               メールアドレス
             </label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -118,10 +119,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className={formStyles.label}>
+            <label htmlFor="password" className={formStyles.label}>
               パスワード
             </label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
