@@ -1,3 +1,63 @@
+# ChoibenAssist-Front
+
+このプロジェクトは、Next.js + TypeScript + PandaCSS + Supabase + FastAPI を用いた学習支援アプリのフロントエンドです。
+
+## 主な機能
+
+- ユーザープロフィール管理（Google認証/Supabase連携）
+- 学習記録の投稿・一覧・削除
+- AIによるTODOリスト提案（FastAPI連携）
+- 提案TODOをワンクリックで自分のTODOリストに追加
+- TODOリスト管理（完了・未完了・完了済みTODOの保持）
+- 完了済みTODOを学習記録一覧の右側に表示
+- Scrapbox連携による学習計画最適化
+- レスポンシブなUI/UX（PandaCSS）
+
+## セットアップ
+
+1. 必要な環境変数を`.env.local`に設定
+2. Supabaseプロジェクトを作成し、DBテーブル・RLS・バケットをセットアップ
+3. FastAPIバックエンド（AI連携用）を`localhost:8000`で起動
+4. 依存パッケージをインストール
+
+```bash
+npm install
+```
+
+5. 開発サーバー起動
+
+```bash
+npm run dev
+```
+
+6. ブラウザで [http://localhost:3000](http://localhost:3000) を開く
+
+## ディレクトリ構成
+
+- `app/` ... Next.js App Router構成
+- `app/api/` ... API Route（AI提案TODOなど）
+- `app/myPage/` ... マイページ・プロフィール・AI提案TODO
+- `app/todoList/` ... TODOリスト管理
+- `app/studyList/` ... 学習記録一覧
+- `app/components/` ... UIコンポーネント
+- `app/hooks/` ... カスタムフック
+- `styled-system/` ... PandaCSS設定
+
+## 開発Tips
+
+- SupabaseのRLS/バケット設定は`SUPABASE_SETUP.md`参照
+- FastAPI連携APIは`app/api/ai/scrapbox-todo/[project_name]/route.ts`を参照
+- Next.js 15対応のAPI Route型エラーは`context: any`で回避
+- コミットはファイル単位で細かく推奨
+
+## ライセンス
+
+MIT
+
+---
+
+以下はNext.js標準のREADMEです。
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
