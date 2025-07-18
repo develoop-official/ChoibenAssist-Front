@@ -11,6 +11,111 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    plugins: {
+      import: (await import("eslint-plugin-import")).default,
+      // "filename-rules": (await import("eslint-plugin-filename-rules")).default,
+    },
+    rules: {
+      // 開発ブランチ保護ルール
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      
+      // コード品質ルール
+      "prefer-const": "error",
+      "no-var": "error",
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "no-undef": "error",
+      
+      // TypeScript固有ルール
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      
+      // React/Next.jsルール
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "react/no-unescaped-entities": "error",
+      "react/jsx-key": "error",
+      
+      // インポートルール
+      "import/order": [
+        "error",
+        {
+          "groups": [
+            "builtin",
+            "external",
+            "internal",
+            "parent",
+            "sibling",
+            "index"
+          ],
+          "newlines-between": "always",
+          "alphabetize": {
+            "order": "asc",
+            "caseInsensitive": true
+          }
+        }
+      ],
+      
+      // コメントルール
+      "spaced-comment": ["error", "always"],
+      
+      // 空白・フォーマットルール
+      "no-trailing-spaces": "error",
+      "eol-last": "error",
+      "no-multiple-empty-lines": ["error", { "max": 2 }],
+      
+      // セキュリティルール
+      "no-eval": "error",
+      "no-implied-eval": "error",
+      "no-new-func": "error",
+      
+      // パフォーマンスルール
+      "react/jsx-no-bind": [
+        "warn",
+        {
+          "allowArrowFunctions": true,
+          "allowBind": false,
+          "ignoreRefs": true
+        }
+      ],
+      // コメント必須ルール
+      "require-jsdoc": ["error", {
+        require: {
+          FunctionDeclaration: true,
+          MethodDefinition: true,
+          ClassDeclaration: true,
+          ArrowFunctionExpression: true,
+          FunctionExpression: true
+        }
+      }],
+      "jsdoc/require-jsdoc": ["error", {
+        require: {
+          FunctionDeclaration: true,
+          MethodDefinition: true,
+          ClassDeclaration: true,
+          ArrowFunctionExpression: true,
+          FunctionExpression: true
+        }
+      }],
+      "jsdoc/require-description": "error",
+    }
+  },
+  {
+    // 特定のファイルに対するルール
+    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-console": "off"
+    }
+  },
+  {
+    // 設定ファイルに対するルール
+    files: ["**/*.config.*", "**/*.config.js", "**/*.config.mjs"],
+    rules: {
+      "no-console": "off",
+      "@typescript-eslint/no-explicit-any": "off"
+    }
+  }
 ];
 
 export default eslintConfig;
