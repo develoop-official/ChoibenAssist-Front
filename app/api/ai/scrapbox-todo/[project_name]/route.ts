@@ -9,10 +9,10 @@ interface TodoRequest {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { project_name: string } }
+  context: any
 ) {
   try {
-    const projectName = decodeURIComponent(params.project_name);
+    const projectName = decodeURIComponent(context.params.project_name);
     const body: TodoRequest = await request.json();
     const { time_available, recent_progress, weak_areas, daily_goal } = body;
 
@@ -42,16 +42,7 @@ export async function POST(
     // テスト用レスポンス
     const testResponse = {
       success: true,
-      content: `📚 今日の学習TODOリスト（${time_available}分）
-
-• 英単語の暗記（20分）
-• 数学の問題演習（30分）
-• リスニング練習（15分）
-• 復習・まとめ（15分）
-
-💡 今日の目標: ${daily_goal || '効率的に学習を進める'}
-
-✅ 完了したらTODOリストに追加して管理しましょう！`,
+      content: `📚 今日の学習TODOリスト（${time_available}分）\n\n• 英単語の暗記（20分）\n• 数学の問題演習（30分）\n• リスニング練習（15分）\n• 復習・まとめ（15分）\n\n💡 今日の目標: ${daily_goal || '効率的に学習を進める'}\n\n✅ 完了したらTODOリストに追加して管理しましょう！`,
       response_type: 'success'
     };
 
