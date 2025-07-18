@@ -7,6 +7,7 @@ import { css } from '../../styled-system/css';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import { buttonStyles, formStyles, cardStyles } from '../styles/components';
+import { useTodos } from '../hooks/useTodos';
 
 interface UserProfile {
   id: string;
@@ -43,6 +44,7 @@ interface TodoSuggestionResponse {
 
 export default function MyPage() {
   const { user, loading: authLoading } = useAuth();
+  const { addTodo } = useTodos();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState<FormData>({
     username: '',
@@ -308,7 +310,11 @@ export default function MyPage() {
         if (weakAreasArray.length > 0) body.weak_areas = weakAreasArray;
         if (todoSuggestionForm.daily_goal) body.daily_goal = todoSuggestionForm.daily_goal;
       }
-      const response = await fetch(`/api/ai/scrapbox-todo/${encodeURIComponent(profile?.scrapbox_project_name || '')}`, {
+      
+      // プロジェクト名が設定されていない場合はデフォルト値を使用
+      const projectName = profile?.scrapbox_project_name || 'default-project';
+      
+      const response = await fetch(`/api/ai/scrapbox-todo/${encodeURIComponent(projectName)}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -325,6 +331,27 @@ export default function MyPage() {
       setTodoSuggestionError('TODO提案の取得に失敗しました。');
     } finally {
       setTodoSuggestionLoading(false);
+    }
+  };
+
+  const handleAddToTodoList = async (content: string) => {
+    try {
+      // AI提案の内容を行ごとに分割してTODOアイテムとして追加
+      const lines = content.split('\n').filter(line => line.trim());
+      
+      for (const line of lines) {
+        // 行頭の記号や番号を除去してタスク内容を抽出
+        const task = line.replace(/^[•\-\*\d\.\s]+/, '').trim();
+        if (task) {
+          await addTodo({ task });
+        }
+      }
+      
+      // 成功メッセージを表示
+      alert('TODOリストに追加しました！');
+    } catch (err) {
+      console.error('TODO追加エラー:', err);
+      alert('TODOリストへの追加に失敗しました');
     }
   };
 
@@ -980,14 +1007,36 @@ export default function MyPage() {
                     borderColor: 'green.200',
                     rounded: 'md'
                   })}>
-                    <h3 className={css({
-                      fontSize: 'lg',
-                      fontWeight: 'bold',
-                      color: 'green.800',
+                    <div className={css({
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
                       mb: '3'
                     })}>
-                      🤖 AI提案のTODOリスト
-                    </h3>
+                      <h3 className={css({
+                        fontSize: 'lg',
+                        fontWeight: 'bold',
+                        color: 'green.800'
+                      })}>
+                        🤖 AI提案のTODOリスト
+                      </h3>
+                      <button
+                        onClick={() => handleAddToTodoList(todoSuggestionResult.content)}
+                        className={css({
+                          px: '3',
+                          py: '1',
+                          bg: 'blue.600',
+                          color: 'white',
+                          rounded: 'md',
+                          fontSize: 'xs',
+                          fontWeight: 'bold',
+                          _hover: { bg: 'blue.700' },
+                          transition: 'all 0.2s'
+                        })}
+                      >
+                        📝 TODOリストに追加
+                      </button>
+                    </div>
                     <div className={css({
                       whiteSpace: 'pre-wrap',
                       color: 'green.700',
