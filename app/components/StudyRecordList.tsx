@@ -88,7 +88,7 @@ export default function StudyRecordList({ records, loading = false, error = null
       gridTemplateColumns: {
         base: '1fr',
         md: 'repeat(2, 1fr)',
-        xl: 'repeat(3, 1fr)'
+        xl: 'repeat(2, 1fr)'
       },
       gap: '6',
       alignItems: 'start'
