@@ -93,12 +93,11 @@ export default function TodoListPage() {
                     setRemovingId(todo.id);
                     setTimeout(async () => {
                       await updateStatus(todo.id, "completed");
-                      await deleteTodo(todo.id);
                       setRemovingId(null);
                     }, 500);
                   }}
                 >
-                  {todo.status === "completed" ? "完了" : "完了(泡で消す)"}
+                  {todo.status === "completed" ? "完了済み" : "完了にする"}
                 </button>
               </div>
             </li>
