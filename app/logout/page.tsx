@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
 import { css } from '../../styled-system/css';
-import { useAuth } from '../hooks/useAuth';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useAuth } from '../hooks/useAuth';
 
 export default function LogoutPage() {
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,7 @@ export default function LogoutPage() {
     const handleLogout = async () => {
       try {
         const { error } = await signOut();
-        
+
         if (error) {
           setError('ログアウト中にエラーが発生しました');
           setLoading(false);
@@ -101,4 +102,4 @@ export default function LogoutPage() {
   }
 
   return null;
-} 
+}

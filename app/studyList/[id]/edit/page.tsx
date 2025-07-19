@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { css } from '../../../../styled-system/css';
-import { useAuth } from '../../../hooks/useAuth';
+import { useEffect, useState } from 'react';
+
 import { supabase } from '../../../../lib/supabase';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import { css } from '../../../../styled-system/css';
 import ErrorMessage from '../../../components/ui/ErrorMessage';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner';
+import { useAuth } from '../../../hooks/useAuth';
 import { StudyRecord, CreateStudyRecord } from '../../../types/study-record';
 
 export default function StudyRecordEditPage() {
@@ -14,7 +15,7 @@ export default function StudyRecordEditPage() {
   const router = useRouter();
   const params = useParams();
   const recordId = params.id as string;
-  
+
   const [record, setRecord] = useState<StudyRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -522,4 +523,4 @@ export default function StudyRecordEditPage() {
       </div>
     </main>
   );
-} 
+}

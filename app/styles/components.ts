@@ -18,7 +18,7 @@ export const cardStyles = {
       borderColor: 'gray.200'
     }
   }),
-  
+
   elevated: css({
     bg: 'white',
     rounded: '2xl',

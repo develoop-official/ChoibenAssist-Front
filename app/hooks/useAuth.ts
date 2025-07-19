@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
 import { User} from '@supabase/supabase-js';
+import { useEffect, useState } from 'react';
+
 import { supabase } from '../../lib/supabase';
 
 export const useAuth = () => {
@@ -21,7 +22,7 @@ export const useAuth = () => {
         const response = await supabase?.auth.getSession();
         const session = response?.data?.session;
         const error = response?.error;
-        
+
         // デバッグ情報を出力
         console.log('🔐 認証セッション情報:', {
           hasSession: !!session,
@@ -30,7 +31,7 @@ export const useAuth = () => {
           userEmail: session?.user?.email,
           sessionExpiresAt: session?.expires_at
         });
-        
+
         if (error) {
           console.error('セッション取得エラー:', error);
           setError('認証サービスの接続に失敗しました');
@@ -110,4 +111,4 @@ export const useAuth = () => {
     signInWithProvider,
     signOut,
   };
-}; 
+};

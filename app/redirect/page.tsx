@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { css } from '../../styled-system/css';
+import { useEffect, useState } from 'react';
+
 import { supabase } from '../../lib/supabase';
+import { css } from '../../styled-system/css';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 export default function RedirectPage() {
@@ -22,7 +23,7 @@ export default function RedirectPage() {
         }
 
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           setError('認証エラーが発生しました');
           setLoading(false);
@@ -112,4 +113,4 @@ export default function RedirectPage() {
   }
 
   return null;
-} 
+}

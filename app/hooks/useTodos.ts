@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { TodoItem, CreateTodoItem } from '../types/todo-item';
+
 import { supabase } from '../../lib/supabase';
+import { TodoItem, CreateTodoItem } from '../types/todo-item';
+
 import { useAuth } from './useAuth';
 
 export function useTodos() {
@@ -111,4 +113,4 @@ export function useTodos() {
     updateStatus,
     refetch: fetchTodos
   };
-} 
+}

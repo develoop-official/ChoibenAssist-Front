@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 import { css } from '../../styled-system/css';
-import { useAuth } from '../hooks/useAuth';
-import { useStudyRecords } from '../hooks/useStudyRecords';
 import StudyRecordForm from '../components/StudyRecordForm';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useAuth } from '../hooks/useAuth';
+import { useStudyRecords } from '../hooks/useStudyRecords';
 
 export default function PostPage() {
   const { user, loading: authLoading } = useAuth();
@@ -132,8 +133,8 @@ export default function PostPage() {
           学習した内容を記録しましょう
         </p>
       </div>
-      
+
       <StudyRecordForm onSubmit={handleSubmit} />
     </main>
   );
-} 
+}

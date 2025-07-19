@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
+
+import { useAuth } from "../hooks/useAuth";
+
 import MobileHeader from "./MobileHeader";
 import PcHeader from "./PcHeader";
-import { useAuth } from "../hooks/useAuth";
 
 export default function Header() {
   const [isMobile, setIsMobile] = useState(false);
@@ -28,4 +30,4 @@ export default function Header() {
 
   console.log("現在のコンポーネント:", isMobile ? "MobileHeader" : "PcHeader");
   return isMobile ? <MobileHeader /> : <PcHeader />;
-} 
+}

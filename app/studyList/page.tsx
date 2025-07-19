@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 import { css } from '../../styled-system/css';
 import StudyRecordList from '../components/StudyRecordList';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useAuth } from '../hooks/useAuth';
 import { useStudyRecords } from '../hooks/useStudyRecords';
 import { useTodos } from '../hooks/useTodos';
-import { useAuth } from '../hooks/useAuth';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 export default function StudyListPage() {
   const { user, loading: authLoading } = useAuth();
@@ -156,7 +157,7 @@ export default function StudyListPage() {
           </button>
         </div>
       </div>
-      
+
       {/* 2カラムレイアウト */}
       <div className={css({
         display: 'grid',
@@ -171,7 +172,7 @@ export default function StudyListPage() {
         <div>
           <StudyRecordList records={records} loading={recordsLoading} error={error} onDelete={deleteRecord} />
         </div>
-        
+
         {/* 右側: 完了済みTODOリスト */}
         <div className={css({
           bg: 'white',
@@ -206,7 +207,7 @@ export default function StudyListPage() {
               {completedTodos.length}
             </span>
           </h3>
-          
+
           {todosLoading ? (
             <LoadingSpinner text="TODOを読み込み中..." />
           ) : completedTodos.length === 0 ? (
@@ -277,7 +278,7 @@ export default function StudyListPage() {
               ))}
             </div>
           )}
-          
+
           <div className={css({
             mt: '4',
             pt: '4',

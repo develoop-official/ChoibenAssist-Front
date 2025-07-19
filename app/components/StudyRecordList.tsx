@@ -1,9 +1,10 @@
 import { css } from '../../styled-system/css';
-import StudyRecordCard from './StudyRecordCard';
 import { StudyRecord } from '../types/study-record';
-import LoadingSpinner from './ui/LoadingSpinner';
-import ErrorMessage from './ui/ErrorMessage';
+
+import StudyRecordCard from './StudyRecordCard';
 import EmptyState from './ui/EmptyState';
+import ErrorMessage from './ui/ErrorMessage';
+import LoadingSpinner from './ui/LoadingSpinner';
 
 interface StudyRecordListProps {
   records: StudyRecord[];
@@ -18,7 +19,7 @@ export default function StudyRecordList({ records, loading = false, error = null
   }
 
   if (error) {
-    const errorMessage = error === 'Supabaseが設定されていません' 
+    const errorMessage = error === 'Supabaseが設定されていません'
       ? 'Supabaseの設定が必要です。詳細はSUPABASE_SETUP.mdを参照してください。'
       : error;
 
@@ -98,4 +99,4 @@ export default function StudyRecordList({ records, loading = false, error = null
       ))}
     </div>
   );
-} 
+}

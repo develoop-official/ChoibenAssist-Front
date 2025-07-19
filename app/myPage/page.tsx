@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import React, { useState, useEffect } from 'react';
+
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ErrorMessage from '../components/ui/ErrorMessage';
-import { buttonStyles, formStyles, cardStyles } from '../styles/components';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useAuth } from '../hooks/useAuth';
 import { useTodos } from '../hooks/useTodos';
+import { buttonStyles, formStyles } from '../styles/components';
 
 interface UserProfile {
   id: string;
@@ -58,7 +59,7 @@ export default function MyPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [editMode, setEditMode] = useState(false);
-  
+
   // TODO提案フォーム用の状態
   const [todoSuggestionForm, setTodoSuggestionForm] = useState<TodoSuggestionForm>({
     time_available: 60,
@@ -98,7 +99,7 @@ export default function MyPage() {
     try {
       setLoading(true);
       setError('');
-      
+
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -191,7 +192,7 @@ export default function MyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user || !formData.username.trim()) {
       setError('ユーザー名は必須です');
       return;
@@ -253,15 +254,15 @@ export default function MyPage() {
 
     try {
       setUploading(true);
-      
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
-      
+
       // デバッグ用ログ
       console.log('アップロードユーザーID:', user.id);
       console.log('ファイルパス:', filePath);
-      
+
       const { error: uploadError } = await supabase!.storage
         .from('avatars')
         .upload(filePath, file, {
@@ -310,18 +311,18 @@ export default function MyPage() {
         if (weakAreasArray.length > 0) body.weak_areas = weakAreasArray;
         if (todoSuggestionForm.daily_goal) body.daily_goal = todoSuggestionForm.daily_goal;
       }
-      
+
       // APIエンドポイントを使用状況に応じて切り替え
       let apiUrl: string;
       if (useScrapbox) {
         // Scrapboxを使う場合
-        const projectName = profile?.scrapbox_project_name;
+        const projectName = profile?.scrapbox_project_name || 'default-project';
         apiUrl = `/api/ai/scrapbox-todo/${encodeURIComponent(projectName)}`;
       } else {
         // Scrapboxを使わない場合
         apiUrl = `/api/ai/todo`;
       }
-      
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -346,7 +347,7 @@ export default function MyPage() {
     try {
       // AI提案の内容を行ごとに分割してTODOアイテムとして追加
       const lines = content.split('\n').filter(line => line.trim());
-      
+
       for (const line of lines) {
         // 行頭の記号や番号を除去してタスク内容を抽出
         const task = line.replace(/^[•\-\*\d\.\s]+/, '').trim();
@@ -354,7 +355,7 @@ export default function MyPage() {
           await addTodo({ task });
         }
       }
-      
+
       // 成功メッセージを表示
       alert('TODOリストに追加しました！');
     } catch (err) {
@@ -444,7 +445,7 @@ export default function MyPage() {
         })}>
           マイページ
         </h1>
-        
+
         {error && <ErrorMessage message={error} />}
 
         {loading ? (
@@ -497,7 +498,7 @@ export default function MyPage() {
                       編集
                     </button>
                   </div>
-                  
+
                   <div className={css({
                     display: 'flex',
                     alignItems: 'start',
@@ -536,7 +537,7 @@ export default function MyPage() {
                         </span>
                       )}
                     </div>
-                    
+
                     {/* プロフィール情報 */}
                     <div className={css({ flex: '1' })}>
                       <h3 className={css({
@@ -547,7 +548,7 @@ export default function MyPage() {
                       })}>
                         {profile.username}
                       </h3>
-                      
+
                       {profile.full_name && (
                         <p className={css({
                           fontSize: 'lg',
@@ -557,7 +558,7 @@ export default function MyPage() {
                           {profile.full_name}
                         </p>
                       )}
-                      
+
                       {profile.bio && (
                         <p className={css({
                           color: 'gray.700',
@@ -567,7 +568,7 @@ export default function MyPage() {
                           {profile.bio}
                         </p>
                       )}
-                      
+
                       {profile.scrapbox_project_name && (
                         <p className={css({
                           fontSize: 'sm',
@@ -577,7 +578,7 @@ export default function MyPage() {
                           📝 Scrapbox: {profile.scrapbox_project_name}
                         </p>
                       )}
-                      
+
                       <div className={css({
                         display: 'flex',
                         gap: '4',
@@ -669,7 +670,7 @@ export default function MyPage() {
                             </span>
                           )}
                         </div>
-                        
+
                         <label className={css({
                           position: 'absolute',
                           bottom: '0',
@@ -716,7 +717,7 @@ export default function MyPage() {
                           アップロード中...
                         </div>
                       )}
-                      
+
                       <div className={css({
                         spaceY: '2'
                       })}>

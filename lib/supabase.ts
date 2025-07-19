@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
 import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -29,7 +29,7 @@ if (process.env.NODE_ENV === 'development' && (!supabaseUrl || !supabaseAnonKey)
 }
 
 // 環境変数が設定されている場合のみSupabaseクライアントを作成
-export const supabase = supabaseUrl && supabaseAnonKey 
+export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
@@ -48,4 +48,4 @@ if (process.env.NODE_ENV === 'development') {
     isInitialized: !!supabase,
     clientType: supabase ? 'initialized' : 'null'
   });
-} 
+}

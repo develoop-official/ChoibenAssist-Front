@@ -8,12 +8,12 @@ interface ErrorMessageProps {
   className?: string;
 }
 
-export default function ErrorMessage({ 
+export default function ErrorMessage({
   title = 'エラーが発生しました',
   message,
   type = 'error',
   actions,
-  className 
+  className
 }: ErrorMessageProps) {
   const colorScheme = type === 'error' ? 'red' : 'yellow';
 
@@ -77,4 +77,4 @@ export default function ErrorMessage({
       </div>
     </div>
   );
-} 
+}

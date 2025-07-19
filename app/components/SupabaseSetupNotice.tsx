@@ -41,7 +41,7 @@ export default function SupabaseSetupNotice() {
             ⚠️
           </span>
         </div>
-        
+
         <div className={css({
           flex: '1'
         })}>
@@ -53,7 +53,7 @@ export default function SupabaseSetupNotice() {
           })}>
             Supabase設定が必要です
           </h3>
-          
+
           <p className={css({
             fontSize: 'xs',
             color: 'yellow.700',
@@ -62,7 +62,7 @@ export default function SupabaseSetupNotice() {
           })}>
             認証機能を使用するには、Supabaseの環境変数を設定してください。
           </p>
-          
+
           <div className={css({
             fontSize: 'xs',
             color: 'yellow.700',
@@ -82,7 +82,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key`}
             </pre>
             <p>3. 開発サーバーを再起動</p>
           </div>
-          
+
           <p className={css({
             fontSize: 'xs',
             color: 'yellow.600',
@@ -94,4 +94,4 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key`}
       </div>
     </div>
   );
-} 
+}
