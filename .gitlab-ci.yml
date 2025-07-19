@@ -1,14 +1,43 @@
 # GitLab CI/CD Pipeline for Next.js Application with Docker
 stages:
+  - clean
   - build
   - test
   - deploy
 
+# クリーンアップジョブ（週次実行）
+cleanup:
+  stage: clean
+  tags:
+    - shell
+  script:
+    - echo "Cleaning up old Docker images and containers..."
+    
+    # 停止したコンテナを削除
+    - docker container prune -f
+    
+    # 未使用のイメージを削除
+    - docker image prune -f
+    
+    # 未使用のボリュームを削除
+    - docker volume prune -f
+    
+    # 未使用のネットワークを削除
+    - docker network prune -f
+    
+    - echo "Cleanup completed"
+  only:
+    variables:
+      - $CLEANUP == "true"
+  when: manual
+
+
 variables:
   # Docker関連の変数
   DOCKER_IMAGE_NAME: "choibenassist-front"
-  DOCKER_TAG: "$CI_COMMIT_SHORT_SHA"
-  DOCKER_REGISTRY: "registry.gitlab.com/$CI_PROJECT_PATH"
+  DOCKER_TAG: "${CI_COMMIT_REF_NAME}"
+  DOCKER_REGISTRY: "gitlab.p-nasi.pgw.jp/$CI_PROJECT_PATH"
+
   
   # アプリケーション関連の変数
   NODE_VERSION: "18"
@@ -58,21 +87,23 @@ test:
     - shell
   before_script:
     - echo "Running tests on built image..."
+    - docker images | grep $DOCKER_IMAGE_NAME
   script:
     # ビルドしたイメージでテスト実行
     - |
-      docker run --rm 
-        --name test-container-$CI_JOB_ID 
-        $DOCKER_REGISTRY:$DOCKER_TAG 
-        sh -c "
-          echo 'Container health check...';
-          node --version;
-          if [ -f server.js ]; then
-            echo 'server.js found - build successful';
-          else
-            echo 'server.js not found - build failed';
-            exit 1;
-          fi
+      docker run --rm \
+        --name test-container-$CI_JOB_ID \
+        gitlab.p-nasi.pgw.jp/develoop/choibenassist-front:develop \
+        sh -c "\
+          echo 'Container health check...';\
+          node --version;\
+          ls -al;\
+          if [ -f server.js ]; then\
+            echo 'server.js found - build successful';\
+          else\
+            echo 'server.js not found - build failed';\
+            exit 1;\
+          fi\
         "
   dependencies:
     - build
@@ -94,6 +125,7 @@ deploy_production:
   before_script:
     - echo "Deploying to production environment..."
     - docker --version
+    - echo "$DOCKER_REGISTRY:$DOCKER_TAG"
   script:
     # 既存のコンテナを停止・削除
     - docker stop $CONTAINER_NAME || true
@@ -101,15 +133,15 @@ deploy_production:
     
     # 新しいコンテナを起動
     - |
-      docker run -d 
-        --name $CONTAINER_NAME 
-        --restart unless-stopped 
-        -p 3001:3001 
-        --env NODE_ENV=production 
-        --env NEXT_PUBLIC_SUPABASE_URL="$PRODUCTION_SUPABASE_URL" 
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$PRODUCTION_SUPABASE_ANON_KEY" 
-        --env BACKEND_API_URL="$PRODUCTION_BACKEND_API_URL" 
-        --env API_SECRET_KEY="$PRODUCTION_API_SECRET_KEY" 
+      docker run -d \
+        --name $CONTAINER_NAME \
+        --restart unless-stopped \
+        -p 3001:3001 \
+        --env NODE_ENV=production \
+        --env NEXT_PUBLIC_SUPABASE_URL="$PRODUCTION_SUPABASE_URL" \
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$PRODUCTION_SUPABASE_ANON_KEY" \
+        --env BACKEND_API_URL="$PRODUCTION_BACKEND_API_URL" \
+        --env API_SECRET_KEY="$PRODUCTION_API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
     
     # ヘルスチェック
@@ -127,8 +159,8 @@ deploy_production:
     
     # 古いイメージのクリーンアップ（最新の3つを保持）
     - |
-      docker images $DOCKER_REGISTRY --format "table {{.Tag}}\t{{.ID}}" | 
-      tail -n +2 | head -n -3 | awk '{print $2}' | 
+      docker images $DOCKER_REGISTRY --format "table {{.Tag}}\t{{.ID}}" | \
+      tail -n +2 | head -n -3 | awk '{print $2}' | \
       xargs -r docker rmi || true
   after_script:
     - echo "Production deployment completed"
@@ -138,7 +170,6 @@ deploy_production:
     - test
   only:
     - main
-  when: manual  # 手動承認が必要
 
 # 開発環境へのデプロイ
 deploy_staging:
@@ -153,6 +184,7 @@ deploy_staging:
     CONTAINER_NAME: "choibenassist-front-staging"
   before_script:
     - echo "Deploying to staging environment..."
+    - echo "$DOCKER_REGISTRY:$DOCKER_TAG"
   script:
     # 既存のコンテナを停止・削除
     - docker stop $CONTAINER_NAME || true
@@ -160,15 +192,15 @@ deploy_staging:
     
     # 新しいコンテナを起動
     - |
-      docker run -d 
-        --name $CONTAINER_NAME 
-        --restart unless-stopped 
-        -p 3002:3001 
-        --env NODE_ENV=development 
-        --env NEXT_PUBLIC_SUPABASE_URL="$STAGING_SUPABASE_URL" 
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$STAGING_SUPABASE_ANON_KEY" 
-        --env BACKEND_API_URL="$STAGING_BACKEND_API_URL" 
-        --env API_SECRET_KEY="$STAGING_API_SECRET_KEY" 
+      docker run -d \
+        --name $CONTAINER_NAME \
+        --restart unless-stopped \
+        -p 3002:3001 \
+        --env NODE_ENV=development \
+        --env NEXT_PUBLIC_SUPABASE_URL="$STAGING_SUPABASE_URL" \
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$STAGING_SUPABASE_ANON_KEY" \
+        --env BACKEND_API_URL="$STAGING_BACKEND_API_URL" \
+        --env API_SECRET_KEY="$STAGING_API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
     
     # ヘルスチェック
@@ -182,28 +214,3 @@ deploy_staging:
   only:
     - develop
 
-# クリーンアップジョブ（週次実行）
-cleanup:
-  stage: deploy
-  tags:
-    - shell
-  script:
-    - echo "Cleaning up old Docker images and containers..."
-    
-    # 停止したコンテナを削除
-    - docker container prune -f
-    
-    # 未使用のイメージを削除
-    - docker image prune -f
-    
-    # 未使用のボリュームを削除
-    - docker volume prune -f
-    
-    # 未使用のネットワークを削除
-    - docker network prune -f
-    
-    - echo "Cleanup completed"
-  only:
-    variables:
-      - $CLEANUP == "true"
-  when: manual

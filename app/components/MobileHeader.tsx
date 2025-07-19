@@ -121,7 +121,7 @@ export default function MobileHeader() {
           <span className={css({ fontSize: "xl", fontWeight: "extrabold", color: "#3D8D7A", letterSpacing: "wide", textShadow: "0 1px 4px rgba(61,141,122,0.10)" })}>ちょい勉アシスト</span>
         </Link>
         {user && (
-          <Link href="/myPage" className={css({
+          <Link href="/profile" className={css({
             w: "8",
             h: "8",
             rounded: "full",
@@ -174,7 +174,7 @@ export default function MobileHeader() {
             <button onClick={() => setOpen(false)} className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.900", bg: "transparent", border: "none", cursor: "pointer" })}>&times;</button>
           </div>
           <div className={css({ px: "6", pt: "10", fontWeight: "bold", display: "flex", flexDirection: "column", gap: "6" })}>
-                        <Link href="/" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>🏠 ダッシュボード</Link>
+            <Link href="/" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>🏠 ダッシュボード</Link>
             <Link href="/farm" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/farm") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/farm") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>🌱 ちょい勉ファーム</Link>
             <Link href="/timeline" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/timeline") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/timeline") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>📱 ちょい勉タイムライン</Link>
             {user && (

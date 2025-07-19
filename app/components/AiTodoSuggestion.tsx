@@ -64,7 +64,7 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
     const allTodoIds: string[] = [];
     sections.forEach((section, sectionIndex) => {
       section.todos.forEach((todo, todoIndex) => {
-        allTodoIds.push(`${todo.section}-${todo.task}-${sectionIndex}-${todoIndex}`);
+        allTodoIds.push(`${sectionIndex}-${todoIndex}`);
       });
     });
     setSelectedTodos(allTodoIds);
@@ -90,19 +90,16 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
     const selectedTodoItems: ParsedTodo[] = [];
     selectedTodos.forEach(selectedId => {
       const parts = selectedId.split('-');
-      if (parts.length >= 4) {
-        const sectionIndex = parseInt(parts[parts.length - 2]);
-        const todoIndex = parseInt(parts[parts.length - 1]);
-        const task = parts.slice(0, -2).join('-'); // セクション名とタスク名を復元
+      if (parts.length >= 2) {
+        const sectionIndex = parseInt(parts[0]);
+        const todoIndex = parseInt(parts[1]);
 
         if (sections[sectionIndex] && sections[sectionIndex].todos[todoIndex]) {
           const todo = sections[sectionIndex].todos[todoIndex];
-          if (todo.task === task) {
-            selectedTodoItems.push({
-              ...todo,
-              section: sections[sectionIndex].title
-            });
-          }
+          selectedTodoItems.push({
+            ...todo,
+            section: sections[sectionIndex].title
+          });
         }
       }
     });
@@ -292,7 +289,7 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
                 spaceY: '2'
               })}>
                 {section.todos.map((todo, todoIndex) => {
-                  const todoId = `${todo.section}-${todo.task}-${sectionIndex}-${todoIndex}`;
+                  const todoId = `${sectionIndex}-${todoIndex}`;
                   const isSelected = selectedTodos.includes(todoId);
 
                   return (
