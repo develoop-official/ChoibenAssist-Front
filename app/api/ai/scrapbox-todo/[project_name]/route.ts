@@ -28,7 +28,7 @@ export async function POST(
     }
 
     // バックエンドAPIにリクエストを送信
-    const backendUrl = process.env.BACKEND_URL;
+    const backendUrl = process.env.BACKEND_API_URL;
     const backendRes = await fetch(`${backendUrl}/api/ai/scrapbox-todo/${encodeURIComponent(projectName)}`, {
       method: 'POST',
       headers: {
