@@ -141,8 +141,7 @@ export default function TodoDetailPage() {
 
   return (
     <main className={css({ maxW: "2xl", mx: "auto", px: "4", py: "8" })}>
-      <div className={css({ display: "flex", justifyContent: "space-between", alignItems: "center", mb: "8" })}>
-        <h2 className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.700" })}>TODO詳細</h2>
+      <div className={css({ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: "6" })}>
         <div className={css({ display: "flex", gap: "3" })}>
           <Link
             href="/"

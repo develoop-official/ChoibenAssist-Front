@@ -65,8 +65,8 @@ export const buttonStyles = {
   }),
 
   secondary: css({
-    bg: 'primary.100',
-    color: 'primary.800',
+    bg: 'gray.100',
+    color: 'gray.700',
     px: '6',
     py: '3',
     rounded: 'xl',
@@ -76,7 +76,7 @@ export const buttonStyles = {
     cursor: 'pointer',
     transition: 'all 0.2s',
     _hover: {
-      bg: 'primary.200'
+      bg: 'gray.200'
     }
   }),
 
@@ -98,19 +98,19 @@ export const buttonStyles = {
 
   outline: css({
     bg: 'transparent',
-    color: 'primary.700',
+    color: 'gray.600',
     px: '4',
     py: '2',
     rounded: 'md',
     fontSize: 'sm',
     fontWeight: 'medium',
     border: '1px solid',
-    borderColor: 'primary.700',
+    borderColor: 'gray.300',
     cursor: 'pointer',
     transition: 'all 0.2s',
     _hover: {
-      bg: 'primary.700',
-      color: 'white'
+      bg: 'gray.50',
+      borderColor: 'gray.400'
     }
   })
 };
@@ -153,6 +153,7 @@ export const formStyles = {
     rounded: 'xl',
     fontSize: 'sm',
     resize: 'vertical',
+    minH: '20',
     transition: 'all 0.2s',
     _focus: {
       outline: 'none',
@@ -233,5 +234,171 @@ export const statusStyles = {
     color: 'primary.800',
     p: '4',
     rounded: 'lg'
+  })
+};
+
+// TODO Card styles
+export const todoCardStyles = {
+  base: css({
+    p: '4',
+    bg: 'white',
+    rounded: 'lg',
+    border: '1px solid',
+    borderColor: 'gray.200',
+    position: 'relative',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease-in-out'
+  }),
+
+  completed: css({
+    p: '4',
+    bg: 'success.50',
+    rounded: 'lg',
+    border: '1px solid',
+    borderColor: 'success.200',
+    position: 'relative',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease-in-out'
+  }),
+
+  completing: css({
+    p: '4',
+    bg: 'success.100',
+    rounded: 'lg',
+    border: '1px solid',
+    borderColor: 'success.300',
+    position: 'relative',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease-in-out',
+    transform: 'scale(1.02)',
+    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+  }),
+
+  link: css({
+    flex: '1',
+    textDecoration: 'none',
+    color: 'inherit',
+    _hover: { color: 'primary.600' }
+  }),
+
+  title: css({
+    fontSize: 'lg',
+    fontWeight: 'bold',
+    color: 'primary.800',
+    cursor: 'pointer'
+  }),
+
+  status: css({
+    fontSize: 'sm',
+    fontWeight: 'bold'
+  }),
+
+  completedStatus: css({
+    fontSize: 'sm',
+    fontWeight: 'bold',
+    color: 'success.600'
+  }),
+
+  pendingStatus: css({
+    fontSize: 'sm',
+    fontWeight: 'bold',
+    color: 'amber.600'
+  }),
+
+  date: css({
+    fontSize: 'xs',
+    color: 'gray.500',
+    mt: '2'
+  }),
+
+  completeButton: css({
+    px: '3',
+    py: '1',
+    bg: 'success.500',
+    color: 'white',
+    rounded: 'md',
+    fontSize: 'xs',
+    fontWeight: 'bold',
+    border: 'none',
+    cursor: 'pointer',
+    _hover: { bg: 'success.600' },
+    _disabled: { bg: 'gray.300', cursor: 'not-allowed' },
+    transition: 'all 0.2s'
+  }),
+
+  completedOverlay: css({
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    right: '0',
+    bottom: '0',
+    bg: 'success.500',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 'lg',
+    fontWeight: 'bold',
+    animation: 'slideIn 0.5s ease-out',
+    zIndex: '10'
+  })
+};
+
+// Stat Card styles
+export const statCardStyles = {
+  base: css({
+    bg: 'white',
+    rounded: 'xl',
+    p: '6',
+    shadow: 'md',
+    border: '1px solid',
+    borderColor: 'gray.200',
+    textAlign: 'center'
+  }),
+
+  value: css({
+    fontSize: '3xl',
+    fontWeight: 'bold',
+    color: 'primary.800',
+    mb: '2'
+  }),
+
+  label: css({
+    fontSize: 'sm',
+    color: 'primary.700'
+  })
+};
+
+// Section styles
+export const sectionStyles = {
+  primary: css({
+    bg: 'white',
+    rounded: 'xl',
+    p: '6',
+    shadow: 'md',
+    border: '1px solid',
+    borderColor: 'gray.200'
+  }),
+
+  white: css({
+    bg: 'white',
+    rounded: 'xl',
+    p: '6',
+    shadow: 'md',
+    border: '1px solid',
+    borderColor: 'gray.200'
+  }),
+
+  title: css({
+    fontSize: '2xl',
+    fontWeight: 'bold',
+    color: 'primary.800',
+    mb: '4'
+  }),
+
+  emptyState: css({
+    textAlign: 'center',
+    py: '12',
+    color: 'primary.600'
   })
 };

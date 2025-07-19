@@ -54,8 +54,7 @@ export default function TodoListPage() {
 
   return (
     <main className={css({ maxW: "2xl", mx: "auto", px: "4", py: "8" })}>
-      <div className={css({ display: "flex", justifyContent: "space-between", alignItems: "center", mb: "8" })}>
-        <h2 className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.700" })}>TODOリスト</h2>
+      <div className={css({ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: "6" })}>
         <div className={css({ display: "flex", gap: "3" })}>
           <Link
             href="/timeline"
@@ -104,11 +103,11 @@ export default function TodoListPage() {
         <div className={css({ spaceY: "8" })}>
           {/* 最近のTODOリスト */}
           <div>
-            <h3 className={css({ fontSize: "xl", fontWeight: "bold", color: "gray.800", mb: "4" })}>
+            <h3 className={css({ fontSize: "xl", fontWeight: "bold", color: "primary.800", mb: "4" })}>
               最近のTODOリスト
             </h3>
             {recentTodos.length === 0 ? (
-              <div className={css({ color: "gray.500", textAlign: "center", py: "8" })}>最近のTODOはありません</div>
+              <div className={css({ color: "primary.600", textAlign: "center", py: "8" })}>最近のTODOはありません</div>
             ) : (
               <ul className={css({ spaceY: "4" })}>
                 {recentTodos.map(todo => (
@@ -129,16 +128,17 @@ export default function TodoListPage() {
           {/* これまでのTODOリスト */}
           {pastTodos.length > 0 && (
             <div>
-              <h3 className={css({ fontSize: "xl", fontWeight: "bold", color: "gray.800", mb: "4" })}>
+              <h3 className={css({ fontSize: "xl", fontWeight: "bold", color: "primary.800", mb: "4" })}>
                 これまでのTODOリスト
               </h3>
               <div className={css({
                 maxH: "96",
                 overflowY: "auto",
                 border: "1px solid",
-                borderColor: "gray.200",
+                borderColor: "primary.200",
                 rounded: "lg",
-                p: "4"
+                p: "4",
+                bg: "primary.50"
               })}>
                 <ul className={css({ spaceY: "3" })}>
                   {pastTodos.map(todo => (

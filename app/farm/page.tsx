@@ -239,19 +239,11 @@ export default function FarmPage() {
       {/* ヘッダー */}
       <div className={css({
         textAlign: 'center',
-        mb: '8'
+        mb: '6'
       })}>
-        <h1 className={css({
-          fontSize: '3xl',
-          fontWeight: 'bold',
-          color: 'green.700',
-          mb: '2'
-        })}>
-          🌱 ちょい勉ファーム
-        </h1>
         <p className={css({
           fontSize: 'lg',
-          color: 'gray.600'
+          color: 'primary.600'
         })}>
           TODOを完了して草を育てよう！
         </p>
@@ -303,7 +295,7 @@ export default function FarmPage() {
         <h2 className={css({
           fontSize: '2xl',
           fontWeight: 'bold',
-          color: 'green.700',
+          color: 'primary.800',
           mb: '2'
         })}>
           {currentStage.name}
@@ -311,7 +303,7 @@ export default function FarmPage() {
 
         <p className={css({
           fontSize: 'lg',
-          color: 'green.600',
+          color: 'primary.700',
           mb: '4'
         })}>
           水やり回数: {waterCount}回
@@ -363,9 +355,9 @@ export default function FarmPage() {
 
         {!nextStage && (
           <div className={css({
-            bg: 'yellow.100',
+            bg: 'success.100',
             border: '2px solid',
-            borderColor: 'yellow.300',
+            borderColor: 'success.500',
             rounded: 'lg',
             p: '4',
             mt: '4'
@@ -373,12 +365,12 @@ export default function FarmPage() {
             <p className={css({
               fontSize: 'lg',
               fontWeight: 'bold',
-              color: 'yellow.700'
+              color: 'success.700'
             })}>
               🎉 おめでとうございます！
             </p>
             <p className={css({
-              color: 'yellow.600'
+              color: 'success.600'
             })}>
               最大段階のジャングルに到達しました！
             </p>

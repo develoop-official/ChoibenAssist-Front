@@ -314,19 +314,11 @@ function TimelineContent() {
       {/* ヘッダー */}
       <div className={css({
         textAlign: 'center',
-        mb: '8'
+        mb: '6'
       })}>
-        <h1 className={css({
-          fontSize: '3xl',
-          fontWeight: 'bold',
-          color: 'blue.700',
-          mb: '2'
-        })}>
-          📱 ちょい勉タイムライン
-        </h1>
         <p className={css({
           fontSize: 'lg',
-          color: 'gray.600',
+          color: 'primary.600',
           mb: '4'
         })}>
           みんなの学習成果をチェックしよう！
@@ -377,7 +369,7 @@ function TimelineContent() {
             <h3 className={css({
               fontSize: 'lg',
               fontWeight: 'bold',
-              color: 'gray.900',
+              color: 'primary.800',
               mb: '3'
             })}>
               📊 統計
@@ -385,7 +377,7 @@ function TimelineContent() {
             <div className={css({
               spaceY: '2',
               fontSize: 'sm',
-              color: 'gray.600'
+              color: 'primary.700'
             })}>
               <div className={css({
                 display: 'flex',
@@ -444,7 +436,9 @@ function TimelineContent() {
                 rounded: 'lg',
                 p: '8',
                 textAlign: 'center',
-                shadow: 'md'
+                shadow: 'md',
+                border: '1px solid',
+                borderColor: 'gray.200'
               })}>
                 <div className={css({
                   fontSize: '4xl',
@@ -455,7 +449,7 @@ function TimelineContent() {
                 <h3 className={css({
                   fontSize: 'xl',
                   fontWeight: 'bold',
-                  color: 'gray.700',
+                  color: 'primary.700',
                   mb: '2'
                 })}>
                   {selectedHashtag ? `#${selectedHashtag}の投稿がありません` : 'まだ投稿がありません'}
@@ -490,7 +484,8 @@ function TimelineContent() {
                       transition: 'all 0.2s',
                       _hover: {
                         shadow: 'lg',
-                        transform: 'translateY(-1px)'
+                        transform: 'translateY(-1px)',
+                        borderColor: 'gray.300'
                       }
                     })}
                   >
@@ -720,7 +715,9 @@ function TimelineContent() {
             p: '6',
             maxW: 'md',
             w: 'full',
-            shadow: '2xl'
+            shadow: '2xl',
+            border: '2px solid',
+            borderColor: 'gray.300'
           })}>
             <div className={css({
               textAlign: 'center',
