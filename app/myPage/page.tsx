@@ -311,10 +311,18 @@ export default function MyPage() {
         if (todoSuggestionForm.daily_goal) body.daily_goal = todoSuggestionForm.daily_goal;
       }
       
-      // プロジェクト名が設定されていない場合はデフォルト値を使用
-      const projectName = profile?.scrapbox_project_name || 'default-project';
+      // APIエンドポイントを使用状況に応じて切り替え
+      let apiUrl: string;
+      if (useScrapbox) {
+        // Scrapboxを使う場合
+        const projectName = profile?.scrapbox_project_name;
+        apiUrl = `/api/ai/scrapbox-todo/${encodeURIComponent(projectName)}`;
+      } else {
+        // Scrapboxを使わない場合
+        apiUrl = `/api/ai/todo`;
+      }
       
-      const response = await fetch(`/api/ai/scrapbox-todo/${encodeURIComponent(projectName)}`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
