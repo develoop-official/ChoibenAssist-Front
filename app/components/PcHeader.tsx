@@ -127,7 +127,7 @@ export default function PcHeader() {
         pr: { base: "6", md: "12" }
       })}>
         <Link href="/" className={css({ display: "flex", alignItems: "center", gap: "2", textDecoration: "none" })}>
-          <Image src="/logo.svg" alt="ロゴ" width={40} height={40} className={css({ w: "10", h: "10" })} priority />
+          <Image src="/choiben.webp" alt="ロゴ" width={40} height={40} className={css({ w: "10", h: "10" })} priority />
           <span className={css({
             fontSize: { base: "xl", md: "2xl" },
             fontWeight: "extrabold",
