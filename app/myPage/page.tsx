@@ -6,11 +6,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
 import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
+import AiTodoSuggestion from '../components/AiTodoSuggestion';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
 import { useTodos } from '../hooks/useTodos';
 import { buttonStyles, formStyles } from '../styles/components';
+import { CreateTodoItem } from '../types/todo-item';
 
 interface UserProfile {
   id: string;
@@ -47,7 +49,7 @@ interface TodoSuggestionResponse {
 
 export default function MyPage() {
   const { user, loading: authLoading } = useAuth();
-  const { addTodo } = useTodos();
+  const { addTodos } = useTodos();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState<FormData>({
     username: '',
@@ -333,20 +335,9 @@ export default function MyPage() {
     }
   };
 
-  const handleAddToTodoList = async (content: string) => {
+  const handleAddToTodoList = async (todos: CreateTodoItem[]) => {
     try {
-      // AI提案の内容を行ごとに分割してTODOアイテムとして追加
-      const lines = content.split('\n').filter(line => line.trim());
-
-      for (const line of lines) {
-        // 行頭の記号や番号を除去してタスク内容を抽出
-        const task = line.replace(/^[•\-\*\d\.\s]+/, '').trim();
-        if (task) {
-          await addTodo({ task });
-        }
-      }
-
-      // 成功メッセージを表示
+      await addTodos(todos);
       alert('TODOリストに追加しました！');
     } catch (_err) {
       console.error('TODO追加エラー:', _err);
@@ -1010,44 +1001,10 @@ export default function MyPage() {
                     borderColor: 'green.200',
                     rounded: 'md'
                   })}>
-                    <div className={css({
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      mb: '3'
-                    })}>
-                      <h3 className={css({
-                        fontSize: 'lg',
-                        fontWeight: 'bold',
-                        color: 'green.800'
-                      })}>
-                        🤖 AI提案のTODOリスト
-                      </h3>
-                      <button
-                        onClick={() => handleAddToTodoList(todoSuggestionResult.content)}
-                        className={css({
-                          px: '3',
-                          py: '1',
-                          bg: 'blue.600',
-                          color: 'white',
-                          rounded: 'md',
-                          fontSize: 'xs',
-                          fontWeight: 'bold',
-                          _hover: { bg: 'blue.700' },
-                          transition: 'all 0.2s'
-                        })}
-                      >
-                        📝 TODOリストに追加
-                      </button>
-                    </div>
-                    <div className={css({
-                      whiteSpace: 'pre-wrap',
-                      color: 'green.700',
-                      lineHeight: '1.6',
-                      fontSize: 'sm'
-                    })}>
-                      {todoSuggestionResult.content}
-                    </div>
+                    <AiTodoSuggestion
+                      content={todoSuggestionResult.content}
+                      onAddTodos={handleAddToTodoList}
+                    />
                   </div>
                 )}
               </div>
