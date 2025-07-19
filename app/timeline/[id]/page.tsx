@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -43,7 +43,7 @@ interface UserProfile {
   icon_url?: string;
 }
 
-export default function PostDetailPage() {
+function PostDetailContent() {
   const router = useRouter();
   const params = useParams();
   const postId = params.id as string;
@@ -52,6 +52,12 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [baseUrl, setBaseUrl] = useState<string>('');
+
+  // クライアントサイドでのみbaseUrlを設定
+  useEffect(() => {
+    setBaseUrl(window.location.origin);
+  }, []);
 
   useEffect(() => {
     if (!postId) return;
@@ -276,7 +282,7 @@ export default function PostDetailPage() {
     );
   }
 
-  const shareData = createPostShareData(post, window.location.href);
+  const shareData = createPostShareData(post, baseUrl);
 
   return (
     <main className={css({
@@ -535,5 +541,13 @@ export default function PostDetailPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function PostDetailPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <PostDetailContent />
+    </Suspense>
   );
 } 

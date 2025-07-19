@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -45,7 +45,7 @@ interface UserProfile {
   icon_url?: string;
 }
 
-export default function TimelinePage() {
+function TimelineContent() {
   const { user, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const [posts, setPosts] = useState<TodoPost[]>([]);
@@ -55,6 +55,12 @@ export default function TimelinePage() {
   const [showPostForm, setShowPostForm] = useState(false);
   const [completedTodo, setCompletedTodo] = useState<any>(null);
   const [showCompletedTodoModal, setShowCompletedTodoModal] = useState(false);
+  const [baseUrl, setBaseUrl] = useState<string>('');
+
+  // クライアントサイドでのみbaseUrlを設定
+  useEffect(() => {
+    setBaseUrl(window.location.origin);
+  }, []);
 
   // URLパラメータから完了したTODOの情報を取得
   useEffect(() => {
@@ -681,7 +687,7 @@ export default function TimelinePage() {
                       <ShareButton
                         shareData={createPostShareData(
                           post,
-                          `${window.location.origin}/timeline/post/${post.id}`
+                          `${baseUrl}/timeline/post/${post.id}`
                         )}
                       />
                     </div>
@@ -835,5 +841,13 @@ export default function TimelinePage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function TimelinePage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <TimelineContent />
+    </Suspense>
   );
 }
