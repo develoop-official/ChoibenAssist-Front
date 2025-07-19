@@ -49,4 +49,5 @@ jobs:
           echo "Username: ${GITLAB_USERNAME}"
           
           # プッシュ実行
-          git push gitlab main
+          echo "Pushing branch: ${{ github.ref_name }}"
+          git push gitlab ${{ github.ref_name }}
