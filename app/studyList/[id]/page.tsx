@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -516,9 +517,11 @@ export default function StudyRecordDetailPage() {
                   overflow: 'hidden'
                 })}>
                   {getAuthorAvatarUrl() ? (
-                    <img
+                    <Image
                       src={getAuthorAvatarUrl() || ''}
                       alt="投稿者アバター"
+                      width={16}
+                      height={16}
                       className={css({
                         w: 'full',
                         h: 'full',

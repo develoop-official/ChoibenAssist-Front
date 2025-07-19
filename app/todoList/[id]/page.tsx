@@ -1,7 +1,6 @@
 "use client";
-import React from 'react';
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { supabase } from "../../../lib/supabase";
 import { css } from "../../../styled-system/css";

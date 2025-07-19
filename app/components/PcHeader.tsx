@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import { supabase } from "../../lib/supabase";
 import { css } from "../../styled-system/css";
@@ -26,14 +26,7 @@ export default function PcHeader() {
 
   // console.log("PcHeaderが表示されています");
 
-  // ユーザープロフィールを取得
-  useEffect(() => {
-    if (user && supabase) {
-      fetchProfile();
-    }
-  }, [user]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!supabase || !user) return;
 
     try {
@@ -49,7 +42,14 @@ export default function PcHeader() {
     } catch (err) {
       console.error('プロフィール取得エラー:', err);
     }
-  };
+  }, [user]);
+
+  // ユーザープロフィールを取得
+  useEffect(() => {
+    if (user && supabase) {
+      fetchProfile();
+    }
+  }, [user, fetchProfile]);
 
   // アバターURLを取得する関数
   const getAvatarUrl = () => {
@@ -218,9 +218,11 @@ export default function PcHeader() {
                 overflow: "hidden"
               })}>
                 {getAvatarUrl() ? (
-                  <img
-                    src={getAvatarUrl()}
+                  <Image
+                    src={getAvatarUrl()!}
                     alt="アバター"
+                    width={40}
+                    height={40}
                     className={css({
                       w: "full",
                       h: "full",

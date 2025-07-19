@@ -36,6 +36,9 @@ const eslintConfig = [
       "react/no-unescaped-entities": "error",
       "react/jsx-key": "error",
       
+      // Next.js 画像最適化ルール
+      "@next/next/no-img-element": "error", // warningからerrorに変更
+      
       // インポートルール
       "import/order": [
         "warn",

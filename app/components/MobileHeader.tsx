@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { supabase } from "../../lib/supabase";
 import { css } from "../../styled-system/css";
@@ -25,14 +25,7 @@ export default function MobileHeader() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const isActive = (path: string) => pathname === path;
 
-  // ユーザープロフィールを取得
-  useEffect(() => {
-    if (user && supabase) {
-      fetchProfile();
-    }
-  }, [user]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!supabase || !user) return;
 
     try {
@@ -48,7 +41,14 @@ export default function MobileHeader() {
     } catch (err) {
       console.error('プロフィール取得エラー:', err);
     }
-  };
+  }, [user]);
+
+  // ユーザープロフィールを取得
+  useEffect(() => {
+    if (user && supabase) {
+      fetchProfile();
+    }
+  }, [user, fetchProfile]);
 
   // アバターURLを取得する関数
   const getAvatarUrl = () => {
@@ -136,9 +136,11 @@ export default function MobileHeader() {
             overflow: "hidden"
           })}>
             {getAvatarUrl() ? (
-              <img
-                src={getAvatarUrl()}
+              <Image
+                src={getAvatarUrl()!}
                 alt="アバター"
+                width={32}
+                height={32}
                 className={css({
                   w: "full",
                   h: "full",
