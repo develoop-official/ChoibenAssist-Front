@@ -125,7 +125,7 @@ deploy_production:
   before_script:
     - echo "Deploying to production environment..."
     - docker --version
-    - echo "IMAGE: $DOCKER_REGISTRY:$DOCKER_TAG"
+    - echo "$DOCKER_REGISTRY:$DOCKER_TAG"
   script:
     # 既存のコンテナを停止・削除
     - docker stop $CONTAINER_NAME || true
@@ -184,7 +184,7 @@ deploy_staging:
     CONTAINER_NAME: "choibenassist-front-staging"
   before_script:
     - echo "Deploying to staging environment..."
-    - echo "IMAGE: $DOCKER_REGISTRY:$DOCKER_TAG"
+    - echo "$DOCKER_REGISTRY:$DOCKER_TAG"
   script:
     # 既存のコンテナを停止・削除
     - docker stop $CONTAINER_NAME || true
