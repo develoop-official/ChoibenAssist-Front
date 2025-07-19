@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import { css } from '../../styled-system/css';
 import { CreateTodoItem } from '../types/todo-item';
-import { parseMarkdownTodos, flattenTodoSections, convertToCreateTodoItem } from '../utils/todo-parser';
+import { parseMarkdownTodos, flattenTodoSections, convertToCreateTodoItem, ParsedTodo } from '../utils/todo-parser';
 
 interface AiTodoSuggestionProps {
   content: string;
@@ -19,6 +19,23 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
   // マークダウンを解析
   const sections = parseMarkdownTodos(content);
   const allTodos = flattenTodoSections(sections);
+
+  // デバッグ情報
+  console.warn('🔍 AI提案デバッグ:', {
+    contentLength: content.length,
+    sectionsCount: sections.length,
+    allTodosCount: allTodos.length,
+    sections: sections.map(s => ({ title: s.title, todosCount: s.todos.length })),
+    selectedSections,
+    selectedTodos
+  });
+
+  // 初期化時にすべてのセクションを展開
+  React.useEffect(() => {
+    if (sections.length > 0 && selectedSections.length === 0) {
+      setSelectedSections(sections.map(section => section.title));
+    }
+  }, [sections, selectedSections.length]);
 
   // セクション選択の切り替え
   const toggleSection = (sectionTitle: string) => {
@@ -44,7 +61,13 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
 
   // 全選択/全解除
   const selectAll = () => {
-    setSelectedTodos(allTodos.map(todo => `${todo.section}-${todo.task}`));
+    const allTodoIds: string[] = [];
+    sections.forEach((section, sectionIndex) => {
+      section.todos.forEach((todo, todoIndex) => {
+        allTodoIds.push(`${todo.section}-${todo.task}-${sectionIndex}-${todoIndex}`);
+      });
+    });
+    setSelectedTodos(allTodoIds);
   };
 
   const deselectAll = () => {
@@ -52,10 +75,45 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
   };
 
   // 選択されたTODOを追加
-      const handleAddSelectedTodos = async () => {
-    const selectedTodoItems = allTodos.filter(todoItem =>
-      selectedTodos.includes(`${todoItem.section}-${todoItem.task}`)
-    );
+  const handleAddSelectedTodos = async () => {
+    console.warn('🔍 TODO選択デバッグ:', {
+      selectedTodos,
+      allTodos: allTodos.map(todo => ({
+        section: todo.section,
+        task: todo.task,
+        id: `${todo.section}-${todo.task}`
+      })),
+      selectedTodosCount: selectedTodos.length
+    });
+
+    // 選択されたTODOを抽出（IDから元のTODOを復元）
+    const selectedTodoItems: ParsedTodo[] = [];
+    selectedTodos.forEach(selectedId => {
+      const parts = selectedId.split('-');
+      if (parts.length >= 4) {
+        const sectionIndex = parseInt(parts[parts.length - 2]);
+        const todoIndex = parseInt(parts[parts.length - 1]);
+        const task = parts.slice(0, -2).join('-'); // セクション名とタスク名を復元
+        
+        if (sections[sectionIndex] && sections[sectionIndex].todos[todoIndex]) {
+          const todo = sections[sectionIndex].todos[todoIndex];
+          if (todo.task === task) {
+            selectedTodoItems.push({
+              ...todo,
+              section: sections[sectionIndex].title
+            });
+          }
+        }
+      }
+    });
+
+    console.warn('🔍 フィルタリング結果:', {
+      selectedTodoItemsCount: selectedTodoItems.length,
+      selectedTodoItems: selectedTodoItems.map(todo => ({
+        section: todo.section,
+        task: todo.task
+      }))
+    });
 
     if (selectedTodoItems.length === 0) {
       alert('追加するTODOを選択してください');
@@ -234,7 +292,7 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
                 spaceY: '2'
               })}>
                 {section.todos.map((todo, todoIndex) => {
-                  const todoId = `${todo.section}-${todo.task}`;
+                  const todoId = `${todo.section}-${todo.task}-${sectionIndex}-${todoIndex}`;
                   const isSelected = selectedTodos.includes(todoId);
 
                   return (
@@ -253,11 +311,16 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => toggleTodo(todoId)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleTodo(todoId);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                         className={css({
                           w: '4',
                           h: '4',
-                          accentColor: 'green.600'
+                          accentColor: 'green.600',
+                          cursor: 'pointer'
                         })}
                       />
                       <div className={css({
