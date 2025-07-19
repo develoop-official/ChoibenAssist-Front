@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useMemo } from "react";
 
 import { css } from "../../styled-system/css";
+import TodoCompletionModal from "../components/TodoCompletionModal";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { useAllTodos } from "../hooks/useAllTodos";
 import { useTodos } from "../hooks/useTodos";
@@ -12,6 +13,8 @@ export default function TodoListPage() {
   const { todos: myTodos, loading: myLoading, error: myError, updateStatus } = useTodos();
   const { todos: allTodos, loading: allLoading, error: allError } = useAllTodos();
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [completionModalTodo, setCompletionModalTodo] = useState<TodoItemWithUser | null>(null);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   // 最近のTODOリスト（最新の2つ）とそれ以外を分離
   const { recentTodos, pastTodos } = useMemo(() => {
@@ -32,28 +35,64 @@ export default function TodoListPage() {
   const loading = myLoading || allLoading;
   const error = myError || allError;
 
+  const handleTodoCompletion = async (todo: TodoItemWithUser) => {
+    setRemovingId(todo.id);
+    setTimeout(async () => {
+      await updateStatus(todo.id, "completed");
+      setRemovingId(null);
+      // 完了モーダルを表示
+      setCompletionModalTodo(todo);
+      setShowCompletionModal(true);
+    }, 500);
+  };
+
+  const handlePostCreated = () => {
+    // 投稿完了後の処理（必要に応じて実装）
+    console.warn('投稿が完了しました');
+  };
+
   return (
     <main className={css({ maxW: "2xl", mx: "auto", px: "4", py: "8" })}>
       <div className={css({ display: "flex", justifyContent: "space-between", alignItems: "center", mb: "8" })}>
         <h2 className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.700" })}>TODOリスト</h2>
-        <Link
-          href="/todoList/create"
-          className={css({
-            px: "4",
-            py: "2",
-            bg: "primary.600",
-            color: "white",
-            rounded: "md",
-            fontWeight: "bold",
-            fontSize: "sm",
-            _hover: { bg: "primary.700" },
-            transition: "all 0.2s",
-            textDecoration: "none",
-            display: "inline-block"
-          })}
-        >
-          TODO作成
-        </Link>
+        <div className={css({ display: "flex", gap: "3" })}>
+          <Link
+            href="/timeline"
+            className={css({
+              px: "4",
+              py: "2",
+              bg: "blue.600",
+              color: "white",
+              rounded: "md",
+              fontWeight: "bold",
+              fontSize: "sm",
+              _hover: { bg: "blue.700" },
+              transition: "all 0.2s",
+              textDecoration: "none",
+              display: "inline-block"
+            })}
+          >
+            📱 タイムライン
+          </Link>
+          <Link
+            href="/todoList/create"
+            className={css({
+              px: "4",
+              py: "2",
+              bg: "primary.600",
+              color: "white",
+              rounded: "md",
+              fontWeight: "bold",
+              fontSize: "sm",
+              _hover: { bg: "primary.700" },
+              transition: "all 0.2s",
+              textDecoration: "none",
+              display: "inline-block"
+            })}
+          >
+            TODO作成
+          </Link>
+        </div>
       </div>
 
       {loading ? (
@@ -71,16 +110,17 @@ export default function TodoListPage() {
               <div className={css({ color: "gray.500", textAlign: "center", py: "8" })}>最近のTODOはありません</div>
             ) : (
               <ul className={css({ spaceY: "4" })}>
-                                  {recentTodos.map(todo => (
-                    <TodoItem
-                      key={todo.id}
-                      todo={todo}
-                      isMyTodo={myTodos.some(todoItem => todoItem.id === todo.id)}
-                      onStatusUpdate={updateStatus}
-                      removingId={removingId}
-                      setRemovingId={setRemovingId}
-                    />
-                  ))}
+                {recentTodos.map(todo => (
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    isMyTodo={myTodos.some(todoItem => todoItem.id === todo.id)}
+                    _onStatusUpdate={updateStatus}
+                    onCompletion={handleTodoCompletion}
+                    removingId={removingId}
+                    _setRemovingId={setRemovingId}
+                  />
+                ))}
               </ul>
             )}
           </div>
@@ -105,9 +145,10 @@ export default function TodoListPage() {
                       key={todo.id}
                       todo={todo}
                       isMyTodo={myTodos.some(todoItem => todoItem.id === todo.id)}
-                      onStatusUpdate={updateStatus}
+                      _onStatusUpdate={updateStatus}
+                      onCompletion={handleTodoCompletion}
                       removingId={removingId}
-                      setRemovingId={setRemovingId}
+                      _setRemovingId={setRemovingId}
                       compact={true}
                     />
                   ))}
@@ -117,6 +158,17 @@ export default function TodoListPage() {
           )}
         </div>
       )}
+
+      {/* Todo完了モーダル */}
+      <TodoCompletionModal
+        todo={completionModalTodo}
+        isOpen={showCompletionModal}
+        onClose={() => {
+          setShowCompletionModal(false);
+          setCompletionModalTodo(null);
+        }}
+        onPostCreated={handlePostCreated}
+      />
     </main>
   );
 }
@@ -124,13 +176,14 @@ export default function TodoListPage() {
 interface TodoItemProps {
   todo: TodoItemWithUser;
   isMyTodo: boolean;
-  onStatusUpdate: (_id: string, _status: 'pending' | 'completed') => Promise<void>;
+  _onStatusUpdate: (_id: string, _status: 'pending' | 'completed') => Promise<void>;
+  onCompletion: (_todo: TodoItemWithUser) => void;
   removingId: string | null;
-  setRemovingId: (_id: string | null) => void;
+  _setRemovingId: (_id: string | null) => void;
   compact?: boolean;
 }
 
-function TodoItem({ todo, isMyTodo, onStatusUpdate, removingId, setRemovingId, compact = false }: TodoItemProps) {
+function TodoItem({ todo, isMyTodo, _onStatusUpdate, onCompletion, removingId, _setRemovingId, compact = false }: TodoItemProps) {
   return (
     <li
       className={css({
@@ -197,11 +250,7 @@ function TodoItem({ todo, isMyTodo, onStatusUpdate, removingId, setRemovingId, c
             })}
             onClick={async () => {
               if (todo.status === "completed") return;
-              setRemovingId(todo.id);
-              setTimeout(async () => {
-                await onStatusUpdate(todo.id, "completed");
-                setRemovingId(null);
-              }, 500);
+              onCompletion(todo);
             }}
           >
             {todo.status === "completed" ? "完了済み" : "完了にする"}

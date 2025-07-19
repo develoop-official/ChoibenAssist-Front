@@ -1,202 +1,181 @@
--- タイムライン機能用テーブル追加スクリプト
--- 既存のuser_profilesテーブルにscrapbox_project_nameカラムを追加し、
--- SNS機能用のテーブルを作成します
+-- タイムライン機能用のテーブル作成SQL
+-- このSQLをSupabaseのSQL Editorで実行してください
 
--- 1. 既存のuser_profilesテーブルにscrapbox_project_nameカラムを追加
-ALTER TABLE public.user_profiles 
-ADD COLUMN IF NOT EXISTS scrapbox_project_name TEXT;
+-- 1. ユーザープロフィールテーブル（既存のprofilesテーブルを拡張）
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS icon_url TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
 -- 2. フォロー関係テーブル
-CREATE TABLE IF NOT EXISTS public.user_follows (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  follower_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  following_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(follower_id, following_id)
+CREATE TABLE IF NOT EXISTS user_follows (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    follower_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    following_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(follower_id, following_id)
 );
 
--- インデックス
-CREATE INDEX IF NOT EXISTS idx_user_follows_follower_id ON public.user_follows(follower_id);
-CREATE INDEX IF NOT EXISTS idx_user_follows_following_id ON public.user_follows(following_id);
-CREATE INDEX IF NOT EXISTS idx_user_follows_created_at ON public.user_follows(created_at DESC);
-
--- RLS有効化
-ALTER TABLE public.user_follows ENABLE ROW LEVEL SECURITY;
-
--- フォロー関係のポリシー
-CREATE POLICY "Follow relationships are viewable by everyone"
-  ON public.user_follows
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can insert own follows"
-  ON public.user_follows
-  FOR INSERT WITH CHECK (auth.uid() = follower_id);
-
-CREATE POLICY "Users can delete own follows"
-  ON public.user_follows
-  FOR DELETE USING (auth.uid() = follower_id);
-
--- 3. 投稿テーブル
-CREATE TABLE IF NOT EXISTS public.timeline_posts (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  content TEXT NOT NULL,
-  hashtags TEXT[] DEFAULT '{}',
-  is_public BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- 3. タイムライン投稿テーブル
+CREATE TABLE IF NOT EXISTS timeline_posts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    hashtags TEXT[] DEFAULT '{}',
+    is_public BOOLEAN DEFAULT true,
+    todo_id UUID REFERENCES todo_items(id) ON DELETE SET NULL, -- Todoとの紐付け
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- インデックス
-CREATE INDEX IF NOT EXISTS idx_timeline_posts_user_id ON public.timeline_posts(user_id);
-CREATE INDEX IF NOT EXISTS idx_timeline_posts_created_at ON public.timeline_posts(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_timeline_posts_hashtags ON public.timeline_posts USING GIN(hashtags);
-CREATE INDEX IF NOT EXISTS idx_timeline_posts_public ON public.timeline_posts(is_public) WHERE is_public = true;
-
--- updated_at トリガー
-DROP TRIGGER IF EXISTS set_updated_at_on_timeline_posts
-  ON public.timeline_posts;
-CREATE TRIGGER set_updated_at_on_timeline_posts
-  BEFORE UPDATE ON public.timeline_posts
-  FOR EACH ROW EXECUTE FUNCTION public.trigger_set_updated_at();
-
--- RLS有効化
-ALTER TABLE public.timeline_posts ENABLE ROW LEVEL SECURITY;
-
--- 投稿のポリシー
-CREATE POLICY "Public posts are viewable by everyone"
-  ON public.timeline_posts
-  FOR SELECT USING (is_public = true);
-
-CREATE POLICY "Users can view own posts"
-  ON public.timeline_posts
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can view followed users' posts"
-  ON public.timeline_posts
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.user_follows 
-      WHERE follower_id = auth.uid() 
-      AND following_id = public.timeline_posts.user_id
-    )
-  );
-
-CREATE POLICY "Users can insert own posts"
-  ON public.timeline_posts
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own posts"
-  ON public.timeline_posts
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own posts"
-  ON public.timeline_posts
-  FOR DELETE USING (auth.uid() = user_id);
-
--- 4. コメントテーブル
-CREATE TABLE IF NOT EXISTS public.timeline_comments (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  post_id UUID NOT NULL REFERENCES public.timeline_posts(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  content TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- 4. タイムラインコメントテーブル
+CREATE TABLE IF NOT EXISTS timeline_comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES timeline_posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- インデックス
-CREATE INDEX IF NOT EXISTS idx_timeline_comments_post_id ON public.timeline_comments(post_id);
-CREATE INDEX IF NOT EXISTS idx_timeline_comments_user_id ON public.timeline_comments(user_id);
-CREATE INDEX IF NOT EXISTS idx_timeline_comments_created_at ON public.timeline_comments(created_at);
-
--- RLS有効化
-ALTER TABLE public.timeline_comments ENABLE ROW LEVEL SECURITY;
-
--- コメントのポリシー
-CREATE POLICY "Comments on public posts are viewable"
-  ON public.timeline_comments
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.timeline_posts 
-      WHERE public.timeline_posts.id = public.timeline_comments.post_id 
-      AND public.timeline_posts.is_public = true
-    )
-  );
-
-CREATE POLICY "Users can view own comments"
-  ON public.timeline_comments
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own comments"
-  ON public.timeline_comments
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own comments"
-  ON public.timeline_comments
-  FOR DELETE USING (auth.uid() = user_id);
-
--- 5. いいねテーブル
-CREATE TABLE IF NOT EXISTS public.timeline_likes (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  post_id UUID NOT NULL REFERENCES public.timeline_posts(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(post_id, user_id)
+-- 5. タイムラインいいねテーブル
+CREATE TABLE IF NOT EXISTS timeline_likes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES timeline_posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(post_id, user_id)
 );
 
--- インデックス
-CREATE INDEX IF NOT EXISTS idx_timeline_likes_post_id ON public.timeline_likes(post_id);
-CREATE INDEX IF NOT EXISTS idx_timeline_likes_user_id ON public.timeline_likes(user_id);
+-- 6. インデックスの作成
+CREATE INDEX IF NOT EXISTS idx_timeline_posts_user_id ON timeline_posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_timeline_posts_created_at ON timeline_posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_timeline_posts_hashtags ON timeline_posts USING GIN(hashtags);
+CREATE INDEX IF NOT EXISTS idx_timeline_posts_todo_id ON timeline_posts(todo_id);
+CREATE INDEX IF NOT EXISTS idx_timeline_comments_post_id ON timeline_comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_timeline_likes_post_id ON timeline_likes(post_id);
+CREATE INDEX IF NOT EXISTS idx_user_follows_follower_id ON user_follows(follower_id);
+CREATE INDEX IF NOT EXISTS idx_user_follows_following_id ON user_follows(following_id);
 
--- RLS有効化
-ALTER TABLE public.timeline_likes ENABLE ROW LEVEL SECURITY;
-
--- いいねのポリシー
-CREATE POLICY "Likes are viewable by everyone"
-  ON public.timeline_likes
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can insert own likes"
-  ON public.timeline_likes
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own likes"
-  ON public.timeline_likes
-  FOR DELETE USING (auth.uid() = user_id);
-
--- 6. ビューの作成
-
--- 投稿一覧ビュー（いいね数とコメント数を含む）
-CREATE OR REPLACE VIEW public.timeline_posts_with_stats AS
+-- 7. 統計ビューの作成（投稿、いいね数、コメント数を含む）
+CREATE OR REPLACE VIEW timeline_posts_with_stats AS
 SELECT 
-  tp.*,
-  up.username,
-  up.full_name,
-  up.icon_url,
-  COUNT(DISTINCT tl.id) as likes_count,
-  COUNT(DISTINCT tc.id) as comments_count,
-  EXISTS(
-    SELECT 1 FROM public.timeline_likes 
-    WHERE post_id = tp.id AND user_id = auth.uid()
-  ) as is_liked
-FROM public.timeline_posts tp
-LEFT JOIN public.user_profiles up ON tp.user_id = up.user_id
-LEFT JOIN public.timeline_likes tl ON tp.id = tl.post_id
-LEFT JOIN public.timeline_comments tc ON tp.id = tc.post_id
-GROUP BY tp.id, up.username, up.full_name, up.icon_url;
+    p.*,
+    up.username,
+    up.full_name,
+    up.icon_url,
+    COALESCE(likes.likes_count, 0) as likes_count,
+    COALESCE(comments.comments_count, 0) as comments_count,
+    CASE WHEN user_likes.post_id IS NOT NULL THEN true ELSE false END as is_liked
+FROM timeline_posts p
+LEFT JOIN profiles up ON p.user_id = up.id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) as likes_count
+    FROM timeline_likes
+    GROUP BY post_id
+) likes ON p.id = likes.post_id
+LEFT JOIN (
+    SELECT post_id, COUNT(*) as comments_count
+    FROM timeline_comments
+    GROUP BY post_id
+) comments ON p.id = comments.post_id
+LEFT JOIN timeline_likes user_likes ON p.id = user_likes.post_id AND user_likes.user_id = auth.uid()
+WHERE p.is_public = true OR p.user_id = auth.uid();
 
--- フォロー関係ビュー
-CREATE OR REPLACE VIEW public.user_follows_with_profiles AS
-SELECT 
-  uf.*,
-  follower.username as follower_username,
-  follower.full_name as follower_full_name,
-  follower.icon_url as follower_icon_url,
-  following.username as following_username,
-  following.full_name as following_full_name,
-  following.icon_url as following_icon_url
-FROM public.user_follows uf
-LEFT JOIN public.user_profiles follower ON uf.follower_id = follower.user_id
-LEFT JOIN public.user_profiles following ON uf.following_id = following.user_id;
+-- 8. RLS（Row Level Security）ポリシーの設定
+
+-- プロフィールのRLS
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "プロフィールは誰でも閲覧可能" ON profiles
+    FOR SELECT USING (true);
+
+CREATE POLICY "ユーザーは自分のプロフィールを更新可能" ON profiles
+    FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "ユーザーは自分のプロフィールを挿入可能" ON profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- フォロー関係のRLS
+ALTER TABLE user_follows ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "フォロー関係は誰でも閲覧可能" ON user_follows
+    FOR SELECT USING (true);
+
+CREATE POLICY "ユーザーはフォロー関係を作成可能" ON user_follows
+    FOR INSERT WITH CHECK (auth.uid() = follower_id);
+
+CREATE POLICY "ユーザーは自分のフォロー関係を削除可能" ON user_follows
+    FOR DELETE USING (auth.uid() = follower_id);
+
+-- 投稿のRLS
+ALTER TABLE timeline_posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "公開投稿は誰でも閲覧可能、非公開投稿は投稿者のみ" ON timeline_posts
+    FOR SELECT USING (is_public = true OR auth.uid() = user_id);
+
+CREATE POLICY "認証ユーザーは投稿を作成可能" ON timeline_posts
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "投稿者は自分の投稿を更新可能" ON timeline_posts
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "投稿者は自分の投稿を削除可能" ON timeline_posts
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- コメントのRLS
+ALTER TABLE timeline_comments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "コメントは誰でも閲覧可能" ON timeline_comments
+    FOR SELECT USING (true);
+
+CREATE POLICY "認証ユーザーはコメントを作成可能" ON timeline_comments
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "コメント投稿者は自分のコメントを更新可能" ON timeline_comments
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "コメント投稿者は自分のコメントを削除可能" ON timeline_comments
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- いいねのRLS
+ALTER TABLE timeline_likes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "いいねは誰でも閲覧可能" ON timeline_likes
+    FOR SELECT USING (true);
+
+CREATE POLICY "認証ユーザーはいいねを作成可能" ON timeline_likes
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "ユーザーは自分のいいねを削除可能" ON timeline_likes
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- 9. トリガー関数の作成（updated_atの自動更新）
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- トリガーの作成
+CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_timeline_posts_updated_at BEFORE UPDATE ON timeline_posts
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_timeline_comments_updated_at BEFORE UPDATE ON timeline_comments
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 10. サンプルデータの挿入（テスト用）
+-- 注意: 実際のユーザーIDに置き換えてください
+-- INSERT INTO timeline_posts (user_id, content, hashtags, is_public) VALUES
+--     ('your-user-id-here', '今日はReactの勉強を頑張りました！', ARRAY['React', '学習'], true),
+--     ('your-user-id-here', 'TypeScriptの型システムについて理解が深まりました', ARRAY['TypeScript', 'プログラミング'], true);
 
 -- 完了メッセージ
-SELECT 'タイムライン機能用テーブルの作成が完了しました！' as message; 
+SELECT 'タイムライン機能のテーブルとポリシーが正常に作成されました！' as message; 

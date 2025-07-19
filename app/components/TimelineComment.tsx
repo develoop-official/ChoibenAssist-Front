@@ -36,33 +36,54 @@ export default function TimelineComment({ postId, onCommentAdded }: TimelineComm
 
     try {
       setLoading(true);
-      const { data, error } = await supabase!
+      // まず、コメントのみを取得
+      const { data: commentsData, error: commentsError } = await supabase!
         .from('timeline_comments')
-        .select(`
-          *,
-          user_profiles!timeline_comments_user_id_fkey (
-            username,
-            full_name,
-            icon_url
-          )
-        `)
+        .select('*')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('コメント取得エラー:', error);
+      if (commentsError) {
+        console.error('コメント取得エラー:', commentsError);
         return;
       }
 
-      const formattedComments: Comment[] = (data || []).map(comment => ({
-        id: comment.id,
-        content: comment.content,
-        created_at: comment.created_at,
-        user_id: comment.user_id,
-        user_profile: comment.user_profiles
-      }));
+      // コメントがある場合、ユーザープロフィール情報を別途取得
+      if (commentsData && commentsData.length > 0) {
+        const userIds = [...new Set(commentsData.map(comment => comment.user_id))];
+        const { data: profilesData, error: profilesError } = await supabase!
+          .from('user_profiles')
+          .select('user_id, username, full_name, icon_url')
+          .in('user_id', userIds);
 
-      setComments(formattedComments);
+        if (profilesError) {
+          console.warn('ユーザープロフィール取得エラー:', profilesError);
+        }
+
+        // プロフィールデータをマップ
+        const profilesMap = new Map();
+        if (profilesData) {
+          profilesData.forEach(profile => {
+            profilesMap.set(profile.user_id, profile);
+          });
+        }
+
+        const formattedComments: Comment[] = commentsData.map(comment => ({
+          id: comment.id,
+          content: comment.content,
+          created_at: comment.created_at,
+          user_id: comment.user_id,
+          user_profile: profilesMap.get(comment.user_id) || {
+            username: `ユーザー${comment.user_id.slice(0, 8)}`,
+            full_name: `ユーザー${comment.user_id.slice(0, 8)}`,
+            icon_url: undefined
+          }
+        }));
+
+        setComments(formattedComments);
+      } else {
+        setComments([]);
+      }
     } catch (err) {
       console.error('コメント取得エラー:', err);
     } finally {
@@ -92,7 +113,10 @@ export default function TimelineComment({ postId, onCommentAdded }: TimelineComm
           created_at: new Date().toISOString()
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('コメント投稿エラー:', insertError);
+        throw insertError;
+      }
 
       setNewComment('');
       onCommentAdded();

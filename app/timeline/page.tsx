@@ -6,11 +6,13 @@ import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
 import FollowButton from '../components/FollowButton';
 import HashtagSearch from '../components/HashtagSearch';
+import ShareButton from '../components/ShareButton';
 import TimelineComment from '../components/TimelineComment';
 import TimelinePostForm from '../components/TimelinePostForm';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
+import { createPostShareData } from '../utils/share-utils';
 
 interface TodoPost {
   id: string;
@@ -26,6 +28,13 @@ interface TodoPost {
   likes_count?: number;
   is_liked?: boolean;
   comments_count?: number;
+  todo_id?: string; // Todoとの紐付け
+  todo?: {
+    id: string;
+    task: string;
+    study_time: number;
+    due_date?: string;
+  };
 }
 
 interface UserProfile {
@@ -52,10 +61,18 @@ export default function TimelinePage() {
       setLoading(true);
       setError(null);
 
-      // 実際の投稿データを取得
+      // 実際の投稿データを取得（Todoとの紐付けも含む）
       let query = supabase
         .from('timeline_posts_with_stats')
-        .select('*')
+        .select(`
+          *,
+          todo_items (
+            id,
+            task,
+            study_time,
+            due_date
+          )
+        `)
         .order('created_at', { ascending: false });
 
       // ハッシュタグフィルタリング
@@ -85,7 +102,9 @@ export default function TimelinePage() {
         },
         likes_count: post.likes_count || 0,
         is_liked: post.is_liked || false,
-        comments_count: post.comments_count || 0
+        comments_count: post.comments_count || 0,
+        todo_id: post.todo_id,
+        todo: post.todo_items
       }));
 
       setPosts(formattedPosts);
@@ -337,6 +356,15 @@ export default function TimelinePage() {
                   {posts.reduce((sum, post) => sum + (post.comments_count || 0), 0)}
                 </span>
               </div>
+              <div className={css({
+                display: 'flex',
+                justifyContent: 'space-between'
+              })}>
+                <span>Todo完了投稿</span>
+                <span className={css({ fontWeight: 'bold' })}>
+                  {posts.filter(post => post.todo_id).length}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -452,6 +480,48 @@ export default function TimelinePage() {
                     <FollowButton targetUserId={post.user_id} />
                   </div>
 
+                  {/* Todo完了バッジ */}
+                  {post.todo && (
+                    <div className={css({
+                      mb: '3',
+                      p: '3',
+                      bg: 'green.50',
+                      border: '1px solid',
+                      borderColor: 'green.200',
+                      rounded: 'md'
+                    })}>
+                      <div className={css({
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '2',
+                        mb: '1'
+                      })}>
+                        <span className={css({
+                          fontSize: 'lg'
+                        })}>
+                          ✅
+                        </span>
+                        <span className={css({
+                          fontSize: 'sm',
+                          fontWeight: 'bold',
+                          color: 'green.700'
+                        })}>
+                          Todo完了
+                        </span>
+                      </div>
+                      <div className={css({
+                        fontSize: 'sm',
+                        color: 'green.600'
+                      })}>
+                        <div><strong>タスク:</strong> {post.todo.task}</div>
+                        <div><strong>学習時間:</strong> {post.todo.study_time}時間</div>
+                        {post.todo.due_date && (
+                          <div><strong>期限:</strong> {post.todo.due_date}</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* 投稿内容 */}
                   <div className={css({
                     mb: '4'
@@ -542,37 +612,12 @@ export default function TimelinePage() {
                       onCommentAdded={handleCommentAdded}
                     />
 
-                    <button
-                      className={css({
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '2',
-                        px: '3',
-                        py: '2',
-                        rounded: 'lg',
-                        bg: 'gray.50',
-                        color: 'gray.600',
-                        border: '1px solid',
-                        borderColor: 'gray.200',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        _hover: {
-                          bg: 'gray.100'
-                        }
-                      })}
-                    >
-                      <span className={css({
-                        fontSize: 'lg'
-                      })}>
-                        🔄
-                      </span>
-                      <span className={css({
-                        fontSize: 'sm',
-                        fontWeight: 'medium'
-                      })}>
-                        シェア
-                      </span>
-                    </button>
+                    <ShareButton
+                      shareData={createPostShareData(
+                        post,
+                        `${window.location.origin}/timeline/post/${post.id}`
+                      )}
+                    />
                   </div>
                 </div>
               ))
