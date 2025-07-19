@@ -125,6 +125,7 @@ deploy_production:
   before_script:
     - echo "Deploying to production environment..."
     - docker --version
+    - echo "IMAGE: $DOCKER_REGISTRY:$DOCKER_TAG"
   script:
     # 既存のコンテナを停止・削除
     - docker stop $CONTAINER_NAME || true
@@ -132,15 +133,15 @@ deploy_production:
     
     # 新しいコンテナを起動
     - |
-      docker run -d 
-        --name $CONTAINER_NAME 
-        --restart unless-stopped 
-        -p 3001:3001 
-        --env NODE_ENV=production 
-        --env NEXT_PUBLIC_SUPABASE_URL="$PRODUCTION_SUPABASE_URL" 
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$PRODUCTION_SUPABASE_ANON_KEY" 
-        --env BACKEND_API_URL="$PRODUCTION_BACKEND_API_URL" 
-        --env API_SECRET_KEY="$PRODUCTION_API_SECRET_KEY" 
+      docker run -d \
+        --name $CONTAINER_NAME \
+        --restart unless-stopped \
+        -p 3001:3001 \
+        --env NODE_ENV=production \
+        --env NEXT_PUBLIC_SUPABASE_URL="$PRODUCTION_SUPABASE_URL" \
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$PRODUCTION_SUPABASE_ANON_KEY" \
+        --env BACKEND_API_URL="$PRODUCTION_BACKEND_API_URL" \
+        --env API_SECRET_KEY="$PRODUCTION_API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
     
     # ヘルスチェック
@@ -158,8 +159,8 @@ deploy_production:
     
     # 古いイメージのクリーンアップ（最新の3つを保持）
     - |
-      docker images $DOCKER_REGISTRY --format "table {{.Tag}}\t{{.ID}}" | 
-      tail -n +2 | head -n -3 | awk '{print $2}' | 
+      docker images $DOCKER_REGISTRY --format "table {{.Tag}}\t{{.ID}}" | \
+      tail -n +2 | head -n -3 | awk '{print $2}' | \
       xargs -r docker rmi || true
   after_script:
     - echo "Production deployment completed"
@@ -183,6 +184,7 @@ deploy_staging:
     CONTAINER_NAME: "choibenassist-front-staging"
   before_script:
     - echo "Deploying to staging environment..."
+    - echo "IMAGE: $DOCKER_REGISTRY:$DOCKER_TAG"
   script:
     # 既存のコンテナを停止・削除
     - docker stop $CONTAINER_NAME || true
@@ -190,15 +192,15 @@ deploy_staging:
     
     # 新しいコンテナを起動
     - |
-      docker run -d 
-        --name $CONTAINER_NAME 
-        --restart unless-stopped 
-        -p 3002:3001 
-        --env NODE_ENV=development 
-        --env NEXT_PUBLIC_SUPABASE_URL="$STAGING_SUPABASE_URL" 
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$STAGING_SUPABASE_ANON_KEY" 
-        --env BACKEND_API_URL="$STAGING_BACKEND_API_URL" 
-        --env API_SECRET_KEY="$STAGING_API_SECRET_KEY" 
+      docker run -d \
+        --name $CONTAINER_NAME \
+        --restart unless-stopped \
+        -p 3002:3001 \
+        --env NODE_ENV=development \
+        --env NEXT_PUBLIC_SUPABASE_URL="$STAGING_SUPABASE_URL" \
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$STAGING_SUPABASE_ANON_KEY" \
+        --env BACKEND_API_URL="$STAGING_BACKEND_API_URL" \
+        --env API_SECRET_KEY="$STAGING_API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
     
     # ヘルスチェック
