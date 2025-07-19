@@ -25,8 +25,32 @@ export default function FollowButton({
   const checkFollowStatus = useCallback(async () => {
     if (!user || !targetUserId || hasChecked) return;
 
+    // 自分自身をフォローしようとしている場合は処理をスキップ
+    if (user.id === targetUserId) {
+      console.warn('自分自身をフォローしようとしています。処理をスキップします。');
+      setHasChecked(true);
+      return;
+    }
+
     try {
-      console.warn('フォロー状態確認開始:', { userId: user.id, targetUserId });
+      console.warn('フォロー状態確認開始:', {
+        userId: user.id,
+        targetUserId,
+        userEmail: user.email,
+        hasSupabase: !!supabase
+      });
+
+      // 認証状態の確認
+      const { data: sessionData, error: sessionError } = await supabase!.auth.getSession();
+      console.warn('セッション確認:', { sessionData, sessionError });
+
+      // まず、user_followsテーブルが存在するかテスト
+      const { data: testData, error: testError } = await supabase!
+        .from('user_follows')
+        .select('count')
+        .limit(1);
+
+      console.warn('テーブルアクセステスト:', { testData, testError });
 
       const { data, error } = await supabase!
         .from('user_follows')
@@ -38,6 +62,13 @@ export default function FollowButton({
       console.warn('フォロー状態確認結果:', { data, error });
 
       if (error) {
+        console.error('詳細エラー情報:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+
         if (error.code === 'PGRST116') {
           // レコードが見つからない場合（フォローしていない）
           console.warn('フォローしていません');
@@ -67,6 +98,12 @@ export default function FollowButton({
 
   const handleFollowToggle = async () => {
     if (!user || !targetUserId || isLoading) return;
+
+    // 自分自身をフォローしようとしている場合は処理をスキップ
+    if (user.id === targetUserId) {
+      console.warn('自分自身をフォローしようとしています。処理をスキップします。');
+      return;
+    }
 
     try {
       setIsLoading(true);
