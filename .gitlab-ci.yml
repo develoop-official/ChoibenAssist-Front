@@ -1,35 +1,8 @@
 # GitLab CI/CD Pipeline for Next.js Application with Docker
 stages:
-  - clean
   - build
   - test
   - deploy
-
-# クリーンアップジョブ（週次実行）
-cleanup:
-  stage: clean
-  tags:
-    - shell
-  script:
-    - echo "Cleaning up old Docker images and containers..."
-    
-    # 停止したコンテナを削除
-    - docker container prune -f
-    
-    # 未使用のイメージを削除
-    - docker image prune -f
-    
-    # 未使用のボリュームを削除
-    - docker volume prune -f
-    
-    # 未使用のネットワークを削除
-    - docker network prune -f
-    
-    - echo "Cleanup completed"
-  only:
-    variables:
-      - $CLEANUP == "true"
-  when: manual
 
 
 variables:
@@ -87,12 +60,13 @@ test:
     - shell
   before_script:
     - echo "Running tests on built image..."
+    - docker images | grep $DOCKER_IMAGE_NAME
   script:
     # ビルドしたイメージでテスト実行
     - |
       docker run --rm 
         --name test-container-$CI_JOB_ID 
-        $DOCKER_REGISTRY:$DOCKER_TAG 
+        $DOCKER_REGISTRY:latest
         sh -c "
           echo 'Container health check...';
           node --version;
@@ -167,7 +141,6 @@ deploy_production:
     - test
   only:
     - main
-  when: manual  # 手動承認が必要
 
 # 開発環境へのデプロイ
 deploy_staging:
@@ -211,3 +184,30 @@ deploy_staging:
   only:
     - develop
 
+
+
+# クリーンアップジョブ（週次実行）
+cleanup:
+  stage: clean
+  tags:
+    - shell
+  script:
+    - echo "Cleaning up old Docker images and containers..."
+    
+    # 停止したコンテナを削除
+    - docker container prune -f
+    
+    # 未使用のイメージを削除
+    - docker image prune -f
+    
+    # 未使用のボリュームを削除
+    - docker volume prune -f
+    
+    # 未使用のネットワークを削除
+    - docker network prune -f
+    
+    - echo "Cleanup completed"
+  only:
+    variables:
+      - $CLEANUP == "true"
+  when: manual
