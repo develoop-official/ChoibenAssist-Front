@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 
 import { css } from '../../styled-system/css';
-
 import { useAuth } from '../hooks/useAuth';
 
 export default function LoginPage() {

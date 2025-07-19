@@ -21,7 +21,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { todos, loading: todosLoading, addTodo } = useTodos();
-  
+
   const [todoSuggestionForm, setTodoSuggestionForm] = useState({
     time_available: 60,
     recent_progress: '',
@@ -308,7 +308,7 @@ export default function DashboardPage() {
             })}>
               最近のTODOリスト
             </h2>
-            
+
             {todosLoading ? (
               <LoadingSpinner text="TODOリストを読み込み中..." />
             ) : todos.length === 0 ? (
@@ -596,7 +596,7 @@ export default function DashboardPage() {
           })}>
             最近のTODO
           </h2>
-          
+
           {todosLoading ? (
             <LoadingSpinner text="TODOを読み込み中..." />
           ) : todos.length === 0 ? (
