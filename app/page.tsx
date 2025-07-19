@@ -1,180 +1,211 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
 
-import { css } from '../styled-system/css';
-
-import { generateGeneralTodo } from './actions/todo-actions';
-import AiTodoSuggestion from './components/AiTodoSuggestion';
-import LoadingSpinner from './components/ui/LoadingSpinner';
-import { useAuth } from './hooks/useAuth';
-import { useTodos } from './hooks/useTodos';
-import { buttonStyles } from './styles/components';
-import { CreateTodoItem } from './types/todo-item';
 import { supabase } from '../lib/supabase';
-
-interface TodoSuggestionResponse {
-  success: boolean;
-  content: string;
-  response_type: string;
-}
+import { css } from '../styled-system/css';
+import { useAuth } from './hooks/useAuth';
+import { TodoItem } from './types/todo-item';
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
-  const { todos, loading: todosLoading, addTodos } = useTodos();
+  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [newTodo, setNewTodo] = useState('');
+  const [newStudyTime, setNewStudyTime] = useState('');
+  const [newDueDate, setNewDueDate] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [todoSuggestionForm, setTodoSuggestionForm] = useState({
-    time_available: 60,
-    recent_progress: '',
-    weak_areas: '',
-    daily_goal: ''
-  });
-  const [todoSuggestionLoading, setTodoSuggestionLoading] = useState(false);
-  const [todoSuggestionResult, setTodoSuggestionResult] = useState<TodoSuggestionResponse | null>(null);
-  const [todoSuggestionError, setTodoSuggestionError] = useState('');
-  const [completingTodoId, setCompletingTodoId] = useState<string | null>(null);
-  const [completedTodoId, setCompletedTodoId] = useState<string | null>(null);
+  const fetchTodos = useCallback(async () => {
+    if (!user) return;
 
-  // 未認証の場合はログインページにリダイレクト
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
-
-  // TODOリストから学習時間を計算（実際のstudy_timeを使用）
-  const today = new Date();
-  const todayTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at);
-    return todoDate.toDateString() === today.toDateString();
-  });
-  const todayTotalMinutes = todayTodos.reduce((total, todo) => total + (todo.study_time * 60), 0);
-
-  // 今週の学習時間を計算
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay());
-  const weekTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at);
-    return todoDate >= weekStart;
-  });
-  const weekTotalMinutes = weekTodos.reduce((total, todo) => total + (todo.study_time * 60), 0);
-
-  // 今月の学習時間を計算
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const monthTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at);
-    return todoDate >= monthStart;
-  });
-  const monthTotalMinutes = monthTodos.reduce((total, todo) => total + (todo.study_time * 60), 0);
-
-  // 完了したTODOの数
-  const completedTodos = todos.filter(todo => todo.status === 'completed');
-
-  const handleTodoSuggestion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!todoSuggestionForm.time_available || todoSuggestionForm.time_available < 1 || todoSuggestionForm.time_available > 480) {
-      setTodoSuggestionError('勉強時間は1分〜480分の間で指定してください。');
-      return;
-    }
     try {
-      setTodoSuggestionLoading(true);
-      setTodoSuggestionError('');
-      setTodoSuggestionResult(null);
+      const { data, error } = await supabase!
+        .from('todo_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      // 実際のAI APIを呼び出し
-      const weakAreasArray = todoSuggestionForm.weak_areas
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
+      if (error) {
+        console.error('TODO取得エラー:', error);
+        return;
+      }
 
-      const result = await generateGeneralTodo(
-        todoSuggestionForm.time_available,
-        todoSuggestionForm.recent_progress,
-        weakAreasArray,
-        todoSuggestionForm.daily_goal
-      );
-
-      setTodoSuggestionResult(result);
-    } catch (_err) {
-      console.error('TODO提案エラー:', _err);
-      setTodoSuggestionError('TODO提案の取得に失敗しました。');
+      setTodos(data || []);
+    } catch (err) {
+      console.error('TODO取得エラー:', err);
     } finally {
-      setTodoSuggestionLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, [user]);
 
-  const handleAddToTodoList = async (todos: CreateTodoItem[]) => {
+  useEffect(() => {
+    if (user) {
+      fetchTodos();
+    }
+  }, [user, fetchTodos]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !newTodo.trim() || isSubmitting) return;
+
     try {
-      await addTodos(todos);
-      alert('TODOリストに追加しました！');
-    } catch (_err) {
-      console.error('TODO追加エラー:', _err);
-      alert('TODOリストへの追加に失敗しました');
+      setIsSubmitting(true);
+
+      const studyTime = parseFloat(newStudyTime) || 0;
+
+      const { error } = await supabase!
+        .from('todo_items')
+        .insert({
+          user_id: user.id,
+          task: newTodo.trim(),
+          study_time: studyTime,
+          due_date: newDueDate || null,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('TODO作成エラー:', error);
+        alert('TODOの作成に失敗しました。');
+        return;
+      }
+
+      setNewTodo('');
+      setNewStudyTime('');
+      setNewDueDate('');
+      fetchTodos();
+    } catch (err) {
+      console.error('TODO作成エラー:', err);
+      alert('TODOの作成に失敗しました。');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleCompleteTodo = async (todoId: string) => {
+    if (!user) return;
+
     try {
-      setCompletingTodoId(todoId);
-      if (!supabase) {
-        throw new Error('Supabase client is not initialized');
-      }
-      
-      const { error } = await supabase
+      const { error } = await supabase!
         .from('todo_items')
-        .update({ status: 'completed' })
-        .eq('id', todoId);
+        .update({
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', todoId)
+        .eq('user_id', user.id);
 
       if (error) {
-        throw error;
+        console.error('TODO完了エラー:', error);
+        alert('TODOの完了に失敗しました。');
+        return;
       }
 
       // 完了アニメーションを表示
-      setCompletedTodoId(todoId);
-      setCompletingTodoId(null);
-      
-      // 2秒後にタイムラインに遷移
+      const todoElement = document.getElementById(`todo-${todoId}`);
+      if (todoElement) {
+        todoElement.style.transition = 'all 0.5s ease';
+        todoElement.style.backgroundColor = '#10b981';
+        todoElement.style.color = 'white';
+        todoElement.style.transform = 'scale(1.02)';
+
+        setTimeout(() => {
+          todoElement.style.transform = 'scale(1)';
+        }, 500);
+      }
+
+      // タイムラインに遷移
       setTimeout(() => {
-        setCompletedTodoId(null);
         router.push(`/timeline?completed_todo=${todoId}`);
-      }, 2000);
-    } catch (error) {
-      console.error('TODO完了エラー:', error);
-      alert('TODOの完了に失敗しました');
-      setCompletingTodoId(null);
+      }, 1000);
+
+    } catch (err) {
+      console.error('TODO完了エラー:', err);
+      alert('TODOの完了に失敗しました。');
     }
   };
 
-  if (authLoading) {
+  const handleDeleteTodo = async (todoId: string) => {
+    if (!user || !confirm('このTODOを削除しますか？')) return;
+
+    try {
+      const { error } = await supabase!
+        .from('todo_items')
+        .delete()
+        .eq('id', todoId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('TODO削除エラー:', error);
+        alert('TODOの削除に失敗しました。');
+        return;
+      }
+
+      fetchTodos();
+    } catch (err) {
+      console.error('TODO削除エラー:', err);
+      alert('TODOの削除に失敗しました。');
+    }
+  };
+
+  if (!user) {
     return (
       <div className={css({
         minH: '100vh',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        bg: 'gray.50'
       })}>
-        <LoadingSpinner />
+        <div className={css({
+          textAlign: 'center',
+          p: '8'
+        })}>
+          <h1 className={css({
+            fontSize: '2xl',
+            fontWeight: 'bold',
+            color: 'gray.900',
+            mb: '4'
+          })}>
+            ログインが必要です
+          </h1>
+          <Link
+            href="/login"
+            className={css({
+              display: 'inline-block',
+              px: '6',
+              py: '3',
+              bg: 'blue.600',
+              color: 'white',
+              rounded: 'lg',
+              fontSize: 'md',
+              fontWeight: 'medium',
+              textDecoration: 'none',
+              transition: 'all 0.2s',
+              _hover: { bg: 'blue.700' }
+            })}
+          >
+            ログインする
+          </Link>
+        </div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null; // リダイレクト中
   }
 
   return (
     <div className={css({
       minH: '100vh',
-      bg: 'primary.50',
-      py: '8',
-      px: '4'
+      bg: 'gray.50',
+      py: '8'
     })}>
       <div className={css({
-        maxW: '6xl',
-        mx: 'auto'
+        maxW: '4xl',
+        mx: 'auto',
+        px: '6'
       })}>
         {/* ヘッダー */}
         <div className={css({
@@ -182,302 +213,76 @@ export default function DashboardPage() {
           textAlign: 'center'
         })}>
           <h1 className={css({
-            fontSize: '4xl',
+            fontSize: '3xl',
             fontWeight: 'bold',
-            color: 'primary.700',
-            mb: '4'
+            color: 'gray.900',
+            mb: '2'
           })}>
-            🏠 マイダッシュボード
+            ちょい勉ダッシュボード
           </h1>
           <p className={css({
             fontSize: 'lg',
             color: 'gray.600'
           })}>
-            今日の学習を管理し、目標に向かって進もう！
+            学習タスクを管理して、効率的に勉強を進めましょう
           </p>
         </div>
 
-        {/* 統計カード */}
+        {/* 新しいTODO作成フォーム */}
         <div className={css({
-          display: 'grid',
-          gridTemplateColumns: { base: '1fr', md: 'repeat(4, 1fr)' },
-          gap: '6',
+          bg: 'white',
+          rounded: 'lg',
+          shadow: 'md',
+          p: '6',
           mb: '8'
         })}>
-          <div className={css({
-            bg: 'white',
-            rounded: 'xl',
-            p: '6',
-            shadow: 'md',
-            border: '1px solid',
-            borderColor: 'primary.100'
+          <h2 className={css({
+            fontSize: 'xl',
+            fontWeight: 'bold',
+            color: 'gray.900',
+            mb: '4'
           })}>
-            <div className={css({
-              textAlign: 'center'
-            })}>
-              <div className={css({
-                fontSize: '3xl',
-                fontWeight: 'bold',
-                color: 'primary.600',
+            新しいTODOを作成
+          </h2>
+          <form onSubmit={handleSubmit} className={css({
+            spaceY: '4'
+          })}>
+            <div>
+              <label className={css({
+                display: 'block',
+                fontSize: 'sm',
+                fontWeight: 'medium',
+                color: 'gray.700',
                 mb: '2'
               })}>
-                {Math.floor(todayTotalMinutes / 60)}h {todayTotalMinutes % 60}m
-              </div>
-              <div className={css({
-                fontSize: 'sm',
-                color: 'gray.600'
-              })}>
-                今日の学習時間
-              </div>
+                タスク
+              </label>
+              <input
+                type="text"
+                value={newTodo}
+                onChange={(e) => setNewTodo(e.target.value)}
+                placeholder="学習したい内容を入力してください"
+                className={css({
+                  w: 'full',
+                  p: '3',
+                  border: '1px solid',
+                  borderColor: 'gray.300',
+                  rounded: 'md',
+                  fontSize: 'sm',
+                  _focus: {
+                    outline: 'none',
+                    borderColor: 'blue.500',
+                    ring: '1px',
+                    ringColor: 'blue.500'
+                  }
+                })}
+                required
+              />
             </div>
-          </div>
-
-          <div className={css({
-            bg: 'white',
-            rounded: 'xl',
-            p: '6',
-            shadow: 'md',
-            border: '1px solid',
-            borderColor: 'primary.100'
-          })}>
             <div className={css({
-              textAlign: 'center'
-            })}>
-              <div className={css({
-                fontSize: '3xl',
-                fontWeight: 'bold',
-                color: 'primary.600',
-                mb: '2'
-              })}>
-                {Math.floor(weekTotalMinutes / 60)}h {weekTotalMinutes % 60}m
-              </div>
-              <div className={css({
-                fontSize: 'sm',
-                color: 'gray.600'
-              })}>
-                今週の学習時間
-              </div>
-            </div>
-          </div>
-
-          <div className={css({
-            bg: 'white',
-            rounded: 'xl',
-            p: '6',
-            shadow: 'md',
-            border: '1px solid',
-            borderColor: 'primary.100'
-          })}>
-            <div className={css({
-              textAlign: 'center'
-            })}>
-              <div className={css({
-                fontSize: '3xl',
-                fontWeight: 'bold',
-                color: 'primary.600',
-                mb: '2'
-              })}>
-                {Math.floor(monthTotalMinutes / 60)}h {monthTotalMinutes % 60}m
-              </div>
-              <div className={css({
-                fontSize: 'sm',
-                color: 'gray.600'
-              })}>
-                今月の学習時間
-              </div>
-            </div>
-          </div>
-
-          <div className={css({
-            bg: 'white',
-            rounded: 'xl',
-            p: '6',
-            shadow: 'md',
-            border: '1px solid',
-            borderColor: 'primary.100'
-          })}>
-            <div className={css({
-              textAlign: 'center'
-            })}>
-              <div className={css({
-                fontSize: '3xl',
-                fontWeight: 'bold',
-                color: 'green.600',
-                mb: '2'
-              })}>
-                {completedTodos.length}
-              </div>
-              <div className={css({
-                fontSize: 'sm',
-                color: 'gray.600'
-              })}>
-                完了したTODO
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className={css({
-          display: 'grid',
-          gridTemplateColumns: { base: '1fr', lg: '2fr 1fr' },
-          gap: '8'
-        })}>
-          {/* 最近のTODOリスト */}
-          <div className={css({
-            bg: 'white',
-            rounded: 'xl',
-            p: '6',
-            shadow: 'md',
-            border: '1px solid',
-            borderColor: 'primary.100'
-          })}>
-            <h2 className={css({
-              fontSize: '2xl',
-              fontWeight: 'bold',
-              color: 'primary.800',
-              mb: '4'
-            })}>
-              最近のTODOリスト
-            </h2>
-
-            {todosLoading ? (
-              <LoadingSpinner text="TODOリストを読み込み中..." />
-            ) : todos.length === 0 ? (
-              <div className={css({
-                textAlign: 'center',
-                py: '12',
-                color: 'gray.500'
-              })}>
-                まだTODOがありません
-              </div>
-            ) : (
-              <div className={css({
-                spaceY: '4'
-              })}>
-                {todos.slice(0, 5).map(todo => (
-                  <div key={todo.id} className={css({
-                    p: '4',
-                    bg: completedTodoId === todo.id ? 'green.100' : 'gray.50',
-                    rounded: 'lg',
-                    border: '1px solid',
-                    borderColor: completedTodoId === todo.id ? 'green.300' : 'gray.200',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    transition: 'all 0.3s ease-in-out',
-                    ...(completedTodoId === todo.id && {
-                      transform: 'scale(1.02)',
-                      boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
-                    })
-                  })}>
-                    {completedTodoId === todo.id && (
-                      <div className={css({
-                        position: 'absolute',
-                        top: '0',
-                        left: '0',
-                        right: '0',
-                        bottom: '0',
-                        bg: 'green.500',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 'lg',
-                        fontWeight: 'bold',
-                        animation: 'slideIn 0.5s ease-out',
-                        zIndex: '10'
-                      })}>
-                        ✅ 完了済み！
-                      </div>
-                    )}
-                    <div className={css({
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      mb: '2'
-                    })}>
-                      <Link href={`/todoList/${todo.id}`} className={css({
-                        flex: '1',
-                        textDecoration: 'none',
-                        color: 'inherit',
-                        _hover: { color: 'primary.600' }
-                      })}>
-                        <h3 className={css({
-                          fontSize: 'lg',
-                          fontWeight: 'bold',
-                          color: 'gray.900',
-                          cursor: 'pointer'
-                        })}>
-                          {todo.task}
-                        </h3>
-                      </Link>
-                      <div className={css({
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '2'
-                      })}>
-                        <span className={css({
-                          fontSize: 'sm',
-                          color: todo.status === 'completed' ? 'green.600' : 'orange.600',
-                          fontWeight: 'bold'
-                        })}>
-                          {todo.status === 'completed' ? '完了' : '未完了'}
-                        </span>
-                        {todo.status !== 'completed' && (
-                          <button
-                            onClick={() => handleCompleteTodo(todo.id)}
-                            disabled={completingTodoId === todo.id}
-                            className={css({
-                              px: '3',
-                              py: '1',
-                              bg: 'green.500',
-                              color: 'white',
-                              rounded: 'md',
-                              fontSize: 'xs',
-                              fontWeight: 'bold',
-                              _hover: { bg: 'green.600' },
-                              _disabled: { bg: 'gray.400', cursor: 'not-allowed' },
-                              transition: 'all 0.2s'
-                            })}
-                          >
-                            {completingTodoId === todo.id ? '完了中...' : '完了'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <div className={css({
-                      fontSize: 'xs',
-                      color: 'gray.400',
-                      mt: '2'
-                    })}>
-                      {new Date(todo.created_at).toLocaleDateString('ja-JP')}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* AI TODO提案 */}
-          <div className={css({
-            bg: 'white',
-            rounded: 'xl',
-            p: '6',
-            shadow: 'md',
-            border: '1px solid',
-            borderColor: 'primary.100',
-            h: 'fit-content'
-          })}>
-            <h2 className={css({
-              fontSize: '2xl',
-              fontWeight: 'bold',
-              color: 'primary.800',
-              mb: '4'
-            })}>
-              AI TODO提案
-            </h2>
-
-            <form onSubmit={handleTodoSuggestion} className={css({
-              spaceY: '4'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '4'
             })}>
               <div>
                 <label className={css({
@@ -485,291 +290,270 @@ export default function DashboardPage() {
                   fontSize: 'sm',
                   fontWeight: 'medium',
                   color: 'gray.700',
-                  mb: '1'
+                  mb: '2'
                 })}>
-                  勉強時間（分）
+                  予定学習時間（時間）
                 </label>
                 <input
                   type="number"
-                  min="1"
-                  max="480"
-                  value={todoSuggestionForm.time_available}
-                  onChange={(e) => setTodoSuggestionForm(prev => ({
-                    ...prev,
-                    time_available: parseInt(e.target.value) || 0
-                  }))}
+                  step="0.5"
+                  min="0"
+                  value={newStudyTime}
+                  onChange={(e) => setNewStudyTime(e.target.value)}
+                  placeholder="2.5"
                   className={css({
                     w: 'full',
-                    px: '3',
-                    py: '2',
-                    border: '1px solid',
-                    borderColor: 'gray.300',
-                    rounded: 'md',
-                    fontSize: 'sm'
-                  })}
-                />
-              </div>
-
-              <div>
-                <label className={css({
-                  display: 'block',
-                  fontSize: 'sm',
-                  fontWeight: 'medium',
-                  color: 'gray.700',
-                  mb: '1'
-                })}>
-                  最近の進捗
-                </label>
-                <textarea
-                  value={todoSuggestionForm.recent_progress}
-                  onChange={(e) => setTodoSuggestionForm(prev => ({
-                    ...prev,
-                    recent_progress: e.target.value
-                  }))}
-                  placeholder="最近何を勉強しましたか？"
-                  className={css({
-                    w: 'full',
-                    px: '3',
-                    py: '2',
+                    p: '3',
                     border: '1px solid',
                     borderColor: 'gray.300',
                     rounded: 'md',
                     fontSize: 'sm',
-                    resize: 'vertical',
-                    minH: '20'
+                    _focus: {
+                      outline: 'none',
+                      borderColor: 'blue.500',
+                      ring: '1px',
+                      ringColor: 'blue.500'
+                    }
                   })}
                 />
               </div>
-
               <div>
                 <label className={css({
                   display: 'block',
                   fontSize: 'sm',
                   fontWeight: 'medium',
                   color: 'gray.700',
-                  mb: '1'
-                })}>
-                  苦手分野（カンマ区切り）
-                </label>
-                <input
-                  type="text"
-                  value={todoSuggestionForm.weak_areas}
-                  onChange={(e) => setTodoSuggestionForm(prev => ({
-                    ...prev,
-                    weak_areas: e.target.value
-                  }))}
-                  placeholder="例：数学, 英語"
-                  className={css({
-                    w: 'full',
-                    px: '3',
-                    py: '2',
-                    border: '1px solid',
-                    borderColor: 'gray.300',
-                    rounded: 'md',
-                    fontSize: 'sm'
-                  })}
-                />
-              </div>
-
-              <div>
-                <label className={css({
-                  display: 'block',
-                  fontSize: 'sm',
-                  fontWeight: 'medium',
-                  color: 'gray.700',
-                  mb: '1'
-                })}>
-                  今日の目標
-                </label>
-                <input
-                  type="text"
-                  value={todoSuggestionForm.daily_goal}
-                  onChange={(e) => setTodoSuggestionForm(prev => ({
-                    ...prev,
-                    daily_goal: e.target.value
-                  }))}
-                  placeholder="今日達成したい目標"
-                  className={css({
-                    w: 'full',
-                    px: '3',
-                    py: '2',
-                    border: '1px solid',
-                    borderColor: 'gray.300',
-                    rounded: 'md',
-                    fontSize: 'sm'
-                  })}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={todoSuggestionLoading}
-                className={buttonStyles.primary + ' ' + css({ w: 'full' })}
-              >
-                {todoSuggestionLoading ? '生成中...' : 'TODOを生成'}
-              </button>
-            </form>
-
-            {todoSuggestionError && (
-              <div className={css({
-                mt: '4',
-                p: '3',
-                bg: 'red.50',
-                border: '1px solid',
-                borderColor: 'red.200',
-                rounded: 'md',
-                color: 'red.700',
-                fontSize: 'sm'
-              })}>
-                {todoSuggestionError}
-              </div>
-            )}
-
-            {todoSuggestionResult && (
-              <div className={css({
-                mt: '4',
-                p: '4',
-                bg: 'green.50',
-                border: '1px solid',
-                borderColor: 'green.200',
-                rounded: 'md'
-              })}>
-                <h3 className={css({
-                  fontSize: 'lg',
-                  fontWeight: 'bold',
-                  color: 'green.800',
                   mb: '2'
                 })}>
-                  AI提案
-                </h3>
-
-                <AiTodoSuggestion
-                  content={todoSuggestionResult.content}
-                  onAddTodos={handleAddToTodoList}
+                  期限
+                </label>
+                <input
+                  type="date"
+                  value={newDueDate}
+                  onChange={(e) => setNewDueDate(e.target.value)}
+                  className={css({
+                    w: 'full',
+                    p: '3',
+                    border: '1px solid',
+                    borderColor: 'gray.300',
+                    rounded: 'md',
+                    fontSize: 'sm',
+                    _focus: {
+                      outline: 'none',
+                      borderColor: 'blue.500',
+                      ring: '1px',
+                      ringColor: 'blue.500'
+                    }
+                  })}
                 />
               </div>
-            )}
-          </div>
+            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting || !newTodo.trim()}
+              className={css({
+                w: 'full',
+                py: '3',
+                bg: 'blue.600',
+                color: 'white',
+                rounded: 'md',
+                fontSize: 'md',
+                fontWeight: 'medium',
+                transition: 'all 0.2s',
+                _disabled: {
+                  opacity: '0.5',
+                  cursor: 'not-allowed'
+                },
+                _hover: {
+                  bg: 'blue.700'
+                }
+              })}
+            >
+              {isSubmitting ? '作成中...' : 'TODOを作成'}
+            </button>
+          </form>
         </div>
 
-        {/* 最近のTODO */}
+        {/* TODO一覧 */}
         <div className={css({
-          mt: '8',
           bg: 'white',
-          rounded: 'xl',
-          p: '6',
+          rounded: 'lg',
           shadow: 'md',
-          border: '1px solid',
-          borderColor: 'primary.100'
+          p: '6'
         })}>
           <h2 className={css({
-            fontSize: '2xl',
+            fontSize: 'xl',
             fontWeight: 'bold',
-            color: 'primary.800',
+            color: 'gray.900',
             mb: '4'
           })}>
-            最近のTODO
+            TODO一覧
           </h2>
-
-          {todosLoading ? (
-            <LoadingSpinner text="TODOを読み込み中..." />
+          {isLoading ? (
+            <div className={css({
+              textAlign: 'center',
+              py: '8'
+            })}>
+              <div className={css({
+                w: '8',
+                h: '8',
+                border: '4px solid',
+                borderColor: 'gray.200',
+                borderTopColor: 'blue.600',
+                rounded: 'full',
+                animation: 'spin 1s linear infinite',
+                mx: 'auto'
+              })} />
+              <p className={css({
+                mt: '4',
+                color: 'gray.600'
+              })}>
+                読み込み中...
+              </p>
+            </div>
           ) : todos.length === 0 ? (
             <div className={css({
               textAlign: 'center',
-              py: '12',
-              color: 'gray.500'
+              py: '8'
             })}>
-              まだTODOがありません
+              <p className={css({
+                color: 'gray.600',
+                mb: '4'
+              })}>
+                まだTODOがありません
+              </p>
+              <p className={css({
+                fontSize: 'sm',
+                color: 'gray.500'
+              })}>
+                上記のフォームで新しいTODOを作成してください
+              </p>
             </div>
           ) : (
             <div className={css({
-              spaceY: '3'
+              spaceY: '4'
             })}>
-              {todos.slice(0, 5).map(todo => (
-                <div key={todo.id} className={css({
-                  p: '3',
-                  bg: completedTodoId === todo.id ? 'green.100' : (todo.status === 'completed' ? 'green.50' : 'gray.50'),
-                  rounded: 'lg',
-                  border: '1px solid',
-                  borderColor: completedTodoId === todo.id ? 'green.300' : (todo.status === 'completed' ? 'green.200' : 'gray.200'),
-                  position: 'relative',
-                  overflow: 'hidden',
-                  transition: 'all 0.3s ease-in-out',
-                  ...(completedTodoId === todo.id && {
-                    transform: 'scale(1.02)',
-                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
-                  })
-                })}>
-                  {completedTodoId === todo.id && (
-                    <div className={css({
-                      position: 'absolute',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      bottom: '0',
-                      bg: 'green.500',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 'md',
-                      fontWeight: 'bold',
-                      animation: 'slideIn 0.5s ease-out',
-                      zIndex: '10'
-                    })}>
-                      ✅ 完了済み！
-                    </div>
-                  )}
+              {todos.map((todo) => (
+                <div
+                  key={todo.id}
+                  id={`todo-${todo.id}`}
+                  className={css({
+                    p: '4',
+                    border: '1px solid',
+                    borderColor: 'gray.200',
+                    rounded: 'lg',
+                    bg: todo.status === 'completed' ? 'green.50' : 'white',
+                    transition: 'all 0.2s',
+                    _hover: {
+                      shadow: 'md'
+                    }
+                  })}
+                >
                   <div className={css({
                     display: 'flex',
-                    alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: '2'
+                    alignItems: 'flex-start',
+                    gap: '4'
                   })}>
-                    <Link href={`/todoList/${todo.id}`} className={css({
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '2',
-                      flex: '1',
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      _hover: { color: 'primary.600' }
+                    <div className={css({
+                      flex: '1'
                     })}>
                       <div className={css({
-                        w: '4',
-                        h: '4',
-                        rounded: 'full',
-                        bg: todo.status === 'completed' ? 'green.500' : 'gray.300'
-                      })} />
-                      <h3 className={css({
-                        fontSize: 'sm',
-                        color: todo.status === 'completed' ? 'green.700' : 'gray.700',
-                        textDecoration: todo.status === 'completed' ? 'line-through' : 'none',
-                        cursor: 'pointer'
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '2',
+                        mb: '2'
                       })}>
-                        {todo.task}
-                      </h3>
-                    </Link>
-                    {todo.status !== 'completed' && (
-                      <button
-                        onClick={() => handleCompleteTodo(todo.id)}
-                        disabled={completingTodoId === todo.id}
+                        <span className={css({
+                          fontSize: 'lg',
+                          color: todo.status === 'completed' ? 'green.600' : 'gray.400'
+                        })}>
+                          {todo.status === 'completed' ? '✅' : '⭕'}
+                        </span>
+                        <Link
+                          href={`/todoList/${todo.id}`}
+                          className={css({
+                            fontSize: 'lg',
+                            fontWeight: 'medium',
+                            color: todo.status === 'completed' ? 'green.800' : 'gray.900',
+                            textDecoration: 'none',
+                            _hover: {
+                              textDecoration: 'underline'
+                            }
+                          })}
+                        >
+                          {todo.task}
+                        </Link>
+                      </div>
+                      <div className={css({
+                        display: 'flex',
+                        gap: '4',
+                        fontSize: 'sm',
+                        color: 'gray.600'
+                      })}>
+                        <span>学習時間: {todo.study_time}時間</span>
+                        {todo.due_date && (
+                          <span>期限: {new Date(todo.due_date).toLocaleDateString('ja-JP')}</span>
+                        )}
+                        <span>作成日: {new Date(todo.created_at).toLocaleDateString('ja-JP')}</span>
+                      </div>
+                    </div>
+                    <div className={css({
+                      display: 'flex',
+                      gap: '2'
+                    })}>
+                      {todo.status === 'pending' && (
+                        <button
+                          onClick={() => handleCompleteTodo(todo.id)}
+                          className={css({
+                            px: '3',
+                            py: '1',
+                            bg: 'green.600',
+                            color: 'white',
+                            rounded: 'md',
+                            fontSize: 'sm',
+                            fontWeight: 'medium',
+                            transition: 'all 0.2s',
+                            _hover: { bg: 'green.700' }
+                          })}
+                        >
+                          完了
+                        </button>
+                      )}
+                      <Link
+                        href={`/todoList/${todo.id}/edit`}
                         className={css({
-                          px: '2',
+                          px: '3',
                           py: '1',
-                          bg: 'green.500',
+                          bg: 'blue.600',
                           color: 'white',
-                          rounded: 'sm',
-                          fontSize: 'xs',
-                          fontWeight: 'bold',
-                          _hover: { bg: 'green.600' },
-                          _disabled: { bg: 'gray.400', cursor: 'not-allowed' },
-                          transition: 'all 0.2s'
+                          rounded: 'md',
+                          fontSize: 'sm',
+                          fontWeight: 'medium',
+                          textDecoration: 'none',
+                          transition: 'all 0.2s',
+                          _hover: { bg: 'blue.700' }
                         })}
                       >
-                        {completingTodoId === todo.id ? '完了中...' : '完了'}
+                        編集
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteTodo(todo.id)}
+                        className={css({
+                          px: '3',
+                          py: '1',
+                          bg: 'red.600',
+                          color: 'white',
+                          rounded: 'md',
+                          fontSize: 'sm',
+                          fontWeight: 'medium',
+                          transition: 'all 0.2s',
+                          _hover: { bg: 'red.700' }
+                        })}
+                      >
+                        削除
                       </button>
-                    )}
+                    </div>
                   </div>
                 </div>
               ))}
