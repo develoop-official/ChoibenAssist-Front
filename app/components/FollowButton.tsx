@@ -34,7 +34,7 @@ export default function FollowButton({
     }
 
     try {
-      console.log('フォロー状態確認開始:', {
+      console.warn('フォロー状態確認開始:', {
         userId: user.id,
         targetUserId,
         userEmail: user.email
