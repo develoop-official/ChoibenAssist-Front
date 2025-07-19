@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { supabase } from '../../lib/supabase';
 import { TodoItem, CreateTodoItem } from '../types/todo-item';
@@ -12,7 +12,7 @@ export function useTodos() {
   const { user } = useAuth();
 
   // 一覧取得
-  const fetchTodos = async () => {
+  const fetchTodos = useCallback(async () => {
     if (!user) {
       setTodos([]);
       setLoading(false);
@@ -43,7 +43,7 @@ export function useTodos() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   // 追加
   const addTodo = async (newTodo: CreateTodoItem) => {
@@ -102,7 +102,7 @@ export function useTodos() {
 
   useEffect(() => {
     fetchTodos();
-  }, [user]);
+  }, [user, fetchTodos]);
 
   return {
     todos,

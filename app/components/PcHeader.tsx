@@ -154,15 +154,24 @@ export default function PcHeader() {
           minWidth: 0,
           overflow: "hidden"
         }}>
-          <li style={{ display: "inline-block" }}>
-            <Link href="/studyList" style={{
-              color: isActive("/studyList") ? "#1d4ed8" : "#1e3a8a",
-              borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none",
-              paddingBottom: "4px",
-              textDecoration: "none",
-              transition: "all 0.2s"
-            }}>学習記録一覧</Link>
-          </li>
+                      <li style={{ display: "inline-block" }}>
+              <Link href="/" style={{
+                color: isActive("/") ? "#1d4ed8" : "#1e3a8a",
+                borderBottom: isActive("/") ? "2px solid #3D8D7A" : "none",
+                paddingBottom: "4px",
+                textDecoration: "none",
+                transition: "all 0.2s"
+              }}>ダッシュボード</Link>
+            </li>
+            <li style={{ display: "inline-block" }}>
+              <Link href="/studyList" style={{
+                color: isActive("/studyList") ? "#1d4ed8" : "#1e3a8a",
+                borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none",
+                paddingBottom: "4px",
+                textDecoration: "none",
+                transition: "all 0.2s"
+              }}>学習記録一覧</Link>
+            </li>
           <li style={{ display: "inline-block" }}>
 
           </li>
