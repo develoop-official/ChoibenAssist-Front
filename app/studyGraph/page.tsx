@@ -1,7 +1,8 @@
 "use client";
 
+import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
 import {
   ResponsiveContainer,
   BarChart,
@@ -11,10 +12,11 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-import { useRouter } from "next/navigation";
+
+import { supabase } from "../../lib/supabase";
 import { css } from "../../styled-system/css";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
-import dayjs from "dayjs";
+
 
 // 型定義
 interface RecordItem {
@@ -175,4 +177,4 @@ export default function StudyGraphPage() {
       </div>
     </main>
   );
-} 
+}

@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { css } from "../../../styled-system/css";
+import { useEffect, useState } from "react";
+
 import { supabase } from "../../../lib/supabase";
+import { css } from "../../../styled-system/css";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { TodoItem } from "../../types/todo-item";
 
@@ -257,4 +258,4 @@ export default function TodoDetailPage() {
       </button>
     </main>
   );
-} 
+}

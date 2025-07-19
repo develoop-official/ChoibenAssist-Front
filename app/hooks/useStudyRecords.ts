@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { StudyRecord, CreateStudyRecord } from '../types/study-record';
+
 import { supabase } from '../../lib/supabase';
+import { StudyRecord, CreateStudyRecord } from '../types/study-record';
+
 import { useAuth } from './useAuth';
 
 export function useStudyRecords() {
@@ -57,7 +59,7 @@ export function useStudyRecords() {
           details: tableError.details,
           hint: tableError.hint
         });
-        
+
         if (tableError.code === '42P01' || tableError.message?.includes('relation "study_records" does not exist')) {
           console.warn('study_recordsテーブルが存在しません。テーブルを作成してください。');
           setError('データベーステーブルが存在しません。管理者に連絡してください。');
@@ -65,7 +67,7 @@ export function useStudyRecords() {
           setLoading(false);
           return;
         }
-        
+
         // 400エラーの場合は認証や権限の問題の可能性
         if (tableError.code === '400' || tableError.message?.includes('400')) {
           console.error('400エラー - 認証または権限の問題の可能性:', tableError);
@@ -97,14 +99,14 @@ export function useStudyRecords() {
           setRecords([]);
           return;
         }
-        
+
         // テーブルが存在しない場合や権限エラーの場合
         if (error.code === '42P01' || error.message?.includes('relation "study_records" does not exist')) {
           console.warn('study_recordsテーブルが存在しません。テーブルを作成してください。');
           setRecords([]);
           return;
         }
-        
+
         // ネットワークエラーやその他のエラー
         console.error('Supabaseエラー詳細:', {
           message: error.message,
@@ -114,7 +116,7 @@ export function useStudyRecords() {
           stack: error.stack,
           fullError: error
         });
-        
+
         // エラーが空のオブジェクトの場合は特別処理
         if (!error.message && !error.code) {
           console.warn('空のエラーオブジェクトが返されました。Supabaseクライアントの状態を確認してください。');
@@ -123,7 +125,7 @@ export function useStudyRecords() {
           setRecords([]);
           return;
         }
-        
+
         throw error;
       }
 
@@ -150,7 +152,7 @@ export function useStudyRecords() {
       setRecords(formattedRecords);
     } catch (err) {
       console.error('学習記録の取得に失敗しました:', err);
-      
+
       // エラーの詳細をログに出力（デバッグ用）
       if (err instanceof Error) {
         console.error('エラー詳細:', {
@@ -161,7 +163,7 @@ export function useStudyRecords() {
       } else {
         console.error('エラーオブジェクト:', err);
       }
-      
+
       // エラーの種類に応じて適切な処理
       if (err instanceof Error) {
         if (err.message.includes('fetch') || err.message.includes('network')) {
@@ -278,4 +280,4 @@ export function useStudyRecords() {
     deleteRecord,
     refetch: fetchRecords
   };
-} 
+}

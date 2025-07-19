@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
-import { css } from "../../styled-system/css";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "../hooks/useAuth";
+import { useState, useEffect } from "react";
+
 import { supabase } from "../../lib/supabase";
+import { css } from "../../styled-system/css";
+import { useAuth } from "../hooks/useAuth";
 
 interface UserProfile {
   user_id: string;
@@ -186,4 +187,4 @@ export default function MobileHeader() {
       )}
     </header>
   );
-} 
+}

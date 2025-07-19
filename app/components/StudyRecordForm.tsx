@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+
 import { css } from '../../styled-system/css';
-import { CreateStudyRecord } from '../types/study-record';
 import { formStyles } from '../styles/components';
+import { CreateStudyRecord } from '../types/study-record';
 
 interface StudyRecordFormProps {
   onSubmit: (record: CreateStudyRecord) => Promise<void>;
@@ -17,7 +18,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!subject.trim() || !duration.trim()) {
       alert('科目と学習時間を入力してください');
       return;
@@ -98,7 +99,7 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
           新しい記録
         </h2>
       </div>
-      
+
       <form onSubmit={handleSubmit} className={css({
         spaceY: '5'
       })}>
@@ -178,4 +179,4 @@ export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {
       </form>
     </div>
   );
-} 
+}

@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { css } from '../../../styled-system/css';
-import { useAuth } from '../../hooks/useAuth';
+import { useEffect, useState } from 'react';
+
 import { supabase } from '../../../lib/supabase';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { css } from '../../../styled-system/css';
 import ErrorMessage from '../../components/ui/ErrorMessage';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { useAuth } from '../../hooks/useAuth';
 import { StudyRecord } from '../../types/study-record';
 
 interface UserProfile {
@@ -24,7 +25,7 @@ export default function StudyRecordDetailPage() {
   const router = useRouter();
   const params = useParams();
   const recordId = params.id as string;
-  
+
   const [record, setRecord] = useState<StudyRecord | null>(null);
   const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -149,10 +150,10 @@ export default function StudyRecordDetailPage() {
     const hash = subject.split('').reduce((acc, char) => {
       return char.charCodeAt(0) + ((acc << 5) - acc);
     }, 0);
-    
+
     // ハッシュ値から色のインデックスを決定
     const colorIndex = Math.abs(hash) % 6;
-    
+
     // 色のパレット（6色）
     const colorPalette = [
       { bg: 'blue.100', text: 'blue.700' },
@@ -162,7 +163,7 @@ export default function StudyRecordDetailPage() {
       { bg: 'pink.100', text: 'pink.700' },
       { bg: 'teal.100', text: 'teal.700' }
     ];
-    
+
     return colorPalette[colorIndex];
   };
 
@@ -390,7 +391,7 @@ export default function StudyRecordDetailPage() {
         >
           ← 一覧に戻る
         </button>
-        
+
         {user.id === record.user_id && (
           <div className={css({
             display: 'flex',
@@ -517,7 +518,7 @@ export default function StudyRecordDetailPage() {
                   {getAuthorAvatarUrl() ? (
                     <img
                       src={getAuthorAvatarUrl() || ''}
-                      alt="投稿者アバター" 
+                      alt="投稿者アバター"
                       className={css({
                         w: 'full',
                         h: 'full',
@@ -659,4 +660,4 @@ export default function StudyRecordDetailPage() {
       </div>
     </main>
   );
-} 
+}

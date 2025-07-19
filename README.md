@@ -59,6 +59,7 @@ npm install
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+BACKEND_API_URL=https://choiben-back.youkan.uk
 ```
 
 ### 4. Supabaseの設定

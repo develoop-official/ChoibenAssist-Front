@@ -8,12 +8,12 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export default function EmptyState({ 
+export default function EmptyState({
   icon = '📚',
   title,
   description,
   action,
-  className 
+  className
 }: EmptyStateProps) {
   return (
     <div className={css({
@@ -42,7 +42,7 @@ export default function EmptyState({
             {icon}
           </span>
         </div>
-        
+
         <h3 className={css({
           fontSize: 'xl',
           fontWeight: 'bold',
@@ -51,7 +51,7 @@ export default function EmptyState({
         })}>
           {title}
         </h3>
-        
+
         <p className={css({
           color: 'gray.600',
           mb: '6',
@@ -59,7 +59,7 @@ export default function EmptyState({
         })}>
           {description}
         </p>
-        
+
         {action && (
           <div className={css({
             mb: '6'
@@ -67,7 +67,7 @@ export default function EmptyState({
             {action}
           </div>
         )}
-        
+
         <div className={css({
           display: 'flex',
           alignItems: 'center',
@@ -83,4 +83,4 @@ export default function EmptyState({
       </div>
     </div>
   );
-} 
+}
