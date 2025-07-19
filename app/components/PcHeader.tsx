@@ -161,43 +161,34 @@ export default function PcHeader() {
                 paddingBottom: "4px",
                 textDecoration: "none",
                 transition: "all 0.2s"
-              }}>ダッシュボード</Link>
+              }}>🏠 ダッシュボード</Link>
             </li>
             <li style={{ display: "inline-block" }}>
-              <Link href="/studyList" style={{
-                color: isActive("/studyList") ? "#1d4ed8" : "#1e3a8a",
-                borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none",
+              <Link href="/farm" style={{
+                color: isActive("/farm") ? "#1d4ed8" : "#1e3a8a",
+                borderBottom: isActive("/farm") ? "2px solid #3D8D7A" : "none",
                 paddingBottom: "4px",
                 textDecoration: "none",
                 transition: "all 0.2s"
-              }}>学習記録一覧</Link>
+              }}>🌱 ちょい勉ファーム</Link>
             </li>
           <li style={{ display: "inline-block" }}>
 
           </li>
           <li style={{ display: "inline-block" }}>
-            <Link href="/studyGraph" style={{
-              color: isActive("/studyGraph") ? "#1d4ed8" : "#1e3a8a",
-              borderBottom: isActive("/studyGraph") ? "2px solid #3D8D7A" : "none",
+            <Link href="/timeline" style={{
+              color: isActive("/timeline") ? "#1d4ed8" : "#1e3a8a",
+              borderBottom: isActive("/timeline") ? "2px solid #3D8D7A" : "none",
               paddingBottom: "4px",
               textDecoration: "none",
               transition: "all 0.2s"
-            }}>学習グラフ</Link>
-          </li>
-          <li style={{ display: "inline-block" }}>
-            <Link href="/todoList" style={{
-              color: isActive("/todoList") ? "#1d4ed8" : "#1e3a8a",
-              borderBottom: isActive("/todoList") ? "2px solid #3D8D7A" : "none",
-              paddingBottom: "4px",
-              textDecoration: "none",
-              transition: "all 0.2s"
-            }}>TODOリスト</Link>
+            }}>📱 ちょい勉タイムライン</Link>
           </li>
         </ul>
         {user && (
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "16px" }}>
             {/* ユーザーアイコン */}
-            <Link href="/myPage" className={css({
+            <Link href="/profile" className={css({
               display: "flex",
               alignItems: "center",
               gap: "2",

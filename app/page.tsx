@@ -149,16 +149,16 @@ export default function DashboardPage() {
           <h1 className={css({
             fontSize: '4xl',
             fontWeight: 'bold',
-            color: 'primary.800',
-            mb: '2'
+            color: 'primary.700',
+            mb: '4'
           })}>
-            学習ダッシュボード
+            🏠 マイダッシュボード
           </h1>
           <p className={css({
             fontSize: 'lg',
             color: 'gray.600'
           })}>
-            あなたの学習進捗を確認しましょう
+            今日の学習を管理し、目標に向かって進もう！
           </p>
         </div>
 
