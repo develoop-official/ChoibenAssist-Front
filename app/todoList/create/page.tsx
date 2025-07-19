@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 import { css } from '../../../styled-system/css';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -12,7 +12,7 @@ export default function CreateTodoPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { addTodo } = useTodos();
-  
+
   const [formData, setFormData] = useState({
     task: '',
     due_date: '',
@@ -30,7 +30,7 @@ export default function CreateTodoPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.task.trim()) {
       setError('タスクを入力してください');
       return;
@@ -44,7 +44,7 @@ export default function CreateTodoPage() {
     try {
       setLoading(true);
       setError('');
-      
+
       await addTodo({
         task: formData.task.trim(),
         due_date: formData.due_date || undefined,
@@ -53,7 +53,7 @@ export default function CreateTodoPage() {
       });
 
       router.push('/todoList');
-    } catch (_err) {
+    } catch {
       setError('TODOの作成に失敗しました');
     } finally {
       setLoading(false);
