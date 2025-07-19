@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 
+import { supabase } from '../lib/supabase';
 import { css } from '../styled-system/css';
 
 import { generateGeneralTodo } from './actions/todo-actions';
@@ -80,7 +81,18 @@ export default function DashboardPage() {
       setTodoSuggestionError('');
       setTodoSuggestionResult(null);
 
-            // 実際のAI APIを呼び出し
+      // セッショントークンを取得
+      if (!supabase) {
+        setTodoSuggestionError('Supabaseが設定されていません。');
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setTodoSuggestionError('認証トークンが見つかりません。再度ログインしてください。');
+        return;
+      }
+
+      // 実際のAI APIを呼び出し
       const weakAreasArray = todoSuggestionForm.weak_areas
         .split(',')
         .map(s => s.trim())
@@ -90,7 +102,8 @@ export default function DashboardPage() {
         todoSuggestionForm.time_available,
         todoSuggestionForm.recent_progress,
         weakAreasArray,
-        todoSuggestionForm.daily_goal
+        todoSuggestionForm.daily_goal,
+        session.access_token
       );
 
       setTodoSuggestionResult(result);

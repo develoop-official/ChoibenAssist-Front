@@ -18,6 +18,14 @@ export default function LogoutPage() {
       try {
         const { error } = await signOut();
 
+        // リフレッシュトークンエラーの場合も正常なログアウトとして扱う
+        if (error && (error.message?.includes('Invalid Refresh Token') || error.message?.includes('Refresh Token Not Found'))) {
+          console.warn('リフレッシュトークンエラーが発生しましたが、ログアウト処理を続行します');
+          // エラーがあってもログアウト成功として扱い、ログインページにリダイレクト
+          router.push('/login');
+          return;
+        }
+
         if (error) {
           setError('ログアウト中にエラーが発生しました');
           setLoading(false);
@@ -26,14 +34,15 @@ export default function LogoutPage() {
 
         // ログアウト成功時はログインページにリダイレクト
         router.push('/login');
-      } catch {
-        setError('ログアウト処理中にエラーが発生しました');
-        setLoading(false);
+      } catch (err) {
+        console.error('ログアウト処理エラー:', err);
+        // エラーが発生してもログインページにリダイレクト
+        router.push('/login');
       }
     };
 
     handleLogout();
-  }, []); // 依存配列を空にして一度だけ実行
+  }, [router, signOut]); // 依存配列を空にして一度だけ実行
 
   if (loading) {
     return (
@@ -79,7 +88,7 @@ export default function LogoutPage() {
               {error}
             </p>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/login')}
               className={css({
                 px: '4',
                 py: '2',
