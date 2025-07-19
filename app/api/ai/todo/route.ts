@@ -29,12 +29,19 @@ export async function POST(request: NextRequest) {
     const requestBody = JSON.stringify({ time_available, recent_progress, weak_areas, daily_goal });
     console.error('Request body:', requestBody);
 
+    const apiKey = process.env.BACKEND_API_KEY;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-From-Next': 'true',
+    };
+
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+
     const backendRes = await fetch(`${backendUrl}/api/ai/todo`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-From-Next': 'true',
-      },
+      headers,
       body: requestBody,
     });
 
