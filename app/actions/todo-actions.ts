@@ -6,15 +6,15 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
       throw new Error('BACKEND_API_URLが設定されていません');
     }
 
-    if (!process.env.BACKEND_API_KEY) {
-      throw new Error('BACKEND_API_KEYが設定されていません');
+    if (!process.env.API_SECRET_KEY) {
+      throw new Error('API_SECRET_KEYが設定されていません');
     }
 
     const response = await fetch(`${process.env.BACKEND_API_URL}/api/ai/scrapbox-todo/${projectName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.BACKEND_API_KEY}`,
+        'Authorization': `Bearer ${process.env.API_SECRET_KEY}`,
       },
       body: JSON.stringify({
         time_available: timeAvailable,
@@ -55,15 +55,15 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
       throw new Error('BACKEND_API_URLが設定されていません');
     }
 
-    if (!process.env.BACKEND_API_KEY) {
-      throw new Error('BACKEND_API_KEYが設定されていません');
+    if (!process.env.API_SECRET_KEY) {
+      throw new Error('API_SECRET_KEYが設定されていません');
     }
 
     const response = await fetch(`${process.env.BACKEND_API_URL}/api/ai/todo`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.BACKEND_API_KEY}`,
+        'Authorization': `Bearer ${process.env.API_SECRET_KEY}`,
       },
       body: JSON.stringify({
         time_available: timeAvailable,
