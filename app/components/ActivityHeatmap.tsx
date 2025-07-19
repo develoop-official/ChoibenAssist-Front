@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
 import dayjs from 'dayjs';
-import { css } from '../../styled-system/css';
+import { useCallback, useEffect, useState } from 'react';
+
 import { supabase } from '../../lib/supabase';
+import { css } from '../../styled-system/css';
 
 interface ActivityData {
   date: string;

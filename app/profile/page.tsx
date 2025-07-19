@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
+import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../../lib/supabase';
-import ProfileCard from '../components/ProfileCard';
+
 import ActivityHeatmap from '../components/ActivityHeatmap';
+import ProfileCard from '../components/ProfileCard';
 import StudyPosts from '../components/StudyPosts';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ErrorMessage from '../components/ui/ErrorMessage';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 interface UserProfile {
   id: string;
@@ -156,11 +158,13 @@ export default function ProfilePage() {
               gap: '8'
             })}>
               {/* 左側：プロフィールカード */}
-              <ProfileCard 
-                profile={profile} 
-                user={user}
-                onProfileUpdate={handleProfileUpdate}
-              />
+              {user && (
+                <ProfileCard 
+                  profile={profile} 
+                  user={user}
+                  onProfileUpdate={handleProfileUpdate}
+                />
+              )}
 
               {/* 右側：最近の学習投稿 */}
               {user && (

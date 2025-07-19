@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { css } from '../../styled-system/css';
+import { useCallback, useEffect, useState } from 'react';
+
 import { supabase } from '../../lib/supabase';
+import { css } from '../../styled-system/css';
+
 import LoadingSpinner from './ui/LoadingSpinner';
 
 interface CompletedTodo {
@@ -24,11 +26,7 @@ export default function RecentTodos({ userId, limit = 10 }: RecentTodosProps) {
   const [completedTodos, setCompletedTodos] = useState<CompletedTodo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchCompletedTodos();
-  }, [userId, limit]);
-
-  const fetchCompletedTodos = async () => {
+  const fetchCompletedTodos = useCallback(async () => {
     if (!supabase || !userId) return;
 
     try {
@@ -50,7 +48,11 @@ export default function RecentTodos({ userId, limit = 10 }: RecentTodosProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, limit]);
+
+  useEffect(() => {
+    fetchCompletedTodos();
+  }, [fetchCompletedTodos]);
 
   const getPriorityColor = (priority: string) => {
     const colors = {

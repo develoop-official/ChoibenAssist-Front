@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import Image from 'next/image';
-import { css } from '../../styled-system/css';
+import React, { useState } from 'react';
+
 import { supabase } from '../../lib/supabase';
+import { css } from '../../styled-system/css';
+import { buttonStyles, formStyles } from '../styles/components';
+
 import LoadingSpinner from './ui/LoadingSpinner';
 import MarkdownRenderer from './ui/MarkdownRenderer';
-import { buttonStyles, formStyles } from '../styles/components';
 
 interface UserProfile {
   id: string;
@@ -28,10 +30,14 @@ interface FormData {
   scrapbox_project_name: string;
 }
 
+interface User {
+  id: string;
+}
+
 interface ProfileCardProps {
   profile: UserProfile | null;
-  user: any;
-  onProfileUpdate: (updatedProfile: UserProfile) => void;
+  user: User;
+  onProfileUpdate: (_updatedProfile: UserProfile) => void;
 }
 
 export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileCardProps) {

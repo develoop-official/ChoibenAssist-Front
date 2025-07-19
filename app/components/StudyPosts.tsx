@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { css } from '../../styled-system/css';
+import { useCallback, useEffect, useState } from 'react';
+
 import { supabase } from '../../lib/supabase';
+import { css } from '../../styled-system/css';
+
 import LoadingSpinner from './ui/LoadingSpinner';
 import MarkdownRenderer from './ui/MarkdownRenderer';
 
@@ -33,18 +35,14 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
   const [posts, setPosts] = useState<StudyPost[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStudyPosts();
-  }, [userId, limit]);
-
-  const fetchStudyPosts = async () => {
+  const fetchStudyPosts = useCallback(async () => {
     if (!supabase || !userId) return;
 
     try {
       setLoading(true);
 
       // まずtimeline_posts_with_statsビューから投稿を取得を試行
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('timeline_posts_with_stats')
         .select('*')
         .eq('user_id', userId)
@@ -53,7 +51,7 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
 
       // timeline_postsが存在しない場合、study_recordsから取得（フォールバック）
       if (error && error.message.includes('relation "timeline_posts_with_stats" does not exist')) {
-        console.log('タイムラインテーブルが未作成のため、study_recordsからデータを取得します');
+        console.warn('タイムラインテーブルが未作成のため、study_recordsからデータを取得します');
         
         const fallbackResult = await supabase
           .from('study_records')
@@ -93,7 +91,11 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, limit]);
+
+  useEffect(() => {
+    fetchStudyPosts();
+  }, [fetchStudyPosts]);
 
   const truncateContent = (content: string, maxLength: number = 150) => {
     if (content.length <= maxLength) return content;
