@@ -138,10 +138,10 @@ deploy_production:
         --restart unless-stopped \
         -p 3001:3001 \
         --env NODE_ENV=production \
-        --env NEXT_PUBLIC_SUPABASE_URL="$PRODUCTION_SUPABASE_URL" \
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$PRODUCTION_SUPABASE_ANON_KEY" \
-        --env BACKEND_API_URL="$PRODUCTION_BACKEND_API_URL" \
-        --env API_SECRET_KEY="$PRODUCTION_API_SECRET_KEY" \
+        --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+        --env BACKEND_API_URL="$BACKEND_API_URL" \
+        --env API_SECRET_KEY="$API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
     
     # ヘルスチェック
@@ -197,10 +197,10 @@ deploy_staging:
         --restart unless-stopped \
         -p 3002:3001 \
         --env NODE_ENV=development \
-        --env NEXT_PUBLIC_SUPABASE_URL="$STAGING_SUPABASE_URL" \
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$STAGING_SUPABASE_ANON_KEY" \
-        --env BACKEND_API_URL="$STAGING_BACKEND_API_URL" \
-        --env API_SECRET_KEY="$STAGING_API_SECRET_KEY" \
+        --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+        --env BACKEND_API_URL="$BACKEND_API_URL" \
+        --env API_SECRET_KEY="$API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
     
     # ヘルスチェック
