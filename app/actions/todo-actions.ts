@@ -19,7 +19,7 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
     }
 
     return await response.json();
-  } catch (error) {
+  } catch {
     throw new Error('TODOの生成に失敗しました');
   }
 }
@@ -45,7 +45,7 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
     }
 
     return await response.json();
-  } catch (error) {
+  } catch {
     throw new Error('TODOの生成に失敗しました');
   }
-} 
+}
