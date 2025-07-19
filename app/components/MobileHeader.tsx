@@ -174,13 +174,12 @@ export default function MobileHeader() {
             <button onClick={() => setOpen(false)} className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.900", bg: "transparent", border: "none", cursor: "pointer" })}>&times;</button>
           </div>
           <div className={css({ px: "6", pt: "10", fontWeight: "bold", display: "flex", flexDirection: "column", gap: "6" })}>
-                        <Link href="/" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>ダッシュボード</Link>
-            <Link href="/studyList" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/studyList") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>学習記録一覧</Link>
-            <Link href="/studyGraph" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/studyGraph") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/studyGraph") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>学習グラフ</Link>
-            <Link href="/todoList" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/todoList") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/todoList") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>TODOリスト</Link>
+                        <Link href="/" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>🏠 ダッシュボード</Link>
+            <Link href="/farm" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/farm") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/farm") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>🌱 ちょい勉ファーム</Link>
+            <Link href="/timeline" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/timeline") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/timeline") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>📱 ちょい勉タイムライン</Link>
             {user && (
               <div className={css({ borderTop: "1px solid", borderColor: "gray.200", pt: "4", mt: "4", display: "flex", flexDirection: "column", gap: "4" })}>
-                <Link href="/myPage" onClick={() => setOpen(false)} className={css({ color: "blue.600", fontSize: "lg", transition: "all 0.2s", _hover: { color: "blue.700" } })}>マイページ</Link>
+                <Link href="/profile" onClick={() => setOpen(false)} className={css({ color: "blue.600", fontSize: "lg", transition: "all 0.2s", _hover: { color: "blue.700" } })}>👤 プロフィール</Link>
                 <Link href="/logout" onClick={() => setOpen(false)} className={css({ color: "red.600", fontSize: "lg", transition: "all 0.2s", _hover: { color: "red.700" } })}>ログアウト</Link>
               </div>
             )}

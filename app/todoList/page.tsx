@@ -126,7 +126,7 @@ interface TodoItemProps {
   isMyTodo: boolean;
   onStatusUpdate: (_id: string, _status: 'pending' | 'completed') => Promise<void>;
   removingId: string | null;
-  setRemovingId: (id: string | null) => void;
+  setRemovingId: (_id: string | null) => void;
   compact?: boolean;
 }
 

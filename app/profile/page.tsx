@@ -47,7 +47,7 @@ interface TodoSuggestionResponse {
   response_type: string;
 }
 
-export default function MyPage() {
+export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const { addTodos } = useTodos();
   const [profile, setProfile] = useState<UserProfile | null>(null);
