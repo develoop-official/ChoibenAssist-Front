@@ -136,7 +136,7 @@ export default function StudyListPage() {
             最新順
           </span>
           <button
-            onClick={() => router.push('/post')}
+
             className={css({
               px: '4',
               py: '2',
