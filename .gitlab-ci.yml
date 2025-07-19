@@ -1,8 +1,35 @@
 # GitLab CI/CD Pipeline for Next.js Application with Docker
 stages:
+  - clean
   - build
   - test
   - deploy
+
+# クリーンアップジョブ（週次実行）
+cleanup:
+  stage: clean
+  tags:
+    - shell
+  script:
+    - echo "Cleaning up old Docker images and containers..."
+    
+    # 停止したコンテナを削除
+    - docker container prune -f
+    
+    # 未使用のイメージを削除
+    - docker image prune -f
+    
+    # 未使用のボリュームを削除
+    - docker volume prune -f
+    
+    # 未使用のネットワークを削除
+    - docker network prune -f
+    
+    - echo "Cleanup completed"
+  only:
+    variables:
+      - $CLEANUP == "true"
+  when: manual
 
 
 variables:
@@ -184,30 +211,3 @@ deploy_staging:
   only:
     - develop
 
-
-
-# クリーンアップジョブ（週次実行）
-cleanup:
-  stage: clean
-  tags:
-    - shell
-  script:
-    - echo "Cleaning up old Docker images and containers..."
-    
-    # 停止したコンテナを削除
-    - docker container prune -f
-    
-    # 未使用のイメージを削除
-    - docker image prune -f
-    
-    # 未使用のボリュームを削除
-    - docker volume prune -f
-    
-    # 未使用のネットワークを削除
-    - docker network prune -f
-    
-    - echo "Cleanup completed"
-  only:
-    variables:
-      - $CLEANUP == "true"
-  when: manual
