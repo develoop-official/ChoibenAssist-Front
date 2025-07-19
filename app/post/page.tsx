@@ -4,14 +4,23 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { css } from '../../styled-system/css';
 import { useAuth } from '../hooks/useAuth';
-import { useStudyRecords } from '../hooks/useStudyRecords';
-import StudyRecordForm from '../components/StudyRecordForm';
+import TimelinePostForm from '../components/TimelinePostForm';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 export default function PostPage() {
   const { user, loading: authLoading } = useAuth();
-  const { addRecord } = useStudyRecords();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/');
+    }
+  }, [user, authLoading, router]);
+
+  const handlePostCreated = () => {
+    // 投稿後にタイムラインページに移動
+    router.push('/timeline');
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -98,15 +107,6 @@ export default function PostPage() {
     );
   }
 
-  const handleSubmit = async (record: any) => {
-    try {
-      await addRecord(record);
-      router.push('/studyList');
-    } catch (error) {
-      console.error('投稿に失敗しました:', error);
-    }
-  };
-
   return (
     <main className={css({
       maxW: '4xl',
@@ -115,18 +115,26 @@ export default function PostPage() {
       py: '8'
     })}>
       <div className={css({
-        mb: '6'
+        mb: '6',
+        textAlign: 'center'
       })}>
+        <h1 className={css({
+          fontSize: '2xl',
+          fontWeight: 'bold',
+          color: 'gray.900',
+          mb: '4'
+        })}>
+          📝 学習成果を投稿
+        </h1>
         <p className={css({
           fontSize: 'lg',
-          color: 'primary.600',
-          textAlign: 'center'
+          color: 'primary.600'
         })}>
-          学習した内容を記録しましょう
+          学習した内容をタイムラインに投稿して、みんなと共有しましょう
         </p>
       </div>
       
-      <StudyRecordForm onSubmit={handleSubmit} />
+      <TimelinePostForm onPostCreated={handlePostCreated} />
     </main>
   );
 } 

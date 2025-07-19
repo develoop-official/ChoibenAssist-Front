@@ -13,6 +13,7 @@ import TimelineComment from '../components/TimelineComment';
 import TimelinePostForm from '../components/TimelinePostForm';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import MarkdownRenderer from '../components/ui/MarkdownRenderer';
 import { useAuth } from '../hooks/useAuth';
 import { createPostShareData } from '../utils/share-utils';
 
@@ -52,7 +53,6 @@ function TimelineContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedHashtag, setSelectedHashtag] = useState<string>('');
-  const [showPostForm, setShowPostForm] = useState(false);
   const [completedTodo, setCompletedTodo] = useState<any>(null);
   const [showCompletedTodoModal, setShowCompletedTodoModal] = useState(false);
   const [baseUrl, setBaseUrl] = useState<string>('');
@@ -199,7 +199,6 @@ function TimelineContent() {
   };
 
   const handlePostCreated = () => {
-    setShowPostForm(false);
     setShowCompletedTodoModal(false);
     setCompletedTodo(null);
     fetchPosts();
@@ -240,19 +239,6 @@ function TimelineContent() {
   const getUserInitial = (profile?: UserProfile) => {
     const displayName = getUserDisplayName(profile);
     return displayName[0]?.toUpperCase() || 'U';
-  };
-
-  // MarkdownをHTMLに変換する関数
-  const renderMarkdown = (text: string) => {
-    return text
-      .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-gray-800 mb-2">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-gray-900 mb-3">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-gray-900 mb-4">$1</h1>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-xs">$1</code>')
-      .replace(/#(\w+)/g, '<span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mr-2 mb-1">#$1</span>')
-      .replace(/\n/g, '<br>');
   };
 
   if (authLoading || loading) {
@@ -316,29 +302,6 @@ function TimelineContent() {
         textAlign: 'center',
         mb: '6'
       })}>
-        <p className={css({
-          fontSize: 'lg',
-          color: 'primary.600',
-          mb: '4'
-        })}>
-          みんなの学習成果をチェックしよう！
-        </p>
-        <button
-          onClick={() => setShowPostForm(!showPostForm)}
-          className={css({
-            px: '6',
-            py: '3',
-            bg: 'blue.600',
-            color: 'white',
-            rounded: 'lg',
-            fontSize: 'md',
-            fontWeight: 'medium',
-            _hover: { bg: 'blue.700' },
-            transition: 'all 0.2s'
-          })}
-        >
-          {showPostForm ? '投稿フォームを閉じる' : '📝 学習成果を投稿'}
-        </button>
       </div>
 
       <div className={css({
@@ -419,12 +382,10 @@ function TimelineContent() {
 
         {/* メインコンテンツ */}
         <div className={css({
-          spaceY: '6'
+          spaceY: '1'
         })}>
           {/* 投稿フォーム */}
-          {showPostForm && (
-            <TimelinePostForm onPostCreated={handlePostCreated} />
-          )}
+          <TimelinePostForm onPostCreated={handlePostCreated} />
 
           {/* 投稿一覧 */}
           <div className={css({
@@ -584,21 +545,14 @@ function TimelineContent() {
                     <div className={css({
                       mb: '4'
                     })}>
-                      <div 
-                        dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
+                      <MarkdownRenderer
+                        content={post.content}
+                        onHashtagClick={setSelectedHashtag}
                         className={css({
                           fontSize: 'md',
                           color: 'gray.900',
                           lineHeight: 'relaxed',
-                          mb: '3',
-                          '& h1': { fontSize: 'lg', fontWeight: 'bold', color: 'gray.900', mb: '2' },
-                          '& h2': { fontSize: 'md', fontWeight: 'bold', color: 'gray.800', mb: '2' },
-                          '& h3': { fontSize: 'sm', fontWeight: 'bold', color: 'gray.700', mb: '1' },
-                          '& p': { mb: '2' },
-                          '& strong': { fontWeight: 'bold' },
-                          '& em': { fontStyle: 'italic' },
-                          '& code': { bg: 'gray.100', px: '1', py: '0.5', rounded: 'sm', fontSize: 'xs' },
-                          '& br': { display: 'block', content: '""', marginTop: '0.5rem' }
+                          mb: '3'
                         })}
                       />
 
@@ -800,7 +754,6 @@ function TimelineContent() {
               <button
                 onClick={() => {
                   setShowCompletedTodoModal(false);
-                  setShowPostForm(true);
                 }}
                 className={css({
                   flex: '1',
