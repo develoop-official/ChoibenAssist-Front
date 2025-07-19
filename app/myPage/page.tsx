@@ -312,6 +312,16 @@ export default function MyPage() {
         return;
       }
 
+      // デバッグ情報をログ出力
+      console.log('🔍 マイページ認証情報:', {
+        hasSession: !!session,
+        hasToken: !!session.access_token,
+        tokenLength: session.access_token?.length,
+        tokenPrefix: session.access_token?.substring(0, 20) + '...',
+        userId: session.user?.id,
+        userEmail: session.user?.email
+      });
+
       let result: TodoSuggestionResponse;
 
       if (useScrapbox && profile?.scrapbox_project_name) {

@@ -10,6 +10,17 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
       throw new Error('認証トークンが必要です。ログインしてください。');
     }
 
+    // デバッグ情報をログ出力
+    console.log('🔍 TODO生成リクエスト:', {
+      url: `${process.env.BACKEND_API_URL}/api/ai/scrapbox-todo/${projectName}`,
+      hasToken: !!accessToken,
+      tokenLength: accessToken.length,
+      tokenPrefix: accessToken.substring(0, 20) + '...',
+      projectName,
+      timeAvailable,
+      dailyGoal
+    });
+
     const response = await fetch(`${process.env.BACKEND_API_URL}/api/ai/scrapbox-todo/${projectName}`, {
       method: 'POST',
       headers: {
@@ -59,6 +70,18 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
     if (!accessToken) {
       throw new Error('認証トークンが必要です。ログインしてください。');
     }
+
+    // デバッグ情報をログ出力
+    console.log('🔍 一般TODO生成リクエスト:', {
+      url: `${process.env.BACKEND_API_URL}/api/ai/todo`,
+      hasToken: !!accessToken,
+      tokenLength: accessToken.length,
+      tokenPrefix: accessToken.substring(0, 20) + '...',
+      timeAvailable,
+      recentProgress,
+      weakAreas,
+      dailyGoal
+    });
 
     const response = await fetch(`${process.env.BACKEND_API_URL}/api/ai/todo`, {
       method: 'POST',

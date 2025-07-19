@@ -92,6 +92,16 @@ export default function DashboardPage() {
         return;
       }
 
+      // デバッグ情報をログ出力
+      console.log('🔍 フロントエンド認証情報:', {
+        hasSession: !!session,
+        hasToken: !!session.access_token,
+        tokenLength: session.access_token?.length,
+        tokenPrefix: session.access_token?.substring(0, 20) + '...',
+        userId: session.user?.id,
+        userEmail: session.user?.email
+      });
+
       // 実際のAI APIを呼び出し
       const weakAreasArray = todoSuggestionForm.weak_areas
         .split(',')
