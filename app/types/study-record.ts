@@ -14,4 +14,4 @@ export interface CreateStudyRecord {
   subject: string;
   duration: number; // 学習時間（分）
   notes?: string; // 任意のメモ
-} 
+}

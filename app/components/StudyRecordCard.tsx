@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { css } from '../../styled-system/css';
-import { StudyRecord } from '../types/study-record';
-import { cardStyles} from '../styles/components';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+
 import { supabase } from '../../lib/supabase';
+import { css } from '../../styled-system/css';
+import { cardStyles} from '../styles/components';
+import { StudyRecord } from '../types/study-record';
 
 interface UserProfile {
   user_id: string;
@@ -27,7 +28,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!onDelete || !confirm('この学習記録を削除しますか？')) {
       return;
     }
@@ -47,7 +48,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) {
       return '今日';
     } else if (diffDays === 2) {
@@ -67,10 +68,10 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
     const hash = subject.split('').reduce((acc, char) => {
       return char.charCodeAt(0) + ((acc << 5) - acc);
     }, 0);
-    
+
     // ハッシュ値から色のインデックスを決定
     const colorIndex = Math.abs(hash) % 6;
-    
+
     // 色のパレット（6色）
     const colorPalette = [
       { bg: 'blue.100', text: 'blue.700' },
@@ -80,7 +81,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
       { bg: 'pink.100', text: 'pink.700' },
       { bg: 'teal.100', text: 'teal.700' }
     ];
-    
+
     return colorPalette[colorIndex];
   };
 
@@ -172,7 +173,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
             bg: 'gradient-to-r',
             bgGradient: 'from-primary.600 to-primary.800'
           })} />
-          
+
           <div className={css({
             display: 'flex',
             flexDirection: 'column',
@@ -215,7 +216,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
                     {formatDate(record.createdAt)}
                   </span>
                 </div>
-                
+
                 {/* 投稿者情報 */}
                 <div className={css({
                   display: 'flex',
@@ -280,7 +281,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
                 {record.duration}分
               </span>
             </div>
-            
+
             {/* Notes */}
             {record.notes && (
               <p className={css({
@@ -325,7 +326,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
                   学習記録
                 </span>
               </div>
-              
+
               <div className={css({
                 display: 'flex',
                 alignItems: 'center',
@@ -354,7 +355,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
           </div>
         </div>
       </Link>
-      
+
       {/* 削除ボタン - Linkの外に配置 */}
       {onDelete && (
         <button
@@ -391,4 +392,4 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
       )}
     </div>
   );
-} 
+}

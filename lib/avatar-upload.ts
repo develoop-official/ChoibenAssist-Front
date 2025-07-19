@@ -9,7 +9,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
     throw new Error('Supabase環境変数が設定されていません');
   }
   const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
-  
+
   // ファイル拡張子を取得
   const fileExt = file.name.split('.').pop();
   const fileName = `${userId}.${fileExt}`;
@@ -44,7 +44,7 @@ export async function deleteAvatar(userId: string): Promise<void> {
     throw new Error('Supabase環境変数が設定されていません');
   }
   const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
-  
+
   try {
     // ユーザーのアバターファイルを検索
     const { data: files, error: listError } = await supabase
@@ -89,4 +89,4 @@ export function validateAvatarFile(file: File): { isValid: boolean; error?: stri
   }
 
   return { isValid: true };
-} 
+}

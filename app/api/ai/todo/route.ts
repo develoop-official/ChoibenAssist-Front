@@ -7,17 +7,12 @@ interface TodoRequest {
   daily_goal?: string;
 }
 
-export async function POST(
-  request: NextRequest,
-  context: any
-) {
+export async function POST(request: NextRequest) {
   try {
-    const params = await context.params;
-    const projectName = decodeURIComponent(params.project_name);
     const body: TodoRequest = await request.json();
     const { time_available, recent_progress, weak_areas, daily_goal } = body;
 
-    console.log('API Route called with:', { projectName, body });
+    console.log('TODO API Route called with:', { body });
 
     // バリデーション: time_availableのみ必須
     if (!time_available || time_available < 1 || time_available > 480) {
@@ -29,7 +24,7 @@ export async function POST(
 
     // バックエンドAPIにリクエストを送信
     const backendUrl = process.env.BACKEND_API_URL || 'http://localhost:8000';
-    const backendRes = await fetch(`${backendUrl}/api/ai/scrapbox-todo/${encodeURIComponent(projectName)}`, {
+    const backendRes = await fetch(`${backendUrl}/api/ai/todo`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +40,7 @@ export async function POST(
     const backendJson = await backendRes.json();
     return NextResponse.json(backendJson, { status: backendRes.status });
   } catch (error) {
-    console.error('Scrapbox TODO API エラー:', error);
+    console.error('TODO API エラー:', error);
     return NextResponse.json(
       { success: false, content: 'サーバーエラーが発生しました', response_type: 'error' },
       { status: 500 }

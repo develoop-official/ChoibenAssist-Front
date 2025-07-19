@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
 import { css } from '../styled-system/css';
-import { useAuth } from './hooks/useAuth';
+
 import SupabaseSetupNotice from './components/SupabaseSetupNotice';
+import { useAuth } from './hooks/useAuth';
 import { buttonStyles, formStyles, cardStyles } from './styles/components';
 
 export default function LoginPage() {
@@ -29,7 +31,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const { error } = isSignUp 
+      const { error } = isSignUp
         ? await signUpWithEmail(email, password)
         : await signInWithEmail(email, password);
 

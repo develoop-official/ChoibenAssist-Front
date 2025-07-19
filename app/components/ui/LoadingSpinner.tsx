@@ -6,10 +6,10 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export default function LoadingSpinner({ 
-  size = 'md', 
+export default function LoadingSpinner({
+  size = 'md',
   text = '読み込み中...',
-  className 
+  className
 }: LoadingSpinnerProps) {
   const sizeStyles = {
     sm: { w: '4', h: '4' },
@@ -43,4 +43,4 @@ export default function LoadingSpinner({
       )}
     </div>
   );
-} 
+}

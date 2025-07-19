@@ -12,4 +12,4 @@ export interface CreateTodoItem {
   task: string;
   due_date?: string;
   status?: 'pending' | 'completed';
-} 
+}

@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
-import { css } from "../../styled-system/css";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "../hooks/useAuth";
+import { useEffect, useState } from "react";
+
 import { supabase } from "../../lib/supabase";
+import { css } from "../../styled-system/css";
+import { useAuth } from "../hooks/useAuth";
 
 interface UserProfile {
   user_id: string;
@@ -136,17 +137,17 @@ export default function PcHeader() {
             textShadow: "0 1px 4px rgba(61,141,122,0.10)",
           })}>ちょい勉アシスト</span>
         </Link>
-        <ul style={{ 
-          display: "flex", 
-          flexDirection: "row", 
+        <ul style={{
+          display: "flex",
+          flexDirection: "row",
           flexWrap: "nowrap",
-          gap: "32px", 
-          listStyle: "none", 
-          alignItems: "center", 
-          fontWeight: "bold", 
-          color: "#1e3a8a", 
-          fontSize: "16px", 
-          margin: 0, 
+          gap: "32px",
+          listStyle: "none",
+          alignItems: "center",
+          fontWeight: "bold",
+          color: "#1e3a8a",
+          fontSize: "16px",
+          margin: 0,
           padding: 0,
           justifyContent: "center",
           flex: 1,
@@ -154,37 +155,37 @@ export default function PcHeader() {
           overflow: "hidden"
         }}>
           <li style={{ display: "inline-block" }}>
-            <Link href="/studyList" style={{ 
-              color: isActive("/studyList") ? "#1d4ed8" : "#1e3a8a", 
-              borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none", 
-              paddingBottom: "4px", 
+            <Link href="/studyList" style={{
+              color: isActive("/studyList") ? "#1d4ed8" : "#1e3a8a",
+              borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none",
+              paddingBottom: "4px",
               textDecoration: "none",
               transition: "all 0.2s"
             }}>学習記録一覧</Link>
           </li>
           <li style={{ display: "inline-block" }}>
-            <Link href="/post" style={{ 
-              color: isActive("/post") ? "#1d4ed8" : "#1e3a8a", 
-              borderBottom: isActive("/post") ? "2px solid #3D8D7A" : "none", 
-              paddingBottom: "4px", 
+            <Link href="/post" style={{
+              color: isActive("/post") ? "#1d4ed8" : "#1e3a8a",
+              borderBottom: isActive("/post") ? "2px solid #3D8D7A" : "none",
+              paddingBottom: "4px",
               textDecoration: "none",
               transition: "all 0.2s"
             }}>新規投稿</Link>
           </li>
           <li style={{ display: "inline-block" }}>
-            <Link href="/studyGraph" style={{ 
-              color: isActive("/studyGraph") ? "#1d4ed8" : "#1e3a8a", 
-              borderBottom: isActive("/studyGraph") ? "2px solid #3D8D7A" : "none", 
-              paddingBottom: "4px", 
+            <Link href="/studyGraph" style={{
+              color: isActive("/studyGraph") ? "#1d4ed8" : "#1e3a8a",
+              borderBottom: isActive("/studyGraph") ? "2px solid #3D8D7A" : "none",
+              paddingBottom: "4px",
               textDecoration: "none",
               transition: "all 0.2s"
             }}>学習グラフ</Link>
           </li>
           <li style={{ display: "inline-block" }}>
-            <Link href="/todoList" style={{ 
-              color: isActive("/todoList") ? "#1d4ed8" : "#1e3a8a", 
-              borderBottom: isActive("/todoList") ? "2px solid #3D8D7A" : "none", 
-              paddingBottom: "4px", 
+            <Link href="/todoList" style={{
+              color: isActive("/todoList") ? "#1d4ed8" : "#1e3a8a",
+              borderBottom: isActive("/todoList") ? "2px solid #3D8D7A" : "none",
+              paddingBottom: "4px",
               textDecoration: "none",
               transition: "all 0.2s"
             }}>TODOリスト</Link>
@@ -238,7 +239,7 @@ export default function PcHeader() {
                 {getDisplayName()}
               </span>
             </Link>
-            
+
             {/* ログアウトボタン */}
             <Link href="/logout" className={css({
               color: "red.600",
@@ -261,4 +262,4 @@ export default function PcHeader() {
       </nav>
     </header>
   );
-} 
+}
