@@ -1,31 +1,20 @@
 'use server';
 
-export async function generateTodo(projectName: string, timeAvailable: number, dailyGoal?: string, accessToken?: string) {
+export async function generateTodo(projectName: string, timeAvailable: number, dailyGoal?: string) {
   try {
     if (!process.env.BACKEND_API_URL) {
       throw new Error('BACKEND_API_URLが設定されていません');
     }
 
-    if (!accessToken) {
-      throw new Error('認証トークンが必要です。ログインしてください。');
+    if (!process.env.BACKEND_API_KEY) {
+      throw new Error('BACKEND_API_KEYが設定されていません');
     }
-
-    // デバッグ情報をログ出力
-    console.log('🔍 TODO生成リクエスト:', {
-      url: `${process.env.BACKEND_API_URL}/api/ai/scrapbox-todo/${projectName}`,
-      hasToken: !!accessToken,
-      tokenLength: accessToken.length,
-      tokenPrefix: accessToken.substring(0, 20) + '...',
-      projectName,
-      timeAvailable,
-      dailyGoal
-    });
 
     const response = await fetch(`${process.env.BACKEND_API_URL}/api/ai/scrapbox-todo/${projectName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${process.env.BACKEND_API_KEY}`,
       },
       body: JSON.stringify({
         time_available: timeAvailable,
@@ -37,7 +26,7 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
       const errorText = await response.text();
       console.error(`API呼び出しエラー: ${response.status} ${response.statusText}`, errorText);
       if (response.status === 403) {
-        throw new Error('認証に失敗しました。再度ログインしてください。');
+        throw new Error('認証に失敗しました。APIキーを確認してください。');
       } else if (response.status === 404) {
         throw new Error('APIエンドポイントが見つかりません。バックエンドの設定を確認してください。');
       } else {
@@ -60,33 +49,21 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
   }
 }
 
-export async function generateGeneralTodo(timeAvailable: number, recentProgress?: string, weakAreas?: string[], dailyGoal?: string, accessToken?: string) {
+export async function generateGeneralTodo(timeAvailable: number, recentProgress?: string, weakAreas?: string[], dailyGoal?: string) {
   try {
     if (!process.env.BACKEND_API_URL) {
       throw new Error('BACKEND_API_URLが設定されていません');
     }
 
-    if (!accessToken) {
-      throw new Error('認証トークンが必要です。ログインしてください。');
+    if (!process.env.BACKEND_API_KEY) {
+      throw new Error('BACKEND_API_KEYが設定されていません');
     }
-
-    // デバッグ情報をログ出力
-    console.log('🔍 一般TODO生成リクエスト:', {
-      url: `${process.env.BACKEND_API_URL}/api/ai/todo`,
-      hasToken: !!accessToken,
-      tokenLength: accessToken.length,
-      tokenPrefix: accessToken.substring(0, 20) + '...',
-      timeAvailable,
-      recentProgress,
-      weakAreas,
-      dailyGoal
-    });
 
     const response = await fetch(`${process.env.BACKEND_API_URL}/api/ai/todo`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${process.env.BACKEND_API_KEY}`,
       },
       body: JSON.stringify({
         time_available: timeAvailable,
@@ -100,7 +77,7 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
       const errorText = await response.text();
       console.error(`API呼び出しエラー: ${response.status} ${response.statusText}`, errorText);
       if (response.status === 403) {
-        throw new Error('認証に失敗しました。再度ログインしてください。');
+        throw new Error('認証に失敗しました。APIキーを確認してください。');
       } else if (response.status === 404) {
         throw new Error('APIエンドポイントが見つかりません。バックエンドの設定を確認してください。');
       } else {

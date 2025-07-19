@@ -301,27 +301,6 @@ export default function MyPage() {
       setTodoSuggestionError('');
       setTodoSuggestionResult(null);
 
-      // セッショントークンを取得
-      if (!supabase) {
-        setTodoSuggestionError('Supabaseが設定されていません。');
-        return;
-      }
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        setTodoSuggestionError('認証トークンが見つかりません。再度ログインしてください。');
-        return;
-      }
-
-      // デバッグ情報をログ出力
-      console.log('🔍 マイページ認証情報:', {
-        hasSession: !!session,
-        hasToken: !!session.access_token,
-        tokenLength: session.access_token?.length,
-        tokenPrefix: session.access_token?.substring(0, 20) + '...',
-        userId: session.user?.id,
-        userEmail: session.user?.email
-      });
-
       let result: TodoSuggestionResponse;
 
       if (useScrapbox && profile?.scrapbox_project_name) {
@@ -329,8 +308,7 @@ export default function MyPage() {
         result = await generateTodo(
           profile.scrapbox_project_name,
           todoSuggestionForm.time_available,
-          todoSuggestionForm.daily_goal,
-          session.access_token
+          todoSuggestionForm.daily_goal
         );
       } else {
         // 通常AI提案API
@@ -342,8 +320,7 @@ export default function MyPage() {
           todoSuggestionForm.time_available,
           todoSuggestionForm.recent_progress,
           weakAreasArray,
-          todoSuggestionForm.daily_goal,
-          session.access_token
+          todoSuggestionForm.daily_goal
         );
       }
       setTodoSuggestionResult(result);

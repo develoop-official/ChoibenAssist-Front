@@ -13,7 +13,6 @@ import { useAuth } from './hooks/useAuth';
 import { useTodos } from './hooks/useTodos';
 import { buttonStyles } from './styles/components';
 import { CreateTodoItem } from './types/todo-item';
-import { supabase } from '../lib/supabase';
 
 interface TodoSuggestionResponse {
   success: boolean;
@@ -82,27 +81,6 @@ export default function DashboardPage() {
       setTodoSuggestionError('');
       setTodoSuggestionResult(null);
 
-      // セッショントークンを取得
-      if (!supabase) {
-        setTodoSuggestionError('Supabaseが設定されていません。');
-        return;
-      }
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        setTodoSuggestionError('認証トークンが見つかりません。再度ログインしてください。');
-        return;
-      }
-
-      // デバッグ情報をログ出力
-      console.log('🔍 フロントエンド認証情報:', {
-        hasSession: !!session,
-        hasToken: !!session.access_token,
-        tokenLength: session.access_token?.length,
-        tokenPrefix: session.access_token?.substring(0, 20) + '...',
-        userId: session.user?.id,
-        userEmail: session.user?.email
-      });
-
       // 実際のAI APIを呼び出し
       const weakAreasArray = todoSuggestionForm.weak_areas
         .split(',')
@@ -113,8 +91,7 @@ export default function DashboardPage() {
         todoSuggestionForm.time_available,
         todoSuggestionForm.recent_progress,
         weakAreasArray,
-        todoSuggestionForm.daily_goal,
-        session.access_token
+        todoSuggestionForm.daily_goal
       );
 
       setTodoSuggestionResult(result);
