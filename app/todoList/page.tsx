@@ -71,16 +71,16 @@ export default function TodoListPage() {
               <div className={css({ color: "gray.500", textAlign: "center", py: "8" })}>最近のTODOはありません</div>
             ) : (
               <ul className={css({ spaceY: "4" })}>
-                {recentTodos.map(todo => (
-                  <TodoItem
-                    key={todo.id}
-                    todo={todo}
-                    isMyTodo={myTodos.some(_todoItem => _todoItem.id === todo.id)}
-                    onStatusUpdate={updateStatus}
-                    removingId={removingId}
-                    setRemovingId={setRemovingId}
-                  />
-                ))}
+                                  {recentTodos.map(todo => (
+                    <TodoItem
+                      key={todo.id}
+                      todo={todo}
+                      isMyTodo={myTodos.some(todoItem => todoItem.id === todo.id)}
+                      onStatusUpdate={updateStatus}
+                      removingId={removingId}
+                      setRemovingId={setRemovingId}
+                    />
+                  ))}
               </ul>
             )}
           </div>
@@ -104,7 +104,7 @@ export default function TodoListPage() {
                     <TodoItem
                       key={todo.id}
                       todo={todo}
-                      isMyTodo={myTodos.some(_todoItem => _todoItem.id === todo.id)}
+                      isMyTodo={myTodos.some(todoItem => todoItem.id === todo.id)}
                       onStatusUpdate={updateStatus}
                       removingId={removingId}
                       setRemovingId={setRemovingId}
