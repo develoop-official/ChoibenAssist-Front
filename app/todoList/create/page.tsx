@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { css } from '../../../styled-system/css';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useAuth } from '../../hooks/useAuth';
 import { useTodos } from '../../hooks/useTodos';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 export default function CreateTodoPage() {
   const router = useRouter();
@@ -53,7 +53,7 @@ export default function CreateTodoPage() {
       });
 
       router.push('/todoList');
-    } catch (err) {
+    } catch (_err) {
       setError('TODOの作成に失敗しました');
     } finally {
       setLoading(false);

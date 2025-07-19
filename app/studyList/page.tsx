@@ -15,7 +15,6 @@ export default function StudyListPage() {
 
   // 完了済みTODOのみをフィルタリング
   const completedTodos = todos.filter(todo => todo.status === 'completed');
-  const pendingTodos = todos.filter(todo => todo.status === 'pending');
 
   useEffect(() => {
     if (!authLoading && !user) {

@@ -6,7 +6,6 @@ import React, { useState, useEffect } from 'react';
 import { css } from '../../styled-system/css';
 
 import { useAuth } from '../hooks/useAuth';
-import { buttonStyles } from '../styles/components';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -266,4 +265,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} 
+}

@@ -5,10 +5,10 @@ import React, { useState, useEffect } from 'react';
 
 import { css } from '../styled-system/css';
 
-import { useAuth } from './hooks/useAuth';
-import { useTodos } from './hooks/useTodos';
 import { generateGeneralTodo } from './actions/todo-actions';
 import LoadingSpinner from './components/ui/LoadingSpinner';
+import { useAuth } from './hooks/useAuth';
+import { useTodos } from './hooks/useTodos';
 import { buttonStyles } from './styles/components';
 
 interface TodoSuggestionResponse {
@@ -66,7 +66,6 @@ export default function DashboardPage() {
 
   // 完了したTODOの数
   const completedTodos = todos.filter(todo => todo.status === 'completed');
-  const pendingTodos = todos.filter(todo => todo.status === 'pending');
 
   const handleTodoSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
