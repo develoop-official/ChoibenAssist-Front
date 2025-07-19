@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState, useMemo } from "react";
 
+import { supabase } from "../../lib/supabase";
 import { css } from "../../styled-system/css";
 import TodoCompletionModal from "../components/TodoCompletionModal";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
@@ -255,6 +256,53 @@ function TodoItem({ todo, isMyTodo, _onStatusUpdate, onCompletion, removingId, _
           >
             {todo.status === "completed" ? "完了済み" : "完了にする"}
           </button>
+          <div className={css({ display: "flex", gap: "1" })}>
+            <Link
+              href={`/todoList/${todo.id}/edit`}
+              className={css({
+                px: compact ? "1.5" : "2",
+                py: compact ? "0.5" : "1",
+                bg: "yellow.400",
+                color: "white",
+                rounded: "sm",
+                fontSize: "xs",
+                fontWeight: "bold",
+                _hover: { bg: "yellow.500" },
+                transition: "all 0.2s",
+                textDecoration: "none",
+                display: "inline-block"
+              })}
+            >
+              編集
+            </Link>
+            <button
+              className={css({
+                px: compact ? "1.5" : "2",
+                py: compact ? "0.5" : "1",
+                bg: "red.500",
+                color: "white",
+                rounded: "sm",
+                fontSize: "xs",
+                fontWeight: "bold",
+                _hover: { bg: "red.600" },
+                transition: "all 0.2s"
+              })}
+              onClick={async () => {
+                if (confirm("このTODOを削除しますか？")) {
+                  try {
+                    await supabase?.from("todo_items").delete().eq("id", todo.id);
+                    // ページをリロードしてリストを更新
+                    window.location.reload();
+                  } catch (error) {
+                    console.error("TODO削除エラー:", error);
+                    alert("TODOの削除に失敗しました");
+                  }
+                }
+              }}
+            >
+              削除
+            </button>
+          </div>
         </div>
       )}
     </li>
