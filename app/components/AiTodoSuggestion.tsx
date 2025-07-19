@@ -94,7 +94,7 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
         const sectionIndex = parseInt(parts[parts.length - 2]);
         const todoIndex = parseInt(parts[parts.length - 1]);
         const task = parts.slice(0, -2).join('-'); // セクション名とタスク名を復元
-        
+
         if (sections[sectionIndex] && sections[sectionIndex].todos[todoIndex]) {
           const todo = sections[sectionIndex].todos[todoIndex];
           if (todo.task === task) {
