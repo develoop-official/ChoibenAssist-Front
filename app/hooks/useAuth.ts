@@ -26,7 +26,6 @@ export const useAuth = () => {
         // リフレッシュトークンエラーの場合、ローカルストレージをクリア
         if (error?.message?.includes('Invalid Refresh Token') || error?.message?.includes('Refresh Token Not Found')) {
           console.warn('リフレッシュトークンエラーを検出しました。ローカルストレージをクリアします。');
-          localStorage.removeItem('supabase.auth.token');
           setUser(null);
           setError(null);
           setLoading(false);
@@ -107,7 +106,6 @@ export const useAuth = () => {
     if (!supabase) {
       return { error: new Error('Supabaseが設定されていません') };
     }
-
     try {
       // ローカルストレージもクリア
       localStorage.removeItem('supabase.auth.token');

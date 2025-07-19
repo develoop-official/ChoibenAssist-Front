@@ -13,6 +13,7 @@ import { useAuth } from './hooks/useAuth';
 import { useTodos } from './hooks/useTodos';
 import { buttonStyles } from './styles/components';
 import { CreateTodoItem } from './types/todo-item';
+import { supabase } from '../lib/supabase';
 
 interface TodoSuggestionResponse {
   success: boolean;
