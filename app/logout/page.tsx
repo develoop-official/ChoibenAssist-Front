@@ -26,7 +26,7 @@ export default function LogoutPage() {
 
         // ログアウト成功時はログインページにリダイレクト
         router.push('/');
-      } catch (err) {
+      } catch {
         setError('ログアウト処理中にエラーが発生しました');
         setLoading(false);
       }

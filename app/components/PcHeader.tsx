@@ -24,7 +24,7 @@ export default function PcHeader() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const isActive = (path: string) => pathname === path;
 
-  console.log("PcHeaderが表示されています");
+  // console.log("PcHeaderが表示されています");
 
   // ユーザープロフィールを取得
   useEffect(() => {

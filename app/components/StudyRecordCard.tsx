@@ -1,3 +1,4 @@
+import React from 'react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -18,7 +19,7 @@ interface UserProfile {
 
 interface StudyRecordCardProps {
   record: StudyRecord;
-  onDelete?: (id: string) => Promise<void>;
+  onDelete?: (_id: string) => Promise<void>;
 }
 
 export default function StudyRecordCard({ record, onDelete }: StudyRecordCardProps) {

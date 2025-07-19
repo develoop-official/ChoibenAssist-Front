@@ -1,4 +1,5 @@
 "use client";
+import React from 'react';
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -37,7 +38,7 @@ export default function TodoDetailPage() {
         } else {
           setTodo(data);
         }
-      } catch (err) {
+      } catch {
         setError("TODOの取得に失敗しました");
         setTodo(null);
       } finally {
@@ -73,7 +74,7 @@ export default function TodoDetailPage() {
       if (response?.error) throw response.error;
       setEditMode(false);
       setTodo({ ...todo!, task: task.trim(), due_date: dueDate || undefined });
-    } catch (err) {
+    } catch {
       setError("TODOの更新に失敗しました");
     } finally {
       setSaving(false);
@@ -90,7 +91,7 @@ export default function TodoDetailPage() {
         .eq("id", todoId);
       if (response?.error) throw response.error;
       router.push("/todoList");
-    } catch (err) {
+    } catch {
       setError("TODOの削除に失敗しました");
     } finally {
       setDeleting(false);

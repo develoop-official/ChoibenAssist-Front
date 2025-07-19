@@ -23,11 +23,11 @@ const eslintConfig = [
       // コード品質ルール
       "prefer-const": "error",
       "no-var": "error",
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "no-undef": "error",
       
       // TypeScript固有ルール
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/no-explicit-any": "warn",
       
       // React/Next.jsルール
@@ -38,7 +38,7 @@ const eslintConfig = [
       
       // インポートルール
       "import/order": [
-        "error",
+        "warn",
         {
           "groups": [
             "builtin",

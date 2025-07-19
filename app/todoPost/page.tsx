@@ -1,4 +1,5 @@
 "use client";
+import React from 'react';
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -24,7 +25,7 @@ export default function TodoPostPage() {
     try {
       await addTodo({ task: task.trim(), due_date: dueDate || undefined });
       router.push("/todoList");
-    } catch (err) {
+    } catch {
       setError("TODOの作成に失敗しました");
     } finally {
       setLoading(false);

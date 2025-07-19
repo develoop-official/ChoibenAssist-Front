@@ -9,7 +9,7 @@ import { useTodos } from "../hooks/useTodos";
 
 export default function TodoListPage() {
   const router = useRouter();
-  const { todos, loading, error, deleteTodo, updateStatus, refetch } = useTodos();
+  const { todos, loading, error, updateStatus } = useTodos();
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   return (

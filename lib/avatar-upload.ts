@@ -16,7 +16,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   const filePath = `${userId}/${fileName}`; // ユーザーごとにフォルダ分け
 
   // ファイルをアップロード
-  const { data, error } = await supabase
+  const { error } = await supabase
     .storage
     .from('avatars')
     .upload(filePath, file, {

@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useState } from 'react';
 
 import { css } from '../../styled-system/css';
@@ -7,7 +8,7 @@ import { formStyles } from '../styles/components';
 import { CreateStudyRecord } from '../types/study-record';
 
 interface StudyRecordFormProps {
-  onSubmit: (record: CreateStudyRecord) => Promise<void>;
+  onSubmit: (_record: CreateStudyRecord) => Promise<void>;
 }
 
 export default function StudyRecordForm({ onSubmit }: StudyRecordFormProps) {

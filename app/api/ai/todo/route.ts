@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const body: TodoRequest = await request.json();
     const { time_available, recent_progress, weak_areas, daily_goal } = body;
 
-    console.log('TODO API Route called with:', { body });
+    // console.log('TODO API Route called with:', { body });
 
     // バリデーション: time_availableのみ必須
     if (!time_available || time_available < 1 || time_available > 480) {

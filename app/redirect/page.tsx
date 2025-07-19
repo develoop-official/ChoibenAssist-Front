@@ -37,7 +37,7 @@ export default function RedirectPage() {
           // セッションがない場合はログインページにリダイレクト
           router.push('/');
         }
-      } catch (err) {
+      } catch {
         setError('リダイレクト処理中にエラーが発生しました');
         setLoading(false);
       }

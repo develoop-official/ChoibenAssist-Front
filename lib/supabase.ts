@@ -6,14 +6,14 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // 開発環境でのデバッグ情報を表示
 if (process.env.NODE_ENV === 'development') {
-  console.log('🔍 Supabase環境変数チェック:', {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseAnonKey,
-    urlLength: supabaseUrl?.length || 0,
-    keyLength: supabaseAnonKey?.length || 0,
-    urlPrefix: supabaseUrl?.substring(0, 20) + '...',
-    keyPrefix: supabaseAnonKey?.substring(0, 20) + '...'
-  });
+  // console.log('🔍 Supabase環境変数チェック:', {
+  //   hasUrl: !!supabaseUrl,
+  //   hasKey: !!supabaseAnonKey,
+  //   urlLength: supabaseUrl?.length || 0,
+  //   keyLength: supabaseAnonKey?.length || 0,
+  //   urlPrefix: supabaseUrl?.substring(0, 20) + '...',
+  //   keyPrefix: supabaseAnonKey?.substring(0, 20) + '...'
+  // });
 }
 
 // 開発環境でのみ警告を表示
@@ -44,8 +44,8 @@ export const createSupabaseClient = () => {
 
 // クライアントの状態をログ出力
 if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 Supabaseクライアント状態:', {
-    isInitialized: !!supabase,
-    clientType: supabase ? 'initialized' : 'null'
-  });
+  // console.log('🔧 Supabaseクライアント状態:', {
+  //   isInitialized: !!supabase,
+  //   clientType: supabase ? 'initialized' : 'null'
+  // });
 }

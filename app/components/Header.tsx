@@ -15,7 +15,7 @@ export default function Header() {
     setIsClient(true);
     const checkMobile = () => {
       const isMobileView = window.matchMedia("(max-width: 1024px)").matches;
-      console.log("画面幅:", window.innerWidth, "px, モバイル判定:", isMobileView);
+      // console.log("画面幅:", window.innerWidth, "px, モバイル判定:", isMobileView);
       setIsMobile(isMobileView);
     };
     checkMobile();
@@ -28,6 +28,6 @@ export default function Header() {
   // ログインしていない場合はヘッダーを表示しない
   if (!user) return null;
 
-  console.log("現在のコンポーネント:", isMobile ? "MobileHeader" : "PcHeader");
+  // console.log("現在のコンポーネント:", isMobile ? "MobileHeader" : "PcHeader");
   return isMobile ? <MobileHeader /> : <PcHeader />;
 }
