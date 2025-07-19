@@ -11,6 +11,7 @@ import ShareButton from '../../components/ShareButton';
 import TimelineComment from '../../components/TimelineComment';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import MarkdownRenderer from '../../components/ui/MarkdownRenderer';
 import { useAuth } from '../../hooks/useAuth';
 import { createPostShareData } from '../../utils/share-utils';
 
@@ -221,19 +222,6 @@ function PostDetailContent() {
     return displayName[0]?.toUpperCase() || 'U';
   };
 
-  // MarkdownをHTMLに変換する関数
-  const renderMarkdown = (text: string) => {
-    return text
-      .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-gray-800 mb-2">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-gray-900 mb-3">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-gray-900 mb-4">$1</h1>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-xs">$1</code>')
-      .replace(/#(\w+)/g, '<span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mr-2 mb-1">#$1</span>')
-      .replace(/\n/g, '<br>');
-  };
-
   if (authLoading || loading) {
     return (
       <div className={css({
@@ -374,7 +362,6 @@ function PostDetailContent() {
               color: 'blue.600'
             })}>
               {post.user_profile?.icon_url ? (
-                // TODO: 画像表示の実装
                 <span>{getUserInitial(post.user_profile)}</span>
               ) : (
                 getUserInitial(post.user_profile)
@@ -382,7 +369,7 @@ function PostDetailContent() {
             </div>
             <div>
               <div className={css({
-                fontSize: 'xl',
+                fontSize: 'lg',
                 fontWeight: 'bold',
                 color: 'gray.900'
               })}>
@@ -402,8 +389,8 @@ function PostDetailContent() {
         {/* Todo完了バッジ */}
         {post.todo && (
           <div className={css({
-            mb: '6',
-            p: '4',
+            mb: '4',
+            p: '3',
             bg: 'green.50',
             border: '1px solid',
             borderColor: 'green.200',
@@ -416,12 +403,12 @@ function PostDetailContent() {
               mb: '2'
             })}>
               <span className={css({
-                fontSize: 'xl'
+                fontSize: 'lg'
               })}>
                 ✅
               </span>
               <span className={css({
-                fontSize: 'lg',
+                fontSize: 'md',
                 fontWeight: 'bold',
                 color: 'green.700'
               })}>
@@ -429,7 +416,7 @@ function PostDetailContent() {
               </span>
             </div>
             <div className={css({
-              fontSize: 'md',
+              fontSize: 'sm',
               color: 'green.600'
             })}>
               <div><strong>タスク:</strong> {post.todo.task}</div>
@@ -443,22 +430,14 @@ function PostDetailContent() {
 
         {/* 投稿内容 */}
         <div className={css({
-          mb: '8'
+          mb: '6'
         })}>
-          <div 
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
+          <MarkdownRenderer
+            content={post.content}
             className={css({
               fontSize: 'lg',
               color: 'gray.900',
-              lineHeight: 'relaxed',
-              '& h1': { fontSize: '2xl', fontWeight: 'bold', color: 'gray.900', mb: '4' },
-              '& h2': { fontSize: 'xl', fontWeight: 'bold', color: 'gray.800', mb: '3' },
-              '& h3': { fontSize: 'lg', fontWeight: 'bold', color: 'gray.700', mb: '2' },
-              '& p': { mb: '3' },
-              '& strong': { fontWeight: 'bold' },
-              '& em': { fontStyle: 'italic' },
-              '& code': { bg: 'gray.100', px: '2', py: '1', rounded: 'md', fontSize: 'sm' },
-              '& br': { display: 'block', content: '""', marginTop: '1rem' }
+              lineHeight: 'relaxed'
             })}
           />
 
