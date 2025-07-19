@@ -124,7 +124,7 @@ export default function TodoListPage() {
 interface TodoItemProps {
   todo: TodoItemWithUser;
   isMyTodo: boolean;
-  onStatusUpdate: (id: string, status: 'pending' | 'completed') => Promise<void>;
+  onStatusUpdate: (_id: string, _status: 'pending' | 'completed') => Promise<void>;
   removingId: string | null;
   setRemovingId: (id: string | null) => void;
   compact?: boolean;
