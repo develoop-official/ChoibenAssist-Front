@@ -24,11 +24,11 @@ export async function POST(request: NextRequest) {
 
     // バックエンドAPIにリクエストを送信
     const backendUrl = process.env.BACKEND_API_URL;
-    console.log('Backend URL:', backendUrl);
-    
+    console.error('Backend URL:', backendUrl);
+
     const requestBody = JSON.stringify({ time_available, recent_progress, weak_areas, daily_goal });
-    console.log('Request body:', requestBody);
-    
+    console.error('Request body:', requestBody);
+
     const backendRes = await fetch(`${backendUrl}/api/ai/todo`, {
       method: 'POST',
       headers: {
@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
       body: requestBody,
     });
 
-    console.log('Backend response status:', backendRes.status);
-    console.log('Backend response headers:', Object.fromEntries(backendRes.headers.entries()));
+    console.error('Backend response status:', backendRes.status);
+    console.error('Backend response headers:', Object.fromEntries(backendRes.headers.entries()));
 
     if (!backendRes.ok) {
       const errorText = await backendRes.text();
