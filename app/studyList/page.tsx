@@ -4,24 +4,22 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { css } from '../../styled-system/css';
-import StudyRecordList from '../components/StudyRecordList';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
-import { useStudyRecords } from '../hooks/useStudyRecords';
 import { useTodos } from '../hooks/useTodos';
 
 export default function StudyListPage() {
   const { user, loading: authLoading } = useAuth();
-  const { records, loading: recordsLoading, error, deleteRecord } = useStudyRecords();
   const { todos, loading: todosLoading } = useTodos();
   const router = useRouter();
 
   // 完了済みTODOのみをフィルタリング
   const completedTodos = todos.filter(todo => todo.status === 'completed');
+  const pendingTodos = todos.filter(todo => todo.status === 'pending');
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/');
+      router.push('/login');
     }
   }, [user, authLoading, router]);
 
@@ -83,7 +81,7 @@ export default function StudyListPage() {
             このページにアクセスするにはログインが必要です
           </p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/login')}
             className={css({
               px: '4',
               py: '2',
@@ -135,26 +133,6 @@ export default function StudyListPage() {
           })}>
             最新順
           </span>
-          <button
-
-            className={css({
-              px: '4',
-              py: '2',
-              bg: '#90EE90', // 薄緑色
-              color: 'white',
-              rounded: 'md',
-              fontSize: 'sm',
-              fontWeight: 'medium',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              _hover: {
-                bg: '#7FDD7F' // 少し濃い薄緑色
-              }
-            })}
-          >
-            📝 新規投稿
-          </button>
         </div>
       </div>
 
@@ -168,9 +146,119 @@ export default function StudyListPage() {
         gap: '8',
         alignItems: 'start'
       })}>
-        {/* 左側: 学習記録一覧 */}
+        {/* 左側: 全TODOリスト */}
         <div>
-          <StudyRecordList records={records} loading={recordsLoading} error={error} onDelete={deleteRecord} />
+          <div className={css({
+            bg: 'white',
+            rounded: 'xl',
+            shadow: 'md',
+            border: '1px solid',
+            borderColor: 'gray.200',
+            p: '6'
+          })}>
+            <h3 className={css({
+              fontSize: 'xl',
+              fontWeight: 'bold',
+              color: 'gray.900',
+              mb: '4',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '2'
+            })}>
+              📋 全TODOリスト
+              <span className={css({
+                bg: 'blue.100',
+                color: 'blue.700',
+                px: '2',
+                py: '1',
+                rounded: 'full',
+                fontSize: 'xs',
+                fontWeight: 'bold'
+              })}>
+                {todos.length}
+              </span>
+            </h3>
+
+            {todosLoading ? (
+              <LoadingSpinner text="TODOを読み込み中..." />
+            ) : todos.length === 0 ? (
+              <div className={css({
+                textAlign: 'center',
+                py: '8',
+                color: 'gray.500'
+              })}>
+                <div className={css({
+                  fontSize: '2xl',
+                  mb: '2'
+                })}>
+                  📝
+                </div>
+                <p className={css({
+                  fontSize: 'sm'
+                })}>
+                  まだTODOがありません
+                </p>
+              </div>
+            ) : (
+              <div className={css({
+                spaceY: '3'
+              })}>
+                {todos.map(todo => (
+                  <div
+                    key={todo.id}
+                    className={css({
+                      p: '4',
+                      bg: todo.status === 'completed' ? 'green.50' : 'gray.50',
+                      border: '1px solid',
+                      borderColor: todo.status === 'completed' ? 'green.200' : 'gray.200',
+                      rounded: 'md',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '3'
+                    })}
+                  >
+                    <div className={css({
+                      w: '3',
+                      h: '3',
+                      bg: todo.status === 'completed' ? 'green.500' : 'gray.400',
+                      rounded: 'full',
+                      mt: '1',
+                      flexShrink: '0'
+                    })} />
+                    <div className={css({
+                      flex: '1',
+                      minW: '0'
+                    })}>
+                      <div className={css({
+                        fontSize: 'sm',
+                        color: todo.status === 'completed' ? 'green.800' : 'gray.800',
+                        fontWeight: 'medium',
+                        lineHeight: '1.4',
+                        textDecoration: todo.status === 'completed' ? 'line-through' : 'none'
+                      })}>
+                        {todo.task}
+                      </div>
+                      <div className={css({
+                        fontSize: 'xs',
+                        color: 'blue.600',
+                        mt: '1',
+                        fontWeight: 'medium'
+                      })}>
+                        学習時間: {todo.study_time}時間
+                      </div>
+                      <div className={css({
+                        fontSize: 'xs',
+                        color: todo.status === 'completed' ? 'green.600' : 'gray.500',
+                        mt: '1'
+                      })}>
+                        {todo.status === 'completed' ? '完了日' : '作成日'}: {new Date(todo.created_at).toLocaleDateString('ja-JP')}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 右側: 完了済みTODOリスト */}
