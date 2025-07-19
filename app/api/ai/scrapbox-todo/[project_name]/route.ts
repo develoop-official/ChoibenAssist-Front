@@ -29,17 +29,28 @@ export async function POST(
 
     // バックエンドAPIにリクエストを送信
     const backendUrl = process.env.BACKEND_API_URL;
+    console.log('Backend URL:', backendUrl);
+    console.log('Project name:', projectName);
+    
+    const requestBody = JSON.stringify({ time_available, recent_progress, weak_areas, daily_goal });
+    console.log('Request body:', requestBody);
+    
     const backendRes = await fetch(`${backendUrl}/api/ai/scrapbox-todo/${encodeURIComponent(projectName)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-From-Next': 'true',
       },
-      body: JSON.stringify({ time_available, recent_progress, weak_areas, daily_goal }),
+      body: requestBody,
     });
 
+    console.log('Backend response status:', backendRes.status);
+    console.log('Backend response headers:', Object.fromEntries(backendRes.headers.entries()));
+
     if (!backendRes.ok) {
-      throw new Error(`Backend API Error: ${backendRes.status} ${backendRes.statusText}`);
+      const errorText = await backendRes.text();
+      console.error('Backend error response:', errorText);
+      throw new Error(`Backend API Error: ${backendRes.status} ${backendRes.statusText} - ${errorText}`);
     }
 
     const backendJson = await backendRes.json();
