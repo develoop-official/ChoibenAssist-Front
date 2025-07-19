@@ -11,7 +11,6 @@ import LoadingSpinner from './ui/LoadingSpinner';
 import MarkdownRenderer from './ui/MarkdownRenderer';
 
 interface UserProfile {
-  id: string;
   user_id: string;
   username: string;
   full_name?: string;

@@ -13,7 +13,6 @@ import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 interface UserProfile {
-  id: string;
   user_id: string;
   username: string;
   full_name?: string;
@@ -158,9 +157,9 @@ export default function ProfilePage() {
               gap: '8'
             })}>
               {/* 左側：プロフィールカード */}
-              {user && (
+              {user && profile && (
                 <ProfileCard 
-                  profile={profile} 
+                  profile={profile}
                   user={user}
                   onProfileUpdate={handleProfileUpdate}
                 />

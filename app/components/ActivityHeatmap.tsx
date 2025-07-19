@@ -24,10 +24,26 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
 
   const fetchActivityData = useCallback(async () => {
-    if (!supabase || !userId) return;
+    if (!supabase || !userId) {
+      console.warn('ActivityHeatmap: SupabaseまたはuserIdが未設定', {
+        hasSupabase: !!supabase,
+        userId,
+        supabaseClient: supabase ? 'initialized' : 'not initialized'
+      });
+      return;
+    }
 
     try {
       setLoading(true);
+
+      // Supabaseクライアントの状態を確認
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('ActivityHeatmap: 認証状態確認', {
+        currentUserId: userId,
+        authenticatedUser: user?.id,
+        isAuthenticated: !!user,
+        userEmail: user?.email
+      });
 
       // デフォルトで過去365日を表示
       const defaultStartDate = startDate || dayjs().subtract(365, 'days').toDate();
@@ -36,16 +52,37 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
       // 日付範囲を状態に保存
       setDateRange({ start: defaultStartDate, end: defaultEndDate });
 
+      console.log('ActivityHeatmap: データ取得開始', {
+        userId,
+        startDate: dayjs(defaultStartDate).format('YYYY-MM-DD'),
+        endDate: dayjs(defaultEndDate).format('YYYY-MM-DD')
+      });
+
       // TODO完了データを取得
       const { data: todos, error } = await supabase
         .from('todo_items')
-        .select('completed_at, created_at')
+        .select('updated_at, created_at')
         .eq('user_id', userId)
-        .gte('completed_at', dayjs(defaultStartDate).format('YYYY-MM-DD'))
-        .lte('completed_at', dayjs(defaultEndDate).format('YYYY-MM-DD'))
-        .not('completed_at', 'is', null);
+        .eq('status', 'completed')
+        .gte('updated_at', dayjs(defaultStartDate).format('YYYY-MM-DD'))
+        .lte('updated_at', dayjs(defaultEndDate).format('YYYY-MM-DD'));
 
-      if (error) throw error;
+      if (error) {
+        console.error('ActivityHeatmap: Supabaseエラー詳細:', {
+          error,
+          errorMessage: error.message,
+          errorCode: error.code,
+          errorDetails: error.details,
+          errorHint: error.hint
+        });
+        throw error;
+      }
+
+      console.log('ActivityHeatmap: データ取得成功', {
+        todosCount: todos?.length || 0,
+        firstTodo: todos?.[0],
+        lastTodo: todos?.[todos.length - 1]
+      });
 
       // 日付範囲内のすべての日付を生成
       const dateRange: string[] = [];
@@ -58,8 +95,8 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
       // 日付ごとにTODO完了数を集計
       const todoCountByDate: Record<string, number> = {};
       todos?.forEach(todo => {
-        if (todo.completed_at) {
-          const date = dayjs(todo.completed_at).format('YYYY-MM-DD');
+        if (todo.updated_at) {
+          const date = dayjs(todo.updated_at).format('YYYY-MM-DD');
           todoCountByDate[date] = (todoCountByDate[date] || 0) + 1;
         }
       });
@@ -83,7 +120,13 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
 
       setActivityData(activityData);
     } catch (error) {
-      console.error('Activity data fetch error:', error);
+      console.error('ActivityHeatmap: エラー詳細:', {
+        error,
+        errorType: typeof error,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : undefined,
+        errorStringified: JSON.stringify(error, null, 2)
+      });
     } finally {
       setLoading(false);
     }
