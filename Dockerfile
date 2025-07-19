@@ -20,7 +20,7 @@ COPY . .
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
 RUN npm run build
@@ -29,16 +29,13 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Install only production dependencies
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production && npm cache clean --force
-
+# Copy the standalone output from builder
 COPY --from=builder /app/public ./public
 
 # Set the correct permission for prerender cache
@@ -50,12 +47,15 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy package.json for runtime (without installing dependencies)
+COPY --from=builder /app/package.json ./package.json
+
 USER nextjs
 
 EXPOSE 3001
 
-ENV PORT 3001
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3001
+ENV HOSTNAME="0.0.0.0"
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
