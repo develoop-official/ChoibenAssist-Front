@@ -93,7 +93,7 @@ test:
     - |
       docker run --rm 
         --name test-container-$CI_JOB_ID 
-        $DOCKER_REGISTRY:latest
+        gitlab.p-nasi.pgw.jp/develoop/choibenassist-front:develop 
         sh -c "
           echo 'Container health check...';
           node --version;
