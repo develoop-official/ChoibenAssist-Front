@@ -91,18 +91,19 @@ test:
   script:
     # ビルドしたイメージでテスト実行
     - |
-      docker run --rm 
-        --name test-container-$CI_JOB_ID 
-        gitlab.p-nasi.pgw.jp/develoop/choibenassist-front:develop 
-        sh -c "
-          echo 'Container health check...';
-          node --version;
-          if [ -f server.js ]; then
-            echo 'server.js found - build successful';
-          else
-            echo 'server.js not found - build failed';
-            exit 1;
-          fi
+      docker run --rm \
+        --name test-container-$CI_JOB_ID \
+        gitlab.p-nasi.pgw.jp/develoop/choibenassist-front:develop \
+        sh -c "\
+          echo 'Container health check...';\
+          node --version;\
+          ls -al;\
+          if [ -f server.js ]; then\
+            echo 'server.js found - build successful';\
+          else\
+            echo 'server.js not found - build failed';\
+            exit 1;\
+          fi\
         "
   dependencies:
     - build
