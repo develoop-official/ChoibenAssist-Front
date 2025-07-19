@@ -5,7 +5,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
-import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
 import AiTodoSuggestion from '../components/AiTodoSuggestion';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -13,6 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTodos } from '../hooks/useTodos';
 import { buttonStyles, formStyles } from '../styles/components';
 import { CreateTodoItem } from '../types/todo-item';
+import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
 
 interface UserProfile {
   id: string;
@@ -63,6 +63,7 @@ export default function MyPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [editMode, setEditMode] = useState(false);
+  const [useScrapbox, setUseScrapbox] = useState<boolean>(false);
 
   // TODO提案フォーム用の状態
   const [todoSuggestionForm, setTodoSuggestionForm] = useState<TodoSuggestionForm>({
@@ -74,16 +75,7 @@ export default function MyPage() {
   const [todoSuggestionLoading, setTodoSuggestionLoading] = useState(false);
   const [todoSuggestionResult, setTodoSuggestionResult] = useState<TodoSuggestionResponse | null>(null);
   const [todoSuggestionError, setTodoSuggestionError] = useState('');
-  const [useScrapbox, setUseScrapbox] = useState<boolean>(false);
 
-  // Scrapboxプロジェクト名が設定されていれば初期値true、なければfalse
-  useEffect(() => {
-    if (profile?.scrapbox_project_name) {
-      setUseScrapbox(true);
-    } else {
-      setUseScrapbox(false);
-    }
-  }, [profile?.scrapbox_project_name]);
 
   const fetchProfile = useCallback(async () => {
     if (!supabase || !user) {
@@ -138,6 +130,14 @@ export default function MyPage() {
     }
   }, [user, authLoading, fetchProfile]);
 
+  useEffect(() => {
+    if (profile?.scrapbox_project_name) {
+      setUseScrapbox(true);
+    } else {
+      setUseScrapbox(false);
+    }
+  }, [profile?.scrapbox_project_name]);
+
   const createProfile = useCallback(async () => {
     if (!supabase || !user) {
       // console.log('プロフィール作成: Supabaseまたはユーザーが存在しません');
@@ -157,7 +157,7 @@ export default function MyPage() {
         full_name: user.user_metadata?.full_name || '',
         icon_url: formData.icon_url || profile?.icon_url || '',
         bio: '',
-        scrapbox_project_name: '',
+        scrapbox_project_name: formData.scrapbox_project_name || '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -193,7 +193,7 @@ export default function MyPage() {
         setError(`プロフィールの作成に失敗しました: ${JSON.stringify(err)}`);
       }
     }
-  }, [user, formData.icon_url, profile?.icon_url]);
+  }, [user, formData.icon_url, profile?.icon_url, formData.scrapbox_project_name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -303,21 +303,19 @@ export default function MyPage() {
 
       let result: TodoSuggestionResponse;
 
-      if (useScrapbox) {
-        // Scrapboxを使う場合
-        const projectName = profile?.scrapbox_project_name || 'default-project';
+      if (useScrapbox && profile?.scrapbox_project_name) {
+        // Scrapbox連携API
         result = await generateTodo(
-          projectName,
+          profile.scrapbox_project_name,
           todoSuggestionForm.time_available,
           todoSuggestionForm.daily_goal
         );
       } else {
-        // Scrapboxを使わない場合
+        // 通常AI提案API
         const weakAreasArray = todoSuggestionForm.weak_areas
           .split(',')
           .map(s => s.trim())
           .filter(Boolean);
-
         result = await generateGeneralTodo(
           todoSuggestionForm.time_available,
           todoSuggestionForm.recent_progress,
@@ -325,7 +323,6 @@ export default function MyPage() {
           todoSuggestionForm.daily_goal
         );
       }
-
       setTodoSuggestionResult(result);
     } catch (_err) {
       console.error('TODO提案エラー:', _err);
@@ -549,16 +546,6 @@ export default function MyPage() {
                           mb: '3'
                         })}>
                           {profile.bio}
-                        </p>
-                      )}
-
-                      {profile.scrapbox_project_name && (
-                        <p className={css({
-                          fontSize: 'sm',
-                          color: 'green.600',
-                          mb: '2'
-                        })}>
-                          📝 Scrapbox: {profile.scrapbox_project_name}
                         </p>
                       )}
 
@@ -797,26 +784,6 @@ export default function MyPage() {
                       </div>
 
                       <div className={css({ gridColumn: 'span 2' })}>
-                        <label htmlFor="bio_input" className={css({
-                          display: 'block',
-                          fontSize: 'sm',
-                          fontWeight: '600',
-                          color: 'gray.700',
-                          mb: '2'
-                        })}>
-                          自己紹介
-                        </label>
-                        <textarea
-                          id="bio_input"
-                          placeholder="自己紹介を入力してください"
-                          value={formData.bio}
-                          onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                          rows={3}
-                          className={formStyles.textarea}
-                        />
-                      </div>
-
-                      <div className={css({ gridColumn: 'span 2' })}>
                         <label htmlFor="scrapbox_project_name_input" className={css({
                           display: 'block',
                           fontSize: 'sm',
@@ -838,6 +805,28 @@ export default function MyPage() {
                           Scrapboxのプロジェクト名を設定すると、AI TODO提案で活用されます
                         </div>
                       </div>
+
+                      <div className={css({ gridColumn: 'span 2' })}>
+                        <label htmlFor="bio_input" className={css({
+                          display: 'block',
+                          fontSize: 'sm',
+                          fontWeight: '600',
+                          color: 'gray.700',
+                          mb: '2'
+                        })}>
+                          自己紹介
+                        </label>
+                        <textarea
+                          id="bio_input"
+                          placeholder="自己紹介を入力してください"
+                          value={formData.bio}
+                          onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                          rows={3}
+                          className={formStyles.textarea}
+                        />
+                      </div>
+
+
                     </div>
 
                     {/* アクションボタン */}
@@ -890,6 +879,7 @@ export default function MyPage() {
                   今日のTODOリスト提案
                 </h2>
 
+                {/* モード切り替えUI */}
                 {useScrapbox && profile?.scrapbox_project_name ? (
                   <div className={css({ mb: '4', display: 'flex', alignItems: 'center', gap: '3' })}>
                     <span className={css({ bg: 'green.100', color: 'green.700', px: '3', py: '1', rounded: 'full', fontSize: 'xs', fontWeight: 'bold' })}>
@@ -931,39 +921,35 @@ export default function MyPage() {
                       required
                     />
                   </div>
-                  {(!useScrapbox || !profile?.scrapbox_project_name) && (
-                    <>
-                      <div>
-                        <label htmlFor="todo_recent_progress" className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
-                          最近の課題・進捗（任意）
-                        </label>
-                        <textarea
-                          id="todo_recent_progress"
-                          placeholder="例: 英単語の暗記が進んだ、数学の微分が苦手"
-                          value={todoSuggestionForm.recent_progress}
-                          onChange={e => setTodoSuggestionForm(prev => ({ ...prev, recent_progress: e.target.value }))}
-                          rows={2}
-                          className={formStyles.textarea}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="todo_weak_areas" className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
-                          弱点（カンマ区切りで複数入力可・任意）
-                        </label>
-                        <input
-                          id="todo_weak_areas"
-                          type="text"
-                          placeholder="例: リスニング, 文法, 計算ミス"
-                          value={todoSuggestionForm.weak_areas}
-                          onChange={e => setTodoSuggestionForm(prev => ({ ...prev, weak_areas: e.target.value }))}
-                          className={formStyles.input}
-                        />
-                        <div className={css({ fontSize: 'xs', color: 'gray.500', mt: '1' })}>
-                          カンマ区切りで複数入力できます（例: リスニング, 文法, 計算ミス）
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <label htmlFor="todo_recent_progress" className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                      最近の課題・進捗（任意）
+                    </label>
+                    <textarea
+                      id="todo_recent_progress"
+                      placeholder="例: 英単語の暗記が進んだ、数学の微分が苦手"
+                      value={todoSuggestionForm.recent_progress}
+                      onChange={e => setTodoSuggestionForm(prev => ({ ...prev, recent_progress: e.target.value }))}
+                      rows={2}
+                      className={formStyles.textarea}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="todo_weak_areas" className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
+                      弱点（カンマ区切りで複数入力可・任意）
+                    </label>
+                    <input
+                      id="todo_weak_areas"
+                      type="text"
+                      placeholder="例: リスニング, 文法, 計算ミス"
+                      value={todoSuggestionForm.weak_areas}
+                      onChange={e => setTodoSuggestionForm(prev => ({ ...prev, weak_areas: e.target.value }))}
+                      className={formStyles.input}
+                    />
+                    <div className={css({ fontSize: 'xs', color: 'gray.500', mt: '1' })}>
+                      カンマ区切りで複数入力できます（例: リスニング, 文法, 計算ミス）
+                    </div>
+                  </div>
                   <div>
                     <label htmlFor="todo_daily_goal" className={css({ display: 'block', fontSize: 'sm', fontWeight: '600', color: 'gray.700', mb: '2' })}>
                       今日の目標（任意）
