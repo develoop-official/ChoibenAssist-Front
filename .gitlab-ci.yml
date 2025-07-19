@@ -89,6 +89,11 @@ test:
     - echo "Running tests on built image..."
     - docker images | grep $DOCKER_IMAGE_NAME
   script:
+    # 環境変数の確認
+    - echo "SUPABASE_URL: $SUPABASE_URL"
+    - echo "SUPABASE_ANON_KEY: $SUPABASE_ANON_KEY"
+    - echo "BACKEND_API_URL: $BACKEND_API_URL"
+    - echo "API_SECRET_KEY: $API_SECRET_KEY"
     # ビルドしたイメージでテスト実行
     - |
       docker run --rm \
