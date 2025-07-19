@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
+import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
@@ -297,45 +298,32 @@ export default function MyPage() {
       setTodoSuggestionLoading(true);
       setTodoSuggestionError('');
       setTodoSuggestionResult(null);
-      // weak_areasを配列化
-      const weakAreasArray = todoSuggestionForm.weak_areas
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
-      // APIリクエストbodyを切り替え
-      const body: { time_available: number; recent_progress?: string; weak_areas?: string[]; daily_goal?: string } = {
-        time_available: todoSuggestionForm.time_available,
-      };
-      if (useScrapbox) {
-        if (todoSuggestionForm.daily_goal) body.daily_goal = todoSuggestionForm.daily_goal;
-      } else {
-        if (todoSuggestionForm.recent_progress) body.recent_progress = todoSuggestionForm.recent_progress;
-        if (weakAreasArray.length > 0) body.weak_areas = weakAreasArray;
-        if (todoSuggestionForm.daily_goal) body.daily_goal = todoSuggestionForm.daily_goal;
-      }
 
-      // APIエンドポイントを使用状況に応じて切り替え
-      let apiUrl: string;
+      let result: TodoSuggestionResponse;
+
       if (useScrapbox) {
         // Scrapboxを使う場合
         const projectName = profile?.scrapbox_project_name || 'default-project';
-        apiUrl = `/api/ai/scrapbox-todo/${encodeURIComponent(projectName)}`;
+        result = await generateTodo(
+          projectName,
+          todoSuggestionForm.time_available,
+          todoSuggestionForm.daily_goal
+        );
       } else {
         // Scrapboxを使わない場合
-        apiUrl = `/api/ai/todo`;
+        const weakAreasArray = todoSuggestionForm.weak_areas
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
+
+        result = await generateGeneralTodo(
+          todoSuggestionForm.time_available,
+          todoSuggestionForm.recent_progress,
+          weakAreasArray,
+          todoSuggestionForm.daily_goal
+        );
       }
 
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-      if (!response.ok) {
-        throw new Error(`APIエラー: ${response.status}`);
-      }
-      const result: TodoSuggestionResponse = await response.json();
       setTodoSuggestionResult(result);
     } catch (_err) {
       console.error('TODO提案エラー:', _err);
