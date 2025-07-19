@@ -1,6 +1,6 @@
-import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
@@ -88,14 +88,7 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
 
   const subjectColor = getSubjectColor(record.subject);
 
-  // 投稿者のプロフィール情報を取得
-  useEffect(() => {
-    if (record.user_id && supabase) {
-      fetchAuthorProfile();
-    }
-  }, [record.user_id]);
-
-  const fetchAuthorProfile = async () => {
+  const fetchAuthorProfile = useCallback(async () => {
     if (!supabase || !record.user_id) return;
 
     try {
@@ -111,7 +104,14 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
     } catch (err) {
       console.error('投稿者プロフィール取得エラー:', err);
     }
-  };
+  }, [record.user_id]);
+
+  // 投稿者のプロフィール情報を取得
+  useEffect(() => {
+    if (record.user_id && supabase) {
+      fetchAuthorProfile();
+    }
+  }, [record.user_id, fetchAuthorProfile]);
 
   // 投稿者の表示名を取得
   const getAuthorDisplayName = () => {
@@ -238,9 +238,11 @@ export default function StudyRecordCard({ record, onDelete }: StudyRecordCardPro
                     overflow: 'hidden'
                   })}>
                     {getAuthorAvatarUrl() ? (
-                      <img
+                      <Image
                         src={getAuthorAvatarUrl()!}
                         alt="投稿者アバター"
+                        width={16}
+                        height={16}
                         className={css({
                           w: 'full',
                           h: 'full',
