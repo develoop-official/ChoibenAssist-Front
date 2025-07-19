@@ -75,7 +75,7 @@ export default function TodoListPage() {
                   <TodoItem
                     key={todo.id}
                     todo={todo}
-                    isMyTodo={myTodos.some(todoItem => todoItem.id === todo.id)}
+                    isMyTodo={myTodos.some(_todoItem => _todoItem.id === todo.id)}
                     onStatusUpdate={updateStatus}
                     removingId={removingId}
                     setRemovingId={setRemovingId}
@@ -104,7 +104,7 @@ export default function TodoListPage() {
                     <TodoItem
                       key={todo.id}
                       todo={todo}
-                      isMyTodo={myTodos.some(todoItem => todoItem.id === todo.id)}
+                      isMyTodo={myTodos.some(_todoItem => _todoItem.id === todo.id)}
                       onStatusUpdate={updateStatus}
                       removingId={removingId}
                       setRemovingId={setRemovingId}
