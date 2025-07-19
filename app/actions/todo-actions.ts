@@ -13,7 +13,7 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
     // Scrapboxもついてるエンドポイント
     const endpoint = `/api/ai/scrapbox-todo/${projectName}`;
     const apiUrl = `${process.env.BACKEND_API_URL}${endpoint}`.replace(/([^:]\/)\/+/g, '$1');
-    
+
     console.warn('🔍 Scrapbox TODO API呼び出し試行:', {
       url: apiUrl,
       method: 'POST',
@@ -46,7 +46,7 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
     } else {
       const errorText = await response.text();
       console.error(`API呼び出しエラー (${endpoint}): ${response.status} ${response.statusText}`, errorText);
-      
+
       if (response.status === 403) {
         throw new Error('認証に失敗しました。APIキーを確認してください。');
       } else if (response.status === 404) {
@@ -77,7 +77,7 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
     // scrapboxオフの時のエンドポイント
     const endpoint = `/api/ai/todo`;
     const apiUrl = `${process.env.BACKEND_API_URL}${endpoint}`.replace(/([^:]\/)\/+/g, '$1');
-    
+
     console.warn('🔍 一般TODO API呼び出し試行:', {
       url: apiUrl,
       method: 'POST',
@@ -113,7 +113,7 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
     } else {
       const errorText = await response.text();
       console.error(`API呼び出しエラー (${endpoint}): ${response.status} ${response.statusText}`, errorText);
-      
+
       if (response.status === 403) {
         throw new Error('認証に失敗しました。APIキーを確認してください。');
       } else if (response.status === 404) {
