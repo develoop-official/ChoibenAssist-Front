@@ -30,7 +30,9 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
+# 環境変数をブランチに応じて設定
+ARG BRANCH_NAME
+ENV NODE_ENV=${BRANCH_NAME:-production}
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
