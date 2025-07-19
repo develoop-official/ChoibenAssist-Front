@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // バックエンドAPIにリクエストを送信
-    const backendUrl = process.env.BACKEND_API_URL || 'https://choiben-back.youkan.uk';
+    const backendUrl = process.env.BACKEND_URL || 'https://choiben-back.youkan.uk';
     const backendRes = await fetch(`${backendUrl}/api/ai/todo`, {
       method: 'POST',
       headers: {
