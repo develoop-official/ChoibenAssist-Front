@@ -20,6 +20,23 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
   const sections = parseMarkdownTodos(content);
   const allTodos = flattenTodoSections(sections);
 
+  // デバッグ情報
+  console.warn('🔍 AI提案デバッグ:', {
+    contentLength: content.length,
+    sectionsCount: sections.length,
+    allTodosCount: allTodos.length,
+    sections: sections.map(s => ({ title: s.title, todosCount: s.todos.length })),
+    selectedSections,
+    selectedTodos
+  });
+
+  // 初期化時にすべてのセクションを展開
+  React.useEffect(() => {
+    if (sections.length > 0 && selectedSections.length === 0) {
+      setSelectedSections(sections.map(section => section.title));
+    }
+  }, [sections, selectedSections.length]);
+
   // セクション選択の切り替え
   const toggleSection = (sectionTitle: string) => {
     setSelectedSections(prev => {
@@ -253,11 +270,16 @@ export default function AiTodoSuggestion({ content, onAddTodos }: AiTodoSuggesti
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => toggleTodo(todoId)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleTodo(todoId);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                         className={css({
                           w: '4',
                           h: '4',
-                          accentColor: 'green.600'
+                          accentColor: 'green.600',
+                          cursor: 'pointer'
                         })}
                       />
                       <div className={css({
