@@ -23,14 +23,15 @@ export const useAuth = () => {
         const session = response?.data?.session;
         const error = response?.error;
 
-        // デバッグ情報を出力
-        // console.log('🔐 認証セッション情報:', {
-        //   hasSession: !!session,
-        //   hasUser: !!session?.user,
-        //   userId: session?.user?.id,
-        //   userEmail: session?.user?.email,
-        //   sessionExpiresAt: session?.expires_at
-        // });
+        // リフレッシュトークンエラーの場合、ローカルストレージをクリア
+        if (error?.message?.includes('Invalid Refresh Token') || error?.message?.includes('Refresh Token Not Found')) {
+          console.warn('リフレッシュトークンエラーを検出しました。ローカルストレージをクリアします。');
+          localStorage.removeItem('supabase.auth.token');
+          setUser(null);
+          setError(null);
+          setLoading(false);
+          return;
+        }
 
         if (error) {
           console.error('セッション取得エラー:', error);
@@ -51,7 +52,15 @@ export const useAuth = () => {
     // 認証状態の変更を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null);
+        // リフレッシュトークンエラーをチェック
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          console.warn('トークンリフレッシュに失敗しました。ログアウト状態にします。');
+          setUser(null);
+          setError(null);
+        } else {
+          setUser(session?.user ?? null);
+          setError(null);
+        }
         setLoading(false);
       }
     );
@@ -98,8 +107,16 @@ export const useAuth = () => {
     if (!supabase) {
       return { error: new Error('Supabaseが設定されていません') };
     }
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    
+    try {
+      // ローカルストレージもクリア
+      localStorage.removeItem('supabase.auth.token');
+      const { error } = await supabase.auth.signOut();
+      return { error };
+    } catch (err) {
+      console.error('ログアウトエラー:', err);
+      return { error: err as Error };
+    }
   };
 
   return {
