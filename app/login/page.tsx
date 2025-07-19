@@ -104,6 +104,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="メールアドレス"
               required
+              autoComplete="email"
               className={css({
                 w: 'full',
                 px: '3',
@@ -129,6 +130,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="パスワード"
               required
+              autoComplete="current-password"
               className={css({
                 w: 'full',
                 px: '3',
