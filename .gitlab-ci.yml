@@ -1,0 +1,209 @@
+# GitLab CI/CD Pipeline for Next.js Application with Docker
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  # Docker関連の変数
+  DOCKER_IMAGE_NAME: "choibenassist-front"
+  DOCKER_TAG: "$CI_COMMIT_SHORT_SHA"
+  DOCKER_REGISTRY: "registry.gitlab.com/$CI_PROJECT_PATH"
+  
+  # アプリケーション関連の変数
+  NODE_VERSION: "18"
+  APP_PORT: "3000"
+  
+  # Docker in Docker設定
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+
+# Dockerイメージのビルド
+build:
+  stage: build
+  tags:
+    - shell  # shell executorを使用
+  variables:
+    DOCKER_BUILDKIT: 1
+  before_script:
+    - echo "Building Docker image..."
+    - docker --version
+  script:
+    # Next.js設定の調整（standalone出力を有効化）
+    - |
+      if ! grep -q "output.*standalone" next.config.ts; then
+        echo "Warning: next.config.ts should have output: 'standalone' for Docker deployment"
+      fi
+    
+    # Dockerイメージのビルド
+    - docker build 
+        --build-arg BUILDKIT_INLINE_CACHE=1
+        --cache-from $DOCKER_REGISTRY:latest
+        --tag $DOCKER_REGISTRY:$DOCKER_TAG
+        --tag $DOCKER_REGISTRY:latest
+        .
+    
+    # イメージの確認
+    - docker images | grep $DOCKER_IMAGE_NAME
+  after_script:
+    - echo "Build completed. Image tagged as $DOCKER_REGISTRY:$DOCKER_TAG"
+  only:
+    - main
+    - develop
+
+# テスト実行（オプション）
+test:
+  stage: test
+  tags:
+    - shell
+  before_script:
+    - echo "Running tests on built image..."
+  script:
+    # ビルドしたイメージでテスト実行
+    - |
+      docker run --rm 
+        --name test-container-$CI_JOB_ID 
+        $DOCKER_REGISTRY:$DOCKER_TAG 
+        sh -c "
+          echo 'Container health check...';
+          node --version;
+          if [ -f server.js ]; then
+            echo 'server.js found - build successful';
+          else
+            echo 'server.js not found - build failed';
+            exit 1;
+          fi
+        "
+  dependencies:
+    - build
+  only:
+    - main
+    - develop
+
+# 本番環境へのデプロイ
+deploy_production:
+  stage: deploy
+  tags:
+    - shell
+  environment:
+    name: production
+    url: https://choiben-front.youkan.uk/ # 実際のURLに変更
+  variables:
+    DEPLOY_ENV: "production"
+    CONTAINER_NAME: "choibenassist-front-prod"
+  before_script:
+    - echo "Deploying to production environment..."
+    - docker --version
+  script:
+    # 既存のコンテナを停止・削除
+    - docker stop $CONTAINER_NAME || true
+    - docker rm $CONTAINER_NAME || true
+    
+    # 新しいコンテナを起動
+    - |
+      docker run -d 
+        --name $CONTAINER_NAME 
+        --restart unless-stopped 
+        -p 3001:3001 
+        --env NODE_ENV=production 
+        --env NEXT_PUBLIC_SUPABASE_URL="$PRODUCTION_SUPABASE_URL" 
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$PRODUCTION_SUPABASE_ANON_KEY" 
+        --env BACKEND_API_URL="$PRODUCTION_BACKEND_API_URL" 
+        --env API_SECRET_KEY="$PRODUCTION_API_SECRET_KEY" 
+        $DOCKER_REGISTRY:$DOCKER_TAG
+    
+    # ヘルスチェック
+    - sleep 10
+    - docker ps | grep $CONTAINER_NAME
+    - |
+      for i in {1..30}; do
+        if curl -f http://localhost:3001/api/health 2>/dev/null; then
+          echo "Application is healthy"
+          break
+        fi
+        echo "Waiting for application to start... ($i/30)"
+        sleep 2
+      done
+    
+    # 古いイメージのクリーンアップ（最新の3つを保持）
+    - |
+      docker images $DOCKER_REGISTRY --format "table {{.Tag}}\t{{.ID}}" | 
+      tail -n +2 | head -n -3 | awk '{print $2}' | 
+      xargs -r docker rmi || true
+  after_script:
+    - echo "Production deployment completed"
+    - docker logs $CONTAINER_NAME --tail 50
+  dependencies:
+    - build
+    - test
+  only:
+    - main
+  when: manual  # 手動承認が必要
+
+# 開発環境へのデプロイ
+deploy_staging:
+  stage: deploy
+  tags:
+    - shell
+  environment:
+    name: staging
+    url: https://choiben-front-dev.youkan.uk/  # 実際のURLに変更
+  variables:
+    DEPLOY_ENV: "staging"
+    CONTAINER_NAME: "choibenassist-front-staging"
+  before_script:
+    - echo "Deploying to staging environment..."
+  script:
+    # 既存のコンテナを停止・削除
+    - docker stop $CONTAINER_NAME || true
+    - docker rm $CONTAINER_NAME || true
+    
+    # 新しいコンテナを起動
+    - |
+      docker run -d 
+        --name $CONTAINER_NAME 
+        --restart unless-stopped 
+        -p 3002:3001 
+        --env NODE_ENV=development 
+        --env NEXT_PUBLIC_SUPABASE_URL="$STAGING_SUPABASE_URL" 
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$STAGING_SUPABASE_ANON_KEY" 
+        --env BACKEND_API_URL="$STAGING_BACKEND_API_URL" 
+        --env API_SECRET_KEY="$STAGING_API_SECRET_KEY" 
+        $DOCKER_REGISTRY:$DOCKER_TAG
+    
+    # ヘルスチェック
+    - sleep 10
+    - docker ps | grep $CONTAINER_NAME
+  after_script:
+    - echo "Staging deployment completed"
+    - docker logs $CONTAINER_NAME --tail 20
+  dependencies:
+    - build
+  only:
+    - develop
+
+# クリーンアップジョブ（週次実行）
+cleanup:
+  stage: deploy
+  tags:
+    - shell
+  script:
+    - echo "Cleaning up old Docker images and containers..."
+    
+    # 停止したコンテナを削除
+    - docker container prune -f
+    
+    # 未使用のイメージを削除
+    - docker image prune -f
+    
+    # 未使用のボリュームを削除
+    - docker volume prune -f
+    
+    # 未使用のネットワークを削除
+    - docker network prune -f
+    
+    - echo "Cleanup completed"
+  only:
+    variables:
+      - $CLEANUP == "true"
+  when: manual
