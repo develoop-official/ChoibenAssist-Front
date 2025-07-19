@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { css } from "../../styled-system/css";
@@ -8,7 +7,6 @@ import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { useTodos } from "../hooks/useTodos";
 
 export default function TodoListPage() {
-  const router = useRouter();
   const { todos, loading, error, updateStatus } = useTodos();
   const [removingId, setRemovingId] = useState<string | null>(null);
 
@@ -28,7 +26,7 @@ export default function TodoListPage() {
             _hover: { bg: "primary.700" },
             transition: "all 0.2s"
           })}
-          onClick={() => router.push("/todoPost")}
+
         >
           TODO作成
         </button>
