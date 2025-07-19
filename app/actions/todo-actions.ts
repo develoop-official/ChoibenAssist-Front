@@ -2,11 +2,14 @@
 
 export async function generateTodo(projectName: string, timeAvailable: number, dailyGoal?: string) {
   try {
-    const response = await fetch(`https://choiben-back.youkan.uk/api/ai/scrapbox-todo/${projectName}`, {
+    if (!process.env.BACKEND_API_URL) {
+      throw new Error('BACKEND_API_URLが設定されていません');
+    }
+
+    const response = await fetch(`${process.env.BACKEND_API_URL}/api/ai/scrapbox-todo/${projectName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.API_SECRET_KEY}`,
       },
       body: JSON.stringify({
         time_available: timeAvailable,
@@ -15,6 +18,7 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
     });
 
     if (!response.ok) {
+      console.error(`API呼び出しエラー: ${response.status} ${response.statusText}`);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -32,11 +36,14 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
 
 export async function generateGeneralTodo(timeAvailable: number, recentProgress?: string, weakAreas?: string[], dailyGoal?: string) {
   try {
-    const response = await fetch(`https://choiben-back.youkan.uk/api/ai/todo`, {
+    if (!process.env.BACKEND_API_URL) {
+      throw new Error('BACKEND_API_URLが設定されていません');
+    }
+
+    const response = await fetch(`${process.env.BACKEND_API_URL}/api/ai/todo`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.API_SECRET_KEY}`,
       },
       body: JSON.stringify({
         time_available: timeAvailable,
@@ -47,6 +54,7 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
     });
 
     if (!response.ok) {
+      console.error(`API呼び出しエラー: ${response.status} ${response.statusText}`);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
