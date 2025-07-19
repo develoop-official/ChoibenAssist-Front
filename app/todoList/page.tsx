@@ -14,7 +14,8 @@ export default function TodoListPage() {
     <main className={css({ maxW: "2xl", mx: "auto", px: "4", py: "8" })}>
       <div className={css({ display: "flex", justifyContent: "space-between", alignItems: "center", mb: "8" })}>
         <h2 className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.700" })}>TODOリスト</h2>
-        <button
+        <Link
+          href="/todoList/create"
           className={css({
             px: "4",
             py: "2",
@@ -24,12 +25,13 @@ export default function TodoListPage() {
             fontWeight: "bold",
             fontSize: "sm",
             _hover: { bg: "primary.700" },
-            transition: "all 0.2s"
+            transition: "all 0.2s",
+            textDecoration: "none",
+            display: "inline-block"
           })}
-
         >
           TODO作成
-        </button>
+        </Link>
       </div>
       {loading ? (
         <LoadingSpinner text="TODOを読み込み中..." />
@@ -70,6 +72,9 @@ export default function TodoListPage() {
                   {todo.due_date && (
                     <div className={css({ fontSize: "sm", color: "gray.500", mt: "1" })}>期限: {todo.due_date}</div>
                   )}
+                  <div className={css({ fontSize: "sm", color: "blue.600", mt: "1", fontWeight: "medium" })}>
+                    学習時間: {todo.study_time}時間
+                  </div>
                   <div className={css({ fontSize: "xs", color: "gray.400", mt: "1" })}>作成日: {todo.created_at.slice(0, 10)}</div>
                 </div>
               </Link>
