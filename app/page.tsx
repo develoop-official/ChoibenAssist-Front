@@ -170,10 +170,10 @@ export default function DashboardPage() {
       minH: '100vh',
       bg: 'primary.50',
       py: '8',
-      px: '4'
+      px: { base: '4', md: '6', lg: '8' }
     })}>
       <div className={css({
-        maxW: '6xl',
+        maxW: '4xl',
         mx: 'auto'
       })}>
         {/* ヘッダー */}
@@ -200,9 +200,11 @@ export default function DashboardPage() {
         {/* 統計カード */}
         <div className={css({
           display: 'grid',
-          gridTemplateColumns: { base: '1fr', md: 'repeat(4, 1fr)' },
-          gap: '6',
-          mb: '8'
+          gridTemplateColumns: { base: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
+          gap: { base: '4', md: '6' },
+          mb: '8',
+          maxW: '3xl',
+          mx: 'auto'
         })}>
           <div className={css({
             bg: 'white',
@@ -320,7 +322,9 @@ export default function DashboardPage() {
         <div className={css({
           display: 'grid',
           gridTemplateColumns: { base: '1fr', lg: '2fr 1fr' },
-          gap: '8'
+          gap: { base: '6', lg: '8' },
+          maxW: '5xl',
+          mx: 'auto'
         })}>
           {/* 最近のTODOリスト */}
           <div className={css({
