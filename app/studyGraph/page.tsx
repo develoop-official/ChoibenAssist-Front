@@ -16,40 +16,41 @@ import { supabase } from "../../lib/supabase";
 import { css } from "../../styled-system/css";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 
-
 // 型定義
-interface RecordItem {
+interface TodoItem {
   created_at: string;
-  duration: number;
-  subject: string;
+  title: string;
+  priority: string;
+  user_id: string;
 }
 
-// 日付ごとに各科目の合計を持つ
+// 日付ごとに各優先度の合計を持つ
 type ChartData = {
   date: string;
-  [subject: string]: string | number;
+  [priority: string]: string | number;
 };
 
 export default function StudyGraphPage() {
   const [data, setData] = useState<ChartData[]>([]);
-  const [subjects, setSubjects] = useState<string[]>([]);
+  const [priorities, setPriorities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  // const _router = useRouter();
 
   useEffect(() => {
-    async function fetchRecords() {
+    async function fetchTodos() {
       setLoading(true);
       if (!supabase) {
         setLoading(false);
         return;
       }
-      const { data: records, error } = await supabase
-        .from("study_records")
-        .select("created_at, duration, subject")
-        .returns<RecordItem[]>()
+
+      const { data: todos, error } = await supabase
+        .from("todo_items")
+        .select("created_at, title, priority, user_id")
+        .returns<TodoItem[]>()
         .order("created_at", { ascending: true });
 
       if (error) {
+        console.error("TODO取得エラー:", error);
         setLoading(false);
         return;
       }
@@ -64,25 +65,25 @@ export default function StudyGraphPage() {
         allDates.push(startOfMonth.date(i).format("YYYY-MM-DD"));
       }
 
-      // --- 科目一覧を抽出 ---
-      const subjectSet = new Set<string>();
-      records?.forEach(r => subjectSet.add(r.subject));
-      const subjectList = Array.from(subjectSet);
-      setSubjects(subjectList);
+      // --- 優先度一覧を抽出 ---
+      const prioritySet = new Set<string>();
+      todos?.forEach(t => prioritySet.add(t.priority));
+      const priorityList = Array.from(prioritySet);
+      setPriorities(priorityList);
 
-      // --- 日付×科目ごとにdurationを集計 ---
+      // --- 日付×優先度ごとにTODO数を集計 ---
       const grouped: Record<string, Record<string, number>> = {};
-      records?.forEach(r => {
-        const date = dayjs(r.created_at).format("YYYY-MM-DD");
+      todos?.forEach(t => {
+        const date = dayjs(t.created_at).format("YYYY-MM-DD");
         if (!grouped[date]) grouped[date] = {};
-        grouped[date][r.subject] = (grouped[date][r.subject] || 0) + r.duration;
+        grouped[date][t.priority] = (grouped[date][t.priority] || 0) + 1;
       });
 
       // --- すべての日付でChartDataを作成（0埋め）---
       const chartData: ChartData[] = allDates.map(date => {
         const row: ChartData = { date };
-        subjectList.forEach(sub => {
-          row[sub] = grouped[date]?.[sub] || 0;
+        priorityList.forEach(priority => {
+          row[priority] = grouped[date]?.[priority] || 0;
         });
         return row;
       });
@@ -90,7 +91,7 @@ export default function StudyGraphPage() {
       setData(chartData);
       setLoading(false);
     }
-    fetchRecords();
+    fetchTodos();
   }, []);
 
   // --- カスタムツールチップ ---
@@ -110,7 +111,7 @@ export default function StudyGraphPage() {
           <div style={{ fontWeight: "bold", marginBottom: 4 }}>{d.format("M/D")}</div>
           {payload.map((p) => (
             <div key={p.dataKey} style={{ color: p.fill, fontWeight: 600 }}>
-              {p.value} 分 <span style={{ fontSize: 12, marginLeft: 8 }}>{p.dataKey}</span>
+              {p.value} 件 <span style={{ fontSize: 12, marginLeft: 8 }}>{p.dataKey}</span>
             </div>
           ))}
         </div>
@@ -130,18 +131,14 @@ export default function StudyGraphPage() {
     );
   }
 
-  // --- 科目ごとに色を決める ---
-  const getSubjectColor = (subject: string) => {
-    const hash = subject.split('').reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
-    const colorPalette = [
-      "#3b82f6", // blue
-      "#22c55e", // green
-      "#a21caf", // purple
-      "#f59e42", // orange
-      "#ec4899", // pink
-      "#14b8a6"  // teal
-    ];
-    return colorPalette[Math.abs(hash) % colorPalette.length];
+  // --- 優先度ごとに色を決める ---
+  const getPriorityColor = (priority: string) => {
+    const colorMap: Record<string, string> = {
+      "高": "#ef4444", // red
+      "中": "#f59e0b", // amber
+      "低": "#10b981", // emerald
+    };
+    return colorMap[priority] || "#6b7280"; // gray as default
   };
 
   return (
@@ -162,7 +159,7 @@ export default function StudyGraphPage() {
         overflowX: "auto"
       })}>
         <div className={css({ mb: "4" })}>
-          <h2 className={css({ fontSize: "xl", fontWeight: "bold", color: "primary.700" })}>学習時間の推移</h2>
+          <h2 className={css({ fontSize: "xl", fontWeight: "bold", color: "primary.700" })}>TODO作成数の推移</h2>
         </div>
         <div className={css({ flex: 1, minH: "12rem", minWidth: { base: "600px", md: "1000px" } })}>
           {data.length > 0 ? (
@@ -170,15 +167,15 @@ export default function StudyGraphPage() {
               <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="date" tickFormatter={formatXAxis} minTickGap={10} />
-                <YAxis label={{ value: "分", angle: -90, position: "insideLeft" }} />
+                <YAxis label={{ value: "件数", angle: -90, position: "insideLeft" }} />
                 <Tooltip content={<CustomTooltip />} />
-                {subjects.map(sub => (
-                  <Bar key={sub} dataKey={sub} stackId="a" fill={getSubjectColor(sub)} />
+                {priorities.map(priority => (
+                  <Bar key={priority} dataKey={priority} stackId="a" fill={getPriorityColor(priority)} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className={css({ textAlign: "center", py: "8", color: "gray.500" })}>学習記録がありません</div>
+            <div className={css({ textAlign: "center", py: "8", color: "gray.500" })}>TODO記録がありません</div>
           )}
         </div>
       </div>

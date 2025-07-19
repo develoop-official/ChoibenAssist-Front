@@ -6,10 +6,12 @@ import React, { useState, useEffect } from 'react';
 import { css } from '../styled-system/css';
 
 import { generateGeneralTodo } from './actions/todo-actions';
+import AiTodoSuggestion from './components/AiTodoSuggestion';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import { useAuth } from './hooks/useAuth';
 import { useTodos } from './hooks/useTodos';
 import { buttonStyles } from './styles/components';
+import { CreateTodoItem } from './types/todo-item';
 
 interface TodoSuggestionResponse {
   success: boolean;
@@ -20,7 +22,7 @@ interface TodoSuggestionResponse {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { todos, loading: todosLoading, addTodo } = useTodos();
+  const { todos, loading: todosLoading, addTodos } = useTodos();
 
   const [todoSuggestionForm, setTodoSuggestionForm] = useState({
     time_available: 60,
@@ -78,6 +80,7 @@ export default function DashboardPage() {
       setTodoSuggestionError('');
       setTodoSuggestionResult(null);
 
+            // 実際のAI APIを呼び出し
       const weakAreasArray = todoSuggestionForm.weak_areas
         .split(',')
         .map(s => s.trim())
@@ -99,17 +102,9 @@ export default function DashboardPage() {
     }
   };
 
-  const handleAddToTodoList = async (content: string) => {
+  const handleAddToTodoList = async (todos: CreateTodoItem[]) => {
     try {
-      const lines = content.split('\n').filter(line => line.trim());
-
-      for (const line of lines) {
-        const task = line.replace(/^[•\-\*\d\.\s]+/, '').trim();
-        if (task) {
-          await addTodo({ task });
-        }
-      }
-
+      await addTodos(todos);
       alert('TODOリストに追加しました！');
     } catch (_err) {
       console.error('TODO追加エラー:', _err);
@@ -550,29 +545,11 @@ export default function DashboardPage() {
                 })}>
                   AI提案
                 </h3>
-                <div className={css({
-                  fontSize: 'sm',
-                  color: 'green.700',
-                  mb: '3',
-                  whiteSpace: 'pre-wrap'
-                })}>
-                  {todoSuggestionResult.content}
-                </div>
-                <button
-                  onClick={() => handleAddToTodoList(todoSuggestionResult.content)}
-                  className={css({
-                    px: '3',
-                    py: '1',
-                    bg: 'green.600',
-                    color: 'white',
-                    rounded: 'md',
-                    fontSize: 'sm',
-                    fontWeight: 'medium',
-                    _hover: { bg: 'green.700' }
-                  })}
-                >
-                  TODOリストに追加
-                </button>
+
+                <AiTodoSuggestion
+                  content={todoSuggestionResult.content}
+                  onAddTodos={handleAddToTodoList}
+                />
               </div>
             )}
           </div>

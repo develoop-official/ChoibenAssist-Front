@@ -64,6 +64,27 @@ export function useTodos() {
     }
   };
 
+  // 複数追加
+  const addTodos = async (newTodos: CreateTodoItem[]) => {
+    if (!user) throw new Error('ユーザーが認証されていません');
+    if (!supabase) throw new Error('Supabaseが設定されていません');
+    if (newTodos.length === 0) return;
+
+    try {
+      setError(null);
+      const todosWithUserId = newTodos.map(todo => ({ user_id: user.id, ...todo }));
+      const { data, error } = await supabase
+        .from('todo_items')
+        .insert(todosWithUserId)
+        .select();
+      if (error) throw error;
+      setTodos(prev => [...(data || []), ...prev]);
+    } catch (err) {
+      setError('TODOの追加に失敗しました');
+      throw err;
+    }
+  };
+
   // 削除
   const deleteTodo = async (id: string) => {
     if (!supabase) throw new Error('Supabaseが設定されていません');
@@ -109,6 +130,7 @@ export function useTodos() {
     loading,
     error,
     addTodo,
+    addTodos,
     deleteTodo,
     updateStatus,
     refetch: fetchTodos

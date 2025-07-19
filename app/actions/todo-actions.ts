@@ -18,8 +18,14 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
-  } catch {
+    const data = await response.json();
+    return {
+      success: true,
+      content: data.content,
+      response_type: 'scrapbox'
+    };
+  } catch (error) {
+    console.error('TODO生成エラー:', error);
     throw new Error('TODOの生成に失敗しました');
   }
 }
@@ -44,8 +50,14 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
-  } catch {
+    const data = await response.json();
+    return {
+      success: true,
+      content: data.content,
+      response_type: 'general'
+    };
+  } catch (error) {
+    console.error('TODO生成エラー:', error);
     throw new Error('TODOの生成に失敗しました');
   }
 }
