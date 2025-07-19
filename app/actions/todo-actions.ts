@@ -19,10 +19,10 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
     ];
 
     let lastError = null;
-    
+
     for (const endpoint of endpoints) {
       const apiUrl = `${process.env.BACKEND_API_URL}${endpoint}`;
-      console.log('🔍 Scrapbox TODO API呼び出し試行:', {
+      console.warn('🔍 Scrapbox TODO API呼び出し試行:', {
         url: apiUrl,
         method: 'POST',
         hasApiKey: !!process.env.API_SECRET_KEY,
@@ -46,7 +46,7 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
 
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ Scrapbox TODO API成功:', endpoint);
+          console.warn('✅ Scrapbox TODO API成功:', endpoint);
           return {
             success: true,
             content: data.content,
@@ -103,10 +103,10 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
     ];
 
     let lastError = null;
-    
+
     for (const endpoint of endpoints) {
       const apiUrl = `${process.env.BACKEND_API_URL}${endpoint}`;
-      console.log('🔍 一般TODO API呼び出し試行:', {
+      console.warn('🔍 一般TODO API呼び出し試行:', {
         url: apiUrl,
         method: 'POST',
         hasApiKey: !!process.env.API_SECRET_KEY,
@@ -133,7 +133,7 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
 
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ 一般TODO API成功:', endpoint);
+          console.warn('✅ 一般TODO API成功:', endpoint);
           return {
             success: true,
             content: data.content,
