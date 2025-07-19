@@ -5,12 +5,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
+import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
 import { useTodos } from '../hooks/useTodos';
 import { buttonStyles, formStyles } from '../styles/components';
-import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
 
 interface UserProfile {
   id: string;
@@ -315,7 +315,7 @@ export default function MyPage() {
           .split(',')
           .map(s => s.trim())
           .filter(Boolean);
-        
+
         result = await generateGeneralTodo(
           todoSuggestionForm.time_available,
           todoSuggestionForm.recent_progress,
