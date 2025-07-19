@@ -28,7 +28,7 @@ export default function TodoListPage() {
             _hover: { bg: "primary.700" },
             transition: "all 0.2s"
           })}
-          onClick={() => router.push("/todoPost")}
+          
         >
           TODO作成
         </button>

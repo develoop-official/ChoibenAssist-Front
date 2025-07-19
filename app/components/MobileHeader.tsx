@@ -175,7 +175,7 @@ export default function MobileHeader() {
           </div>
           <div className={css({ px: "6", pt: "10", fontWeight: "bold", display: "flex", flexDirection: "column", gap: "6" })}>
             <Link href="/studyList" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/studyList") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/studyList") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>学習記録一覧</Link>
-            <Link href="/post" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/post") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/post") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>新規投稿</Link>
+            
             <Link href="/studyGraph" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/studyGraph") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/studyGraph") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>学習グラフ</Link>
             <Link href="/todoList" onClick={() => setOpen(false)} className={css({ mb: "4", color: isActive("/todoList") ? "primary.700" : "primary.900", fontSize: "lg", borderBottom: isActive("/todoList") ? "2px solid #3D8D7A" : "none", pb: "1", transition: "all 0.2s", _hover: { color: "primary.600" } })}>TODOリスト</Link>
             {user && (

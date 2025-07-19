@@ -164,13 +164,7 @@ export default function PcHeader() {
             }}>学習記録一覧</Link>
           </li>
           <li style={{ display: "inline-block" }}>
-            <Link href="/post" style={{
-              color: isActive("/post") ? "#1d4ed8" : "#1e3a8a",
-              borderBottom: isActive("/post") ? "2px solid #3D8D7A" : "none",
-              paddingBottom: "4px",
-              textDecoration: "none",
-              transition: "all 0.2s"
-            }}>新規投稿</Link>
+
           </li>
           <li style={{ display: "inline-block" }}>
             <Link href="/studyGraph" style={{
