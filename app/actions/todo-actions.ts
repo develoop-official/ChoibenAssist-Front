@@ -15,13 +15,15 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
       `/api/ai/scrapbox-todo/${projectName}`,
       `/api/scrapbox-todo/${projectName}`,
       `/ai/scrapbox-todo/${projectName}`,
-      `/scrapbox-todo/${projectName}`
+      `/scrapbox-todo/${projectName}`,
+      `/api/scrapbox/${projectName}/todo`,
+      `/scrapbox/${projectName}/todo`
     ];
 
     let lastError = null;
 
     for (const endpoint of endpoints) {
-      const apiUrl = `${process.env.BACKEND_API_URL}${endpoint}`;
+      const apiUrl = `${process.env.BACKEND_API_URL}${endpoint}`.replace(/([^:]\/)\/+/g, '$1');
       console.warn('🔍 Scrapbox TODO API呼び出し試行:', {
         url: apiUrl,
         method: 'POST',
@@ -99,13 +101,15 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
       `/api/ai/todo`,
       `/api/todo`,
       `/ai/todo`,
-      `/todo`
+      `/todo`,
+      `/api/general/todo`,
+      `/general/todo`
     ];
 
     let lastError = null;
 
     for (const endpoint of endpoints) {
-      const apiUrl = `${process.env.BACKEND_API_URL}${endpoint}`;
+      const apiUrl = `${process.env.BACKEND_API_URL}${endpoint}`.replace(/([^:]\/)\/+/g, '$1');
       console.warn('🔍 一般TODO API呼び出し試行:', {
         url: apiUrl,
         method: 'POST',
