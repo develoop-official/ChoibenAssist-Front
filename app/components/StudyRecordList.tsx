@@ -10,7 +10,7 @@ interface StudyRecordListProps {
   records: StudyRecord[];
   loading?: boolean;
   error?: string | null;
-  onDelete?: (id: string) => Promise<void>;
+  onDelete?: (_id: string) => Promise<void>;
 }
 
 export default function StudyRecordList({ records, loading = false, error = null, onDelete }: StudyRecordListProps) {
@@ -94,8 +94,8 @@ export default function StudyRecordList({ records, loading = false, error = null
       gap: '6',
       alignItems: 'start'
     })}>
-      {records.map((record) => (
-        <StudyRecordCard key={record.id} record={record} onDelete={onDelete} />
+      {records.map((_record) => (
+        <StudyRecordCard key={_record.id} record={_record} onDelete={onDelete} />
       ))}
     </div>
   );

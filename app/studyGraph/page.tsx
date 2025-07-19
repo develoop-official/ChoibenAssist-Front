@@ -1,7 +1,6 @@
 "use client";
 
 import dayjs from "dayjs";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
@@ -35,7 +34,7 @@ export default function StudyGraphPage() {
   const [data, setData] = useState<ChartData[]>([]);
   const [subjects, setSubjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  // const _router = useRouter();
 
   useEffect(() => {
     async function fetchRecords() {
@@ -92,7 +91,7 @@ export default function StudyGraphPage() {
       setLoading(false);
     }
     fetchRecords();
-  }, [supabase]);
+  }, []);
 
   // --- カスタムツールチップ ---
   const CustomTooltip = ({ active, payload, label }: any) => {

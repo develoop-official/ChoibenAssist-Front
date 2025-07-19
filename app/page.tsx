@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
@@ -7,7 +8,7 @@ import { css } from '../styled-system/css';
 
 import SupabaseSetupNotice from './components/SupabaseSetupNotice';
 import { useAuth } from './hooks/useAuth';
-import { buttonStyles, formStyles, cardStyles } from './styles/components';
+import { buttonStyles, formStyles } from './styles/components';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -40,7 +41,7 @@ export default function LoginPage() {
       } else {
         router.push('/myPage');
       }
-    } catch (err) {
+    } catch {
       setError('認証中にエラーが発生しました');
     } finally {
       setLoading(false);
@@ -57,7 +58,7 @@ export default function LoginPage() {
         setError(error.message);
         setLoading(false);
       }
-    } catch (err) {
+    } catch {
       setError('認証中にエラーが発生しました');
       setLoading(false);
     }

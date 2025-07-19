@@ -46,7 +46,7 @@ export function useStudyRecords() {
       setError(null);
 
       // まずテーブルの存在を確認
-      const { data: tableCheck, error: tableError } = await supabase
+      const { error: tableError } = await supabase
         .from('study_records')
         .select('id')
         .limit(1);

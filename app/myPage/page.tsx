@@ -91,7 +91,7 @@ export default function MyPage() {
 
   const fetchProfile = async () => {
     if (!supabase || !user) {
-      console.log('fetchProfile: Supabaseまたはユーザーが存在しません');
+      // console.log('fetchProfile: Supabaseまたはユーザーが存在しません');
       setLoading(false);
       return;
     }
@@ -106,11 +106,11 @@ export default function MyPage() {
         .eq('user_id', user.id)
         .single();
 
-      console.log('プロフィール取得結果:', { data, error });
+      // console.log('プロフィール取得結果:', { data, error });
 
       if (error) {
         if (error.code === 'PGRST116') {
-          console.log('プロフィールが存在しないため作成します');
+          // console.log('プロフィールが存在しないため作成します');
           await createProfile();
         } else {
           throw error;
@@ -135,16 +135,16 @@ export default function MyPage() {
 
   const createProfile = async () => {
     if (!supabase || !user) {
-      console.log('プロフィール作成: Supabaseまたはユーザーが存在しません');
+      // console.log('プロフィール作成: Supabaseまたはユーザーが存在しません');
       return;
     }
 
     try {
-      console.log('プロフィール作成開始:', {
-        userId: user.id,
-        email: user.email,
-        metadata: user.user_metadata
-      });
+      // console.log('プロフィール作成開始:', {
+      //   userId: user.id,
+      //   email: user.email,
+      //   metadata: user.user_metadata
+      // });
 
       const profileData = {
         user_id: user.id,
@@ -157,7 +157,7 @@ export default function MyPage() {
         updated_at: new Date().toISOString()
       };
 
-      console.log('作成するプロフィールデータ:', profileData);
+      // console.log('作成するプロフィールデータ:', profileData);
 
       const { data, error } = await supabase
         .from('user_profiles')
@@ -170,7 +170,7 @@ export default function MyPage() {
         throw error;
       }
 
-      console.log('プロフィール作成成功:', data);
+      // console.log('プロフィール作成成功:', data);
       setProfile(data);
       setFormData({
         username: data.username || '',
@@ -260,8 +260,8 @@ export default function MyPage() {
       const filePath = `${user.id}/${fileName}`;
 
       // デバッグ用ログ
-      console.log('アップロードユーザーID:', user.id);
-      console.log('ファイルパス:', filePath);
+      // console.log('アップロードユーザーID:', user.id);
+      // console.log('ファイルパス:', filePath);
 
       const { error: uploadError } = await supabase!.storage
         .from('avatars')
@@ -301,7 +301,7 @@ export default function MyPage() {
         .map(s => s.trim())
         .filter(Boolean);
       // APIリクエストbodyを切り替え
-      const body: any = {
+      const body: { time_available: number; recent_progress?: string; weak_areas?: string[]; daily_goal?: string } = {
         time_available: todoSuggestionForm.time_available,
       };
       if (useScrapbox) {
@@ -335,8 +335,8 @@ export default function MyPage() {
       }
       const result: TodoSuggestionResponse = await response.json();
       setTodoSuggestionResult(result);
-    } catch (err) {
-      console.error('TODO提案エラー:', err);
+    } catch (_err) {
+      console.error('TODO提案エラー:', _err);
       setTodoSuggestionError('TODO提案の取得に失敗しました。');
     } finally {
       setTodoSuggestionLoading(false);
@@ -358,8 +358,8 @@ export default function MyPage() {
 
       // 成功メッセージを表示
       alert('TODOリストに追加しました！');
-    } catch (err) {
-      console.error('TODO追加エラー:', err);
+    } catch (_err) {
+      console.error('TODO追加エラー:', _err);
       alert('TODOリストへの追加に失敗しました');
     }
   };

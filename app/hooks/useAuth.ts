@@ -24,13 +24,13 @@ export const useAuth = () => {
         const error = response?.error;
 
         // デバッグ情報を出力
-        console.log('🔐 認証セッション情報:', {
-          hasSession: !!session,
-          hasUser: !!session?.user,
-          userId: session?.user?.id,
-          userEmail: session?.user?.email,
-          sessionExpiresAt: session?.expires_at
-        });
+        // console.log('🔐 認証セッション情報:', {
+        //   hasSession: !!session,
+        //   hasUser: !!session?.user,
+        //   userId: session?.user?.id,
+        //   userEmail: session?.user?.email,
+        //   sessionExpiresAt: session?.expires_at
+        // });
 
         if (error) {
           console.error('セッション取得エラー:', error);
