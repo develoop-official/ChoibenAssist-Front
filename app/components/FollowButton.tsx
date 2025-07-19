@@ -21,93 +21,81 @@ export default function FollowButton({
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [isLoading, setIsLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const checkFollowStatus = useCallback(async () => {
     if (!user || !targetUserId || hasChecked) return;
 
     // 自分自身をフォローしようとしている場合は処理をスキップ
     if (user.id === targetUserId) {
-      console.warn('自分自身をフォローしようとしています。処理をスキップします。');
       setHasChecked(true);
       return;
     }
 
     try {
-      console.warn('フォロー状態確認開始:', {
+      console.log('フォロー状態確認開始:', {
         userId: user.id,
         targetUserId,
-        userEmail: user.email,
-        hasSupabase: !!supabase
+        userEmail: user.email
       });
 
-      // 認証状態の確認
-      const { data: sessionData, error: sessionError } = await supabase!.auth.getSession();
-      console.warn('セッション確認:', { sessionData, sessionError });
-
-      // まず、user_followsテーブルが存在するかテスト
-      const { data: testData, error: testError } = await supabase!
-        .from('user_follows')
-        .select('count')
-        .limit(1);
-
-      console.warn('テーブルアクセステスト:', { testData, testError });
-
+      // maybeSingle()を使用して、結果が0行でもエラーにならないようにする
       const { data, error } = await supabase!
         .from('user_follows')
         .select('*')
         .eq('follower_id', user.id)
         .eq('following_id', targetUserId)
-        .single();
-
-      console.warn('フォロー状態確認結果:', { data, error });
+        .maybeSingle();
 
       if (error) {
-        console.error('詳細エラー情報:', {
+        console.error('フォロー状態確認エラー:', {
           code: error.code,
           message: error.message,
           details: error.details,
           hint: error.hint
         });
 
-        if (error.code === 'PGRST116') {
-          // レコードが見つからない場合（フォローしていない）
-          console.warn('フォローしていません');
+        // 406エラーの場合はRLSポリシーの問題
+        if (error.code === '406') {
+          setErrorMessage(`フォロー機能エラー: RLSポリシーの問題 (${error.message})`);
+          setIsAvailable(false);
           setIsFollowing(false);
         } else {
-          console.error('フォロー状態確認エラー:', error);
-          // エラーの場合は初期状態を維持
-          setIsFollowing(initialIsFollowing);
+          setErrorMessage(`フォロー機能エラー: ${error.message} (${error.code})`);
+          setIsAvailable(false);
+          setIsFollowing(false);
         }
       } else {
-        // データが見つかった場合（フォローしている）
-        console.warn('フォローしています');
-        setIsFollowing(true);
+        // dataがnullの場合はフォローしていない、データがある場合はフォローしている
+        setIsFollowing(!!data);
+        setErrorMessage(null);
       }
     } catch (err) {
       console.error('フォロー状態確認エラー（例外）:', err);
-      // エラーの場合は初期状態を維持
-      setIsFollowing(initialIsFollowing);
+      setErrorMessage(`フォロー機能エラー: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setIsAvailable(false);
+      setIsFollowing(false);
     } finally {
       setHasChecked(true);
     }
-  }, [user, targetUserId, hasChecked, initialIsFollowing]);
+  }, [user, targetUserId, hasChecked]);
 
   useEffect(() => {
     checkFollowStatus();
   }, [checkFollowStatus]);
 
   const handleFollowToggle = async () => {
-    if (!user || !targetUserId || isLoading) return;
+    if (!user || !targetUserId || isLoading || !isAvailable) return;
 
     // 自分自身をフォローしようとしている場合は処理をスキップ
     if (user.id === targetUserId) {
-      console.warn('自分自身をフォローしようとしています。処理をスキップします。');
       return;
     }
 
     try {
       setIsLoading(true);
-      console.warn('フォロー操作開始:', { isFollowing, userId: user.id, targetUserId });
+      setErrorMessage(null);
 
       if (isFollowing) {
         // フォロー解除
@@ -119,10 +107,10 @@ export default function FollowButton({
 
         if (error) {
           console.error('フォロー解除エラー:', error);
+          setErrorMessage(`フォロー解除エラー: ${error.message}`);
           throw error;
         }
 
-        console.warn('フォロー解除成功');
         setIsFollowing(false);
         onFollowChange?.(false);
       } else {
@@ -137,16 +125,16 @@ export default function FollowButton({
 
         if (error) {
           console.error('フォローエラー:', error);
+          setErrorMessage(`フォローエラー: ${error.message}`);
           throw error;
         }
 
-        console.warn('フォロー成功');
         setIsFollowing(true);
         onFollowChange?.(true);
       }
     } catch (err) {
       console.error('フォロー操作エラー:', err);
-      alert('フォロー操作に失敗しました。データベースの設定を確認してください。');
+      // エラーメッセージは既に設定済み
     } finally {
       setIsLoading(false);
     }
@@ -154,6 +142,29 @@ export default function FollowButton({
 
   // 自分自身はフォローできない
   if (user?.id === targetUserId) {
+    return null;
+  }
+
+  // エラーメッセージを表示
+  if (errorMessage) {
+    return (
+      <div className={css({
+        px: '4',
+        py: '2',
+        rounded: 'md',
+        fontSize: 'sm',
+        bg: 'red.50',
+        color: 'red.700',
+        border: '1px solid',
+        borderColor: 'red.200'
+      })}>
+        {errorMessage}
+      </div>
+    );
+  }
+
+  // フォロー機能が利用できない場合
+  if (!isAvailable) {
     return null;
   }
 
