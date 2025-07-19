@@ -117,7 +117,7 @@ export default function MobileHeader() {
           <span className={css({ w: "6", h: "0.5", bg: "white", borderRadius: "full", transition: "all 0.3s", transform: open ? "rotate(-45deg) translate(7px, -6px)" : "none" })} />
         </button>
         <Link href="/" className={css({ textDecoration: "none", display: "flex", alignItems: "center", gap: "2" })}>
-          <Image src="/logo.svg" alt="ロゴ" width={32} height={32} className={css({ w: "8", h: "8" })} priority />
+          <Image src="/choiben.webp" alt="ロゴ" width={32} height={32} className={css({ w: "8", h: "8" })} priority />
           <span className={css({ fontSize: "xl", fontWeight: "extrabold", color: "#3D8D7A", letterSpacing: "wide", textShadow: "0 1px 4px rgba(61,141,122,0.10)" })}>ちょい勉アシスト</span>
         </Link>
         {user && (
