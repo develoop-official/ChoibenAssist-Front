@@ -31,11 +31,11 @@ export default function RedirectPage() {
         }
 
         if (data.session) {
-          // 認証成功時はmyPageにリダイレクト
-          router.push('/myPage');
+          // 認証成功時はダッシュボードにリダイレクト
+          router.push('/');
         } else {
           // セッションがない場合はログインページにリダイレクト
-          router.push('/');
+          router.push('/login');
         }
       } catch {
         setError('リダイレクト処理中にエラーが発生しました');
@@ -90,7 +90,7 @@ export default function RedirectPage() {
               {error}
             </p>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/login')}
               className={css({
                 px: '4',
                 py: '2',
