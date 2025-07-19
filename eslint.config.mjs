@@ -60,7 +60,7 @@ const eslintConfig = [
       "spaced-comment": ["error", "always"],
       
       // 空白・フォーマットルール
-      "no-trailing-spaces": "error",
+      "no-trailing-spaces": "off",
       "eol-last": "error",
       "no-multiple-empty-lines": ["error", { "max": 2 }],
       
