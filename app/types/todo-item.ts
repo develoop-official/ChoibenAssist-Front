@@ -9,6 +9,14 @@ export interface TodoItem {
   updated_at: string; // ISO形式
 }
 
+export interface TodoItemWithUser extends TodoItem {
+  profiles?: {
+    id: string;
+    email: string;
+    full_name?: string;
+  };
+}
+
 export interface CreateTodoItem {
   task: string;
   due_date?: string;
