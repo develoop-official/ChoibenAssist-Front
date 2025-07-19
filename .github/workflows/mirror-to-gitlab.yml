@@ -3,7 +3,8 @@ name: Mirror to GitLab
 on:
   push:
     branches:
-      - main  # ←ミラーしたいブランチ
+      - main
+      - develop
 
 jobs:
   mirror:

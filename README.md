@@ -49,6 +49,85 @@ git clone https://github.com/develoop-official/ChoibenAssist-Front.git
 cd ChoibenAssist-Front
 ```
 
+## 🐳 Docker & GitLab CI/CD デプロイメント
+
+このプロジェクトは、GitLab CI/CDパイプラインとDockerを使用したデプロイメントをサポートしています。
+
+### Docker設定
+
+#### ローカルでのDocker実行
+```bash
+# Dockerイメージのビルド
+docker build -t choibenassist-front .
+
+# コンテナの実行
+docker run -p 3001:3001 --env-file .env.local choibenassist-front
+```
+
+### GitLab CI/CD パイプライン
+
+#### パイプライン構成
+1. **Build**: Dockerイメージのビルド
+2. **Test**: ビルドしたイメージのヘルスチェック
+3. **Deploy**: 
+   - **Staging**: `develop`ブランチへのプッシュで自動デプロイ
+   - **Production**: `main`ブランチでの手動デプロイ
+
+#### 必要な設定
+
+##### GitLab Runner要件
+- **Executor**: Shell
+- **Docker**: インストール済み
+- **権限**: Docker操作権限
+
+##### 環境変数設定（GitLab CI/CD Variables）
+GitLabプロジェクトの Settings > CI/CD > Variables で以下を設定：
+
+```bash
+# 本番環境用変数
+PRODUCTION_SUPABASE_URL=your_production_supabase_url
+PRODUCTION_SUPABASE_ANON_KEY=your_production_supabase_anon_key
+PRODUCTION_BACKEND_API_URL=your_production_backend_api_url
+PRODUCTION_API_SECRET_KEY=your_production_api_secret_key
+
+# ステージング環境用変数
+STAGING_SUPABASE_URL=your_staging_supabase_url
+STAGING_SUPABASE_ANON_KEY=your_staging_supabase_anon_key
+STAGING_BACKEND_API_URL=your_staging_backend_api_url
+STAGING_API_SECRET_KEY=your_staging_api_secret_key
+```
+
+#### デプロイメント手順
+1. GitLabプロジェクトに上記の環境変数を設定
+2. `develop`ブランチにプッシュ → ステージング環境に自動デプロイ（ポート3002）
+3. `main`ブランチにプッシュ → 本番環境への手動デプロイが可能（ポート3001）
+
+#### ヘルスチェック
+デプロイ後のヘルスチェックは以下のエンドポイントで確認できます：
+```
+# 本番環境
+GET http://localhost:3001/api/health
+
+# ステージング環境  
+GET http://localhost:3002/api/health
+```
+
+#### ログ確認
+```bash
+# 本番環境のログ
+docker logs choibenassist-front-prod
+
+# ステージング環境のログ  
+docker logs choibenassist-front-staging
+```
+
+#### クリーンアップ
+古いDockerイメージとコンテナのクリーンアップは、GitLab CI/CDで手動実行できます：
+```bash
+# GitLab UI上で手動実行
+Variables: CLEANUP=true
+```
+
 ### 2. 依存関係のインストール
 ```bash
 npm install

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Docker用のスタンドアロン出力を有効化
+  output: 'standalone',
   eslint: {
     // 警告は無視しない
     ignoreDuringBuilds: false,
