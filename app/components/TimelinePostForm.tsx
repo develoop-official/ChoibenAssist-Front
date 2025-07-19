@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
@@ -12,14 +13,70 @@ interface TimelinePostFormProps {
 
 export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProps) {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [completedTodo, setCompletedTodo] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // URLパラメータから完了したTODOの情報を取得
+  useEffect(() => {
+    const todoId = searchParams.get('completed_todo');
+    if (todoId) {
+      fetchCompletedTodo(todoId);
+    }
+  }, [searchParams]);
+
+  const fetchCompletedTodo = async (todoId: string) => {
+    try {
+      const { data, error } = await supabase!
+        .from('todo_items')
+        .select('*')
+        .eq('id', todoId)
+        .single();
+      
+      if (!error && data) {
+        setCompletedTodo(data);
+        // 完了したTODOの情報を投稿内容に自動的に追加
+        const todoContent = `## 📚 学習完了報告
+
+### ✅ 完了したタスク
+${data.task}
+
+### ⏱️ 学習時間
+${data.study_time}時間
+
+${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
+### 💡 学習内容・感想
+（ここに学習内容や感想を書いてください）
+
+### 🏷️ タグ
+#学習完了 #${data.study_time}時間学習${data.goal ? ' #目標達成' : ''}`;
+        setContent(todoContent);
+      }
+    } catch (err) {
+      console.error('完了したTODOの取得エラー:', err);
+    }
+  };
 
   const extractHashtags = (text: string): string[] => {
     const hashtagRegex = /#(\w+)/g;
     const matches = text.match(hashtagRegex);
     return matches ? matches.map(tag => tag.slice(1)) : [];
+  };
+
+  // MarkdownをHTMLに変換する簡単な関数
+  const renderMarkdown = (text: string) => {
+    return text
+      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold text-gray-800 mb-2">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-gray-900 mb-3">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-gray-900 mb-4">$1</h1>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>')
+      .replace(/#(\w+)/g, '<span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mr-2 mb-1">#$1</span>')
+      .replace(/\n/g, '<br>');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,6 +95,7 @@ export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProp
           content: content.trim(),
           hashtags: hashtags,
           is_public: isPublic,
+          todo_id: completedTodo?.id || null,
           created_at: new Date().toISOString()
         });
 
@@ -48,6 +106,7 @@ export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProp
 
       setContent('');
       setIsPublic(true);
+      setCompletedTodo(null);
       onPostCreated();
     } catch (err) {
       console.error('投稿エラー:', err);
@@ -78,42 +137,164 @@ export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProp
         📝 学習成果を投稿
       </h3>
 
+      {/* 完了したTODOの情報 */}
+      {completedTodo && (
+        <div className={css({
+          bg: 'green.50',
+          border: '1px solid',
+          borderColor: 'green.200',
+          rounded: 'lg',
+          p: '4',
+          mb: '4'
+        })}>
+          <div className={css({
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2',
+            mb: '2'
+          })}>
+            <span className={css({
+              fontSize: 'lg'
+            })}>
+              ✅
+            </span>
+            <span className={css({
+              fontSize: 'sm',
+              fontWeight: 'bold',
+              color: 'green.700'
+            })}>
+              完了したTODOの情報が自動的に含まれています
+            </span>
+          </div>
+          <div className={css({
+            fontSize: 'xs',
+            color: 'green.600'
+          })}>
+            タスク: {completedTodo.task} | 学習時間: {completedTodo.study_time}時間
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className={css({
         spaceY: '4'
       })}>
         {/* 投稿内容 */}
         <div>
-          <label htmlFor="content" className={css({
-            display: 'block',
-            fontSize: 'sm',
-            fontWeight: 'medium',
-            color: 'gray.700',
+          <div className={css({
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             mb: '2'
           })}>
-            学習内容
-          </label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="今日学んだことを共有しましょう！例: React HooksのuseEffectを理解できた！状態管理がスッキリした。#React #JavaScript #プログラミング"
-            rows={4}
-            className={css({
+            <label htmlFor="content" className={css({
+              fontSize: 'sm',
+              fontWeight: 'medium',
+              color: 'gray.700'
+            })}>
+              学習内容
+            </label>
+            <div className={css({
+              display: 'flex',
+              gap: '2'
+            })}>
+              <button
+                type="button"
+                onClick={() => setShowPreview(false)}
+                className={css({
+                  px: '3',
+                  py: '1',
+                  bg: !showPreview ? 'blue.500' : 'gray.200',
+                  color: !showPreview ? 'white' : 'gray.700',
+                  rounded: 'md',
+                  fontSize: 'xs',
+                  fontWeight: 'medium',
+                  _hover: { bg: !showPreview ? 'blue.600' : 'gray.300' }
+                })}
+              >
+                編集
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowPreview(true)}
+                className={css({
+                  px: '3',
+                  py: '1',
+                  bg: showPreview ? 'blue.500' : 'gray.200',
+                  color: showPreview ? 'white' : 'gray.700',
+                  rounded: 'md',
+                  fontSize: 'xs',
+                  fontWeight: 'medium',
+                  _hover: { bg: showPreview ? 'blue.600' : 'gray.300' }
+                })}
+              >
+                プレビュー
+              </button>
+            </div>
+          </div>
+          
+          {!showPreview ? (
+            <textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder={`## 📚 学習完了報告
+
+### ✅ 完了したタスク
+（完了したタスクを書いてください）
+
+### ⏱️ 学習時間
+（学習時間を書いてください）
+
+### 💡 学習内容・感想
+（学習内容や感想を書いてください）
+
+### 🏷️ タグ
+#学習完了 #プログラミング`}
+              rows={12}
+              className={css({
+                w: 'full',
+                p: '4',
+                border: '1px solid',
+                borderColor: 'gray.300',
+                rounded: 'lg',
+                fontSize: 'sm',
+                fontFamily: 'monospace',
+                resize: 'vertical',
+                _focus: {
+                  outline: 'none',
+                  borderColor: 'blue.500',
+                  ring: '1px',
+                  ringColor: 'blue.200'
+                }
+              })}
+            />
+          ) : (
+            <div className={css({
               w: 'full',
-              p: '3',
+              p: '4',
               border: '1px solid',
               borderColor: 'gray.300',
-              rounded: 'md',
-              fontSize: 'sm',
-              resize: 'vertical',
-              _focus: {
-                outline: 'none',
-                borderColor: 'blue.500',
-                ring: '1px',
-                ringColor: 'blue.200'
-              }
-            })}
-          />
+              rounded: 'lg',
+              bg: 'white',
+              minH: '200px',
+              maxH: '400px',
+              overflowY: 'auto'
+            })}>
+              <div 
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+                className={css({
+                  '& h1': { fontSize: 'xl', fontWeight: 'bold', color: 'gray.900', mb: '3' },
+                  '& h2': { fontSize: 'lg', fontWeight: 'bold', color: 'gray.800', mb: '2' },
+                  '& h3': { fontSize: 'md', fontWeight: 'bold', color: 'gray.700', mb: '2' },
+                  '& p': { mb: '2', lineHeight: 'relaxed' },
+                  '& strong': { fontWeight: 'bold' },
+                  '& em': { fontStyle: 'italic' },
+                  '& code': { bg: 'gray.100', px: '1', py: '0.5', rounded: 'sm', fontSize: 'xs' },
+                  '& br': { display: 'block', content: '""', marginTop: '0.5rem' }
+                })}
+              />
+            </div>
+          )}
         </div>
 
         {/* ハッシュタグプレビュー */}
@@ -152,6 +333,34 @@ export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProp
             </div>
           </div>
         )}
+
+        {/* 投稿ガイド */}
+        <div className={css({
+          bg: 'blue.50',
+          border: '1px solid',
+          borderColor: 'blue.200',
+          rounded: 'lg',
+          p: '3'
+        })}>
+          <h4 className={css({
+            fontSize: 'sm',
+            fontWeight: 'bold',
+            color: 'blue.800',
+            mb: '2'
+          })}>
+            📝 投稿のコツ
+          </h4>
+          <ul className={css({
+            spaceY: '1',
+            fontSize: 'xs',
+            color: 'blue.700'
+          })}>
+            <li>• セクションごとに整理して読みやすく</li>
+            <li>• 学習時間や達成感を具体的に</li>
+            <li>• ハッシュタグで検索されやすく</li>
+            <li>• **太字**や*斜体*で強調</li>
+          </ul>
+        </div>
 
         {/* 公開設定 */}
         <div className={css({
@@ -201,28 +410,13 @@ export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProp
               color: 'white',
               rounded: 'lg',
               fontSize: 'md',
-              fontWeight: 'medium',
+              fontWeight: 'bold',
               _hover: { bg: 'blue.700' },
-              _disabled: { opacity: '0.5', cursor: 'not-allowed' },
+              _disabled: { bg: 'gray.400', cursor: 'not-allowed' },
               transition: 'all 0.2s'
             })}
           >
-            {isSubmitting ? (
-              <span className={css({ display: 'flex', alignItems: 'center', gap: '2' })}>
-                <span className={css({
-                  w: '4',
-                  h: '4',
-                  border: '2px solid',
-                  borderColor: 'currentColor',
-                  borderTopColor: 'transparent',
-                  rounded: 'full',
-                  animation: 'spin 1s linear infinite'
-                })} />
-                投稿中...
-              </span>
-            ) : (
-              '📤 投稿する'
-            )}
+            {isSubmitting ? '投稿中...' : '📤 投稿する'}
           </button>
         </div>
       </form>
