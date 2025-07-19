@@ -80,12 +80,12 @@ export default function DashboardPage() {
       setTodoSuggestionError('');
       setTodoSuggestionResult(null);
 
-      // 実際のAI APIを呼び出し
+            // 実際のAI APIを呼び出し
       const weakAreasArray = todoSuggestionForm.weak_areas
         .split(',')
         .map(s => s.trim())
         .filter(Boolean);
-      
+
       const result = await generateGeneralTodo(
         todoSuggestionForm.time_available,
         todoSuggestionForm.recent_progress,

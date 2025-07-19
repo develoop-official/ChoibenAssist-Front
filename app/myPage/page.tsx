@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
+import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
 import AiTodoSuggestion from '../components/AiTodoSuggestion';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -12,7 +13,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useTodos } from '../hooks/useTodos';
 import { buttonStyles, formStyles } from '../styles/components';
 import { CreateTodoItem } from '../types/todo-item';
-import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
 
 interface UserProfile {
   id: string;

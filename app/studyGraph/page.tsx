@@ -42,7 +42,7 @@ export default function StudyGraphPage() {
         setLoading(false);
         return;
       }
-      
+
       const { data: todos, error } = await supabase
         .from("todo_items")
         .select("created_at, title, priority, user_id")
