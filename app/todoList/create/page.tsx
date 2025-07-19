@@ -81,18 +81,11 @@ export default function CreateTodoPage() {
       py: '8'
     })}>
       <div className={css({
-        mb: '8'
+        mb: '6'
       })}>
-        <h1 className={css({
-          fontSize: '2xl',
-          fontWeight: 'bold',
-          color: 'primary.700',
-          mb: '2'
-        })}>
-          新しいTODOを作成
-        </h1>
         <p className={css({
-          color: 'gray.600'
+          color: 'primary.600',
+          textAlign: 'center'
         })}>
           学習タスクと学習時間を設定してください
         </p>

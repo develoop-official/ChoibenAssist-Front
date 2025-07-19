@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
+import MarkdownRenderer from './ui/MarkdownRenderer';
 import { useAuth } from '../hooks/useAuth';
 
 interface TimelinePostFormProps {
@@ -19,6 +20,7 @@ export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedTodo, setCompletedTodo] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   // URLパラメータから完了したTODOの情報を取得
   useEffect(() => {
@@ -64,19 +66,6 @@ ${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
     const hashtagRegex = /#(\w+)/g;
     const matches = text.match(hashtagRegex);
     return matches ? matches.map(tag => tag.slice(1)) : [];
-  };
-
-  // MarkdownをHTMLに変換する簡単な関数
-  const renderMarkdown = (text: string) => {
-    return text
-      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold text-gray-800 mb-2">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-gray-900 mb-3">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-gray-900 mb-4">$1</h1>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>')
-      .replace(/#(\w+)/g, '<span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mr-2 mb-1">#$1</span>')
-      .replace(/\n/g, '<br>');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,7 +115,12 @@ ${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
       shadow: 'md',
       border: '1px solid',
       borderColor: 'gray.200',
-      mb: '6'
+      mb: '6',
+      transition: 'all 0.3s ease-in-out',
+      ...(isFocused && {
+        shadow: 'xl',
+        borderColor: 'blue.300'
+      })
     })}>
       <h3 className={css({
         fontSize: 'lg',
@@ -193,43 +187,36 @@ ${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
             })}>
               学習内容
             </label>
-            <div className={css({
-              display: 'flex',
-              gap: '2'
-            })}>
-              <button
-                type="button"
-                onClick={() => setShowPreview(false)}
-                className={css({
-                  px: '3',
-                  py: '1',
-                  bg: !showPreview ? 'blue.500' : 'gray.200',
-                  color: !showPreview ? 'white' : 'gray.700',
-                  rounded: 'md',
-                  fontSize: 'xs',
-                  fontWeight: 'medium',
-                  _hover: { bg: !showPreview ? 'blue.600' : 'gray.300' }
-                })}
-              >
-                編集
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowPreview(true)}
-                className={css({
-                  px: '3',
-                  py: '1',
-                  bg: showPreview ? 'blue.500' : 'gray.200',
-                  color: showPreview ? 'white' : 'gray.700',
-                  rounded: 'md',
-                  fontSize: 'xs',
-                  fontWeight: 'medium',
-                  _hover: { bg: showPreview ? 'blue.600' : 'gray.300' }
-                })}
-              >
-                プレビュー
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowPreview(!showPreview)}
+              className={css({
+                px: '3',
+                py: '1',
+                bg: 'blue.500',
+                color: 'white',
+                rounded: 'md',
+                fontSize: 'xs',
+                fontWeight: 'medium',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1',
+                _hover: { bg: 'blue.600' },
+                transition: 'all 0.2s'
+              })}
+            >
+              {showPreview ? (
+                <>
+                  <span>✏️</span>
+                  <span>編集</span>
+                </>
+              ) : (
+                <>
+                  <span>👁️</span>
+                  <span>プレビュー</span>
+                </>
+              )}
+            </button>
           </div>
           
           {!showPreview ? (
@@ -237,29 +224,22 @@ ${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder={`## 📚 学習完了報告
-
-### ✅ 完了したタスク
-（完了したタスクを書いてください）
-
-### ⏱️ 学習時間
-（学習時間を書いてください）
-
-### 💡 学習内容・感想
-（学習内容や感想を書いてください）
-
-### 🏷️ タグ
-#学習完了 #プログラミング`}
-              rows={12}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder={`どんなタスクをやりとげた? 
+マークダウンでかけて ハッシュタグ(#)を使えるよ! `}
+              rows={isFocused || content.trim() ? 12 : 4}
               className={css({
                 w: 'full',
                 p: '4',
                 border: '1px solid',
                 borderColor: 'gray.300',
+                color: 'black',
                 rounded: 'lg',
                 fontSize: 'sm',
                 fontFamily: 'monospace',
                 resize: 'vertical',
+                transition: 'all 0.3s ease-in-out',
                 _focus: {
                   outline: 'none',
                   borderColor: 'blue.500',
@@ -280,19 +260,24 @@ ${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
               maxH: '400px',
               overflowY: 'auto'
             })}>
-              <div 
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
-                className={css({
-                  '& h1': { fontSize: 'xl', fontWeight: 'bold', color: 'gray.900', mb: '3' },
-                  '& h2': { fontSize: 'lg', fontWeight: 'bold', color: 'gray.800', mb: '2' },
-                  '& h3': { fontSize: 'md', fontWeight: 'bold', color: 'gray.700', mb: '2' },
-                  '& p': { mb: '2', lineHeight: 'relaxed' },
-                  '& strong': { fontWeight: 'bold' },
-                  '& em': { fontStyle: 'italic' },
-                  '& code': { bg: 'gray.100', px: '1', py: '0.5', rounded: 'sm', fontSize: 'xs' },
-                  '& br': { display: 'block', content: '""', marginTop: '0.5rem' }
-                })}
-              />
+              {content.trim() ? (
+                <MarkdownRenderer
+                  content={content}
+                  className={css({
+                    fontSize: 'sm',
+                    lineHeight: 'relaxed'
+                  })}
+                />
+              ) : (
+                <p className={css({
+                  color: 'gray.500',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  py: '8'
+                })}>
+                  プレビューするには内容を入力してください
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -334,33 +319,6 @@ ${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
           </div>
         )}
 
-        {/* 投稿ガイド */}
-        <div className={css({
-          bg: 'blue.50',
-          border: '1px solid',
-          borderColor: 'blue.200',
-          rounded: 'lg',
-          p: '3'
-        })}>
-          <h4 className={css({
-            fontSize: 'sm',
-            fontWeight: 'bold',
-            color: 'blue.800',
-            mb: '2'
-          })}>
-            📝 投稿のコツ
-          </h4>
-          <ul className={css({
-            spaceY: '1',
-            fontSize: 'xs',
-            color: 'blue.700'
-          })}>
-            <li>• セクションごとに整理して読みやすく</li>
-            <li>• 学習時間や達成感を具体的に</li>
-            <li>• ハッシュタグで検索されやすく</li>
-            <li>• **太字**や*斜体*で強調</li>
-          </ul>
-        </div>
 
         {/* 公開設定 */}
         <div className={css({
@@ -420,37 +378,6 @@ ${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
           </button>
         </div>
       </form>
-
-      {/* 投稿のヒント */}
-      <div className={css({
-        mt: '4',
-        p: '3',
-        bg: 'blue.50',
-        rounded: 'md',
-        border: '1px solid',
-        borderColor: 'blue.200'
-      })}>
-        <h4 className={css({
-          fontSize: 'sm',
-          fontWeight: 'bold',
-          color: 'blue.800',
-          mb: '2'
-        })}>
-          💡 投稿のヒント
-        </h4>
-        <ul className={css({
-          fontSize: 'xs',
-          color: 'blue.700',
-          spaceY: '1',
-          listStyle: 'disc',
-          listStylePosition: 'inside'
-        })}>
-          <li>学んだ内容を具体的に書いてみましょう</li>
-          <li>ハッシュタグ（#）を使って関連キーワードを追加</li>
-          <li>非公開にすると自分だけが見られます</li>
-          <li>他のユーザーの投稿にいいねやコメントをしてみましょう</li>
-        </ul>
-      </div>
     </div>
   );
 }

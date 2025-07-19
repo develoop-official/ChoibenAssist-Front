@@ -102,8 +102,7 @@ export default function TodoEditPage() {
 
   return (
     <main className={css({ maxW: "2xl", mx: "auto", px: "4", py: "8" })}>
-      <div className={css({ display: "flex", justifyContent: "space-between", alignItems: "center", mb: "8" })}>
-        <h2 className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.700" })}>TODO編集</h2>
+      <div className={css({ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: "6" })}>
         <Link
           href={`/todoList/${todoId}`}
           className={css({
