@@ -1,11 +1,15 @@
 "use client";
+import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 import { supabase } from "../../../lib/supabase";
 import { css } from "../../../styled-system/css";
+import ShareButton from "../../components/ShareButton";
+import TodoCompletionModal from "../../components/TodoCompletionModal";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { TodoItem } from "../../types/todo-item";
+import { createPostShareData } from "../../utils/share-utils";
 
 export default function TodoDetailPage() {
   const router = useRouter();
@@ -19,6 +23,8 @@ export default function TodoDetailPage() {
   const [dueDate, setDueDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   useEffect(() => {
     if (!todoId) return;
@@ -54,7 +60,6 @@ export default function TodoDetailPage() {
     }
   }, [todo]);
 
-  const handleEdit = () => setEditMode(true);
   const handleCancel = () => setEditMode(false);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -89,12 +94,37 @@ export default function TodoDetailPage() {
         .delete()
         .eq("id", todoId);
       if (response?.error) throw response.error;
-      router.push("/todoList");
+      router.push("/");
     } catch {
       setError("TODOの削除に失敗しました");
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleComplete = async () => {
+    if (!todo || todo.status === "completed") return;
+    setCompleting(true);
+    try {
+      await supabase?.from("todo_items")
+        .update({ status: "completed" })
+        .eq("id", todoId);
+      setTodo({ ...todo, status: "completed" });
+      
+      // 完了アニメーションを表示してからタイムラインに遷移
+      setTimeout(() => {
+        router.push(`/timeline?completed_todo=${todoId}`);
+      }, 1000);
+    } catch (error) {
+      console.error("TODO完了エラー:", error);
+      alert("TODOの完了に失敗しました");
+    } finally {
+      setCompleting(false);
+    }
+  };
+
+  const handlePostCreated = () => {
+    console.warn('投稿が完了しました');
   };
 
   if (loading) {
@@ -104,9 +134,55 @@ export default function TodoDetailPage() {
     return <div className={css({ color: "red.500", textAlign: "center", py: "12" })}>{error || "TODOが見つかりません"}</div>;
   }
 
+  const shareData = createPostShareData({
+    content: `✅ TODO完了: ${todo.task}`,
+    hashtags: ["ちょい勉", "TODO完了"]
+  }, window.location.href);
+
   return (
-    <main className={css({ maxW: "md", mx: "auto", px: "4", py: "8" })}>
-      <h2 className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.700", mb: "8" })}>TODO詳細</h2>
+    <main className={css({ maxW: "2xl", mx: "auto", px: "4", py: "8" })}>
+      <div className={css({ display: "flex", justifyContent: "space-between", alignItems: "center", mb: "8" })}>
+        <h2 className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.700" })}>TODO詳細</h2>
+        <div className={css({ display: "flex", gap: "3" })}>
+          <Link
+            href="/"
+            className={css({
+              px: "4",
+              py: "2",
+              bg: "gray.500",
+              color: "white",
+              rounded: "md",
+              fontWeight: "bold",
+              fontSize: "sm",
+              _hover: { bg: "gray.600" },
+              transition: "all 0.2s",
+              textDecoration: "none",
+              display: "inline-block"
+            })}
+          >
+            ← ダッシュボードに戻る
+          </Link>
+          <Link
+            href={`/todoList/${todoId}/edit`}
+            className={css({
+              px: "4",
+              py: "2",
+              bg: "yellow.400",
+              color: "white",
+              rounded: "md",
+              fontWeight: "bold",
+              fontSize: "sm",
+              _hover: { bg: "yellow.500" },
+              transition: "all 0.2s",
+              textDecoration: "none",
+              display: "inline-block"
+            })}
+          >
+            編集
+          </Link>
+        </div>
+      </div>
+
       {editMode ? (
         <form onSubmit={handleSave} className={css({ display: "flex", flexDirection: "column", gap: "6", mb: "8" })}>
           <div>
@@ -190,72 +266,141 @@ export default function TodoDetailPage() {
         <div className={css({
           bg: "white",
           border: "1px solid",
-          borderColor: "gray.200",
+          borderColor: todo.status === "completed" ? "green.200" : "gray.200",
           rounded: "xl",
           p: "6",
           shadow: "md",
           mb: "8"
         })}>
-          <div className={css({ fontWeight: "bold", fontSize: "xl", color: "primary.800", mb: "2" })}>{todo.task}</div>
-          <div className={css({ fontSize: "sm", color: "gray.600", mb: "2" })}>ステータス: {todo.status === "completed" ? "完了" : "未完了"}</div>
-          {todo.due_date && <div className={css({ fontSize: "sm", color: "gray.500", mb: "2" })}>期限: {todo.due_date}</div>}
-          <div className={css({ fontSize: "xs", color: "gray.400", mb: "2" })}>作成日: {todo.created_at.slice(0, 10)}</div>
-          <div className={css({ fontSize: "xs", color: "gray.400" })}>更新日: {todo.updated_at.slice(0, 10)}</div>
-          <div className={css({ display: "flex", gap: "4", mt: "6" })}>
-            <button
-              className={css({
-                px: "6",
-                py: "3",
-                bg: "yellow.400",
-                color: "white",
-                rounded: "md",
-                fontWeight: "bold",
-                fontSize: "md",
-                _hover: { bg: "yellow.500" },
-                transition: "all 0.2s"
-              })}
-              onClick={handleEdit}
-              disabled={deleting}
-            >
-              編集
-            </button>
-            <button
-              className={css({
-                px: "6",
-                py: "3",
-                bg: "red.500",
-                color: "white",
-                rounded: "md",
-                fontWeight: "bold",
-                fontSize: "md",
-                _hover: { bg: "red.600" },
-                transition: "all 0.2s"
-              })}
-              onClick={handleDelete}
-              disabled={deleting}
-            >
-              {deleting ? "削除中..." : "削除"}
-            </button>
+          {/* ステータスバッジ */}
+          <div className={css({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: "4" })}>
+            <div className={css({
+              px: "3",
+              py: "1",
+              bg: todo.status === "completed" ? "green.100" : "blue.100",
+              color: todo.status === "completed" ? "green.800" : "blue.800",
+              rounded: "full",
+              fontSize: "sm",
+              fontWeight: "bold"
+            })}>
+              {todo.status === "completed" ? "✅ 完了" : "⏳ 未完了"}
+            </div>
+            <ShareButton shareData={shareData} />
+          </div>
+
+          {/* タスク内容 */}
+          <div className={css({ fontWeight: "bold", fontSize: "xl", color: "primary.800", mb: "4" })}>
+            {todo.task}
+          </div>
+
+          {/* 詳細情報 */}
+          <div className={css({ spaceY: "3", mb: "6" })}>
+            {todo.due_date && (
+              <div className={css({ display: "flex", alignItems: "center", gap: "2" })}>
+                <span className={css({ fontSize: "lg" })}>📅</span>
+                <span className={css({ fontSize: "sm", color: "gray.600" })}>期限: {todo.due_date}</span>
+              </div>
+            )}
+            <div className={css({ display: "flex", alignItems: "center", gap: "2" })}>
+              <span className={css({ fontSize: "lg" })}>⏱️</span>
+              <span className={css({ fontSize: "sm", color: "blue.600" })}>学習時間: {todo.study_time}時間</span>
+            </div>
+            {todo.priority && (
+              <div className={css({ display: "flex", alignItems: "center", gap: "2" })}>
+                <span className={css({ fontSize: "lg" })}>⭐</span>
+                <span className={css({
+                  fontSize: "sm",
+                  color: todo.priority === 1 ? "red.600" : todo.priority === 2 ? "orange.600" : "blue.600"
+                })}>
+                  優先度: {todo.priority === 1 ? "高" : todo.priority === 2 ? "中" : "低"}
+                </span>
+              </div>
+            )}
+            {todo.goal && (
+              <div className={css({ display: "flex", alignItems: "center", gap: "2" })}>
+                <span className={css({ fontSize: "lg" })}>🎯</span>
+                <span className={css({ fontSize: "sm", color: "purple.600" })}>目標: {todo.goal}</span>
+              </div>
+            )}
+            {todo.notes && (
+              <div className={css({ display: "flex", alignItems: "flex-start", gap: "2" })}>
+                <span className={css({ fontSize: "lg", mt: "1" })}>📝</span>
+                <span className={css({ fontSize: "sm", color: "gray.600" })}>メモ: {todo.notes}</span>
+              </div>
+            )}
+            <div className={css({ display: "flex", alignItems: "center", gap: "2" })}>
+              <span className={css({ fontSize: "lg" })}>📅</span>
+              <span className={css({ fontSize: "xs", color: "gray.400" })}>
+                作成日: {todo.created_at.slice(0, 10)}
+              </span>
+            </div>
+            <div className={css({ display: "flex", alignItems: "center", gap: "2" })}>
+              <span className={css({ fontSize: "lg" })}>🔄</span>
+              <span className={css({ fontSize: "xs", color: "gray.400" })}>
+                更新日: {todo.updated_at.slice(0, 10)}
+              </span>
+            </div>
+          </div>
+
+          {/* アクションボタン */}
+          <div className={css({ spaceY: "4", pt: "4", borderTop: "1px solid", borderColor: "gray.200" })}>
+            {/* デバッグ情報 */}
+            <div className={css({ fontSize: "xs", color: "gray.500" })}>
+              デバッグ: ステータス = {todo.status}, 完了ボタン表示 = {todo.status !== "completed" ? "true" : "false"}
+            </div>
+
+            {/* ボタンコンテナ */}
+            <div className={css({ display: "flex", gap: "4" })}>
+              {todo.status !== "completed" && (
+                <button
+                  className={css({
+                    px: "6",
+                    py: "3",
+                    bg: "green.500",
+                    color: "white",
+                    rounded: "md",
+                    fontWeight: "bold",
+                    fontSize: "md",
+                    _hover: { bg: "green.600" },
+                    transition: "all 0.2s",
+                    flex: "1"
+                  })}
+                  onClick={handleComplete}
+                  disabled={completing}
+                >
+                  {completing ? "完了中..." : "✅ 完了して投稿する"}
+                </button>
+              )}
+              <button
+                className={css({
+                  px: "6",
+                  py: "3",
+                  bg: "red.500",
+                  color: "white",
+                  rounded: "md",
+                  fontWeight: "bold",
+                  fontSize: "md",
+                  _hover: { bg: "red.600" },
+                  transition: "all 0.2s",
+                  flex: "1"
+                })}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? "削除中..." : "🗑️ 削除"}
+              </button>
+            </div>
           </div>
         </div>
       )}
-      <button
-        className={css({
-          px: "6",
-          py: "3",
-          bg: "primary.600",
-          color: "white",
-          rounded: "md",
-          fontWeight: "bold",
-          fontSize: "md",
-          _hover: { bg: "primary.700" },
-          transition: "all 0.2s"
-        })}
-        onClick={() => router.push("/todoList")}
-        disabled={deleting || saving}
-      >
-        ← TODOリストに戻る
-      </button>
+
+      {/* Todo完了モーダル */}
+      <TodoCompletionModal
+        todo={todo}
+        isOpen={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
+        onPostCreated={handlePostCreated}
+      />
     </main>
   );
 }
