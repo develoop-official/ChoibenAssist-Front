@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
@@ -81,15 +82,7 @@ export default function MyPage() {
     }
   }, [profile?.scrapbox_project_name]);
 
-  useEffect(() => {
-    if (user && !authLoading) {
-      fetchProfile();
-    } else if (!authLoading) {
-      setLoading(false);
-    }
-  }, [user, authLoading]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!supabase || !user) {
       // console.log('fetchProfile: Supabaseまたはユーザーが存在しません');
       setLoading(false);
@@ -131,9 +124,18 @@ export default function MyPage() {
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, formData.icon_url, profile?.icon_url]);
 
-  const createProfile = async () => {
+  useEffect(() => {
+    if (user && !authLoading) {
+      fetchProfile();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [user, authLoading, fetchProfile]);
+
+  const createProfile = useCallback(async () => {
     if (!supabase || !user) {
       // console.log('プロフィール作成: Supabaseまたはユーザーが存在しません');
       return;
@@ -188,7 +190,7 @@ export default function MyPage() {
         setError(`プロフィールの作成に失敗しました: ${JSON.stringify(err)}`);
       }
     }
-  };
+  }, [user, formData.icon_url, profile?.icon_url]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -519,9 +521,11 @@ export default function MyPage() {
                       flexShrink: '0'
                     })}>
                       {profile.icon_url ? (
-                        <img
+                        <Image
                           src={profile.icon_url}
                           alt="プロフィール画像"
+                          width={80}
+                          height={80}
                           className={css({
                             w: 'full',
                             h: 'full',
@@ -652,9 +656,11 @@ export default function MyPage() {
                           borderColor: 'primary.200'
                         })}>
                           {formData.icon_url ? (
-                            <img
+                            <Image
                               src={formData.icon_url}
                               alt="プロフィール画像"
+                              width={80}
+                              height={80}
                               className={css({
                                 w: 'full',
                                 h: 'full',

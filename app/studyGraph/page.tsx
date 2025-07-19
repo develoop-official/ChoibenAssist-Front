@@ -94,13 +94,21 @@ export default function StudyGraphPage() {
   }, []);
 
   // --- カスタムツールチップ ---
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: {
+    active?: boolean;
+    payload?: Array<{
+      dataKey: string;
+      value: number;
+      fill: string;
+    }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       const d = dayjs(label);
       return (
         <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 8, padding: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
           <div style={{ fontWeight: "bold", marginBottom: 4 }}>{d.format("M/D")}</div>
-          {payload.map((p: any) => (
+          {payload.map((p) => (
             <div key={p.dataKey} style={{ color: p.fill, fontWeight: 600 }}>
               {p.value} 分 <span style={{ fontSize: 12, marginLeft: 8 }}>{p.dataKey}</span>
             </div>

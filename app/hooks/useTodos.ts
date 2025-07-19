@@ -37,7 +37,7 @@ export function useTodos() {
         return;
       }
       setTodos(data || []);
-    } catch (err) {
+    } catch {
       setError('TODOの取得に失敗しました');
       setTodos([]);
     } finally {

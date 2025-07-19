@@ -8,6 +8,7 @@ import StudyRecordForm from '../components/StudyRecordForm';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
 import { useStudyRecords } from '../hooks/useStudyRecords';
+import { CreateStudyRecord } from '../types/study-record';
 
 export default function PostPage() {
   const { user, loading: authLoading } = useAuth();
@@ -99,7 +100,7 @@ export default function PostPage() {
     );
   }
 
-  const handleSubmit = async (record: any) => {
+  const handleSubmit = async (record: CreateStudyRecord) => {
     try {
       await addRecord(record);
       router.push('/studyList');
