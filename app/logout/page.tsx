@@ -33,7 +33,7 @@ export default function LogoutPage() {
     };
 
     handleLogout();
-  }, [signOut, router]);
+  }, []); // 依存配列を空にして一度だけ実行
 
   if (loading) {
     return (
