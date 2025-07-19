@@ -35,8 +35,9 @@ cleanup:
 variables:
   # Docker関連の変数
   DOCKER_IMAGE_NAME: "choibenassist-front"
-  DOCKER_TAG: "latest"
-  DOCKER_REGISTRY: "registry.gitlab.com/$CI_PROJECT_PATH"
+  DOCKER_TAG: "${CI_COMMIT_REF_NAME}"
+  DOCKER_REGISTRY: "gitlab.p-nasi.pgw.jp/$CI_PROJECT_PATH"
+
   
   # アプリケーション関連の変数
   NODE_VERSION: "18"
