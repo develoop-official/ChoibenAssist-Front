@@ -42,7 +42,7 @@ export default function LogoutPage() {
     };
 
     handleLogout();
-  }, []); // 依存配列を空にして一度だけ実行
+  }, [router, signOut]); // 依存配列を空にして一度だけ実行
 
   if (loading) {
     return (

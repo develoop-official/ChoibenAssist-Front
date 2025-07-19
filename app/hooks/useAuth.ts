@@ -107,7 +107,7 @@ export const useAuth = () => {
     if (!supabase) {
       return { error: new Error('Supabaseが設定されていません') };
     }
-    
+
     try {
       // ローカルストレージもクリア
       localStorage.removeItem('supabase.auth.token');

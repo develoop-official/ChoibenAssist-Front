@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 
+import { supabase } from '../lib/supabase';
 import { css } from '../styled-system/css';
 
 import { generateGeneralTodo } from './actions/todo-actions';
@@ -12,7 +13,6 @@ import { useAuth } from './hooks/useAuth';
 import { useTodos } from './hooks/useTodos';
 import { buttonStyles } from './styles/components';
 import { CreateTodoItem } from './types/todo-item';
-import { supabase } from '../lib/supabase';
 
 interface TodoSuggestionResponse {
   success: boolean;

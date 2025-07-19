@@ -25,7 +25,7 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`API呼び出しエラー: ${response.status} ${response.statusText}`, errorText);
-      
+
       if (response.status === 403) {
         throw new Error('認証に失敗しました。再度ログインしてください。');
       } else if (response.status === 404) {
@@ -77,7 +77,7 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`API呼び出しエラー: ${response.status} ${response.statusText}`, errorText);
-      
+
       if (response.status === 403) {
         throw new Error('認証に失敗しました。再度ログインしてください。');
       } else if (response.status === 404) {
