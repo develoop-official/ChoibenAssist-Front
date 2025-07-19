@@ -4,14 +4,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
+import FollowButton from '../components/FollowButton';
+import HashtagSearch from '../components/HashtagSearch';
+import TimelineComment from '../components/TimelineComment';
+import TimelinePostForm from '../components/TimelinePostForm';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
 
 interface TodoPost {
   id: string;
-  task: string;
-  completed_at: string;
+  content: string;
+  hashtags: string[];
+  created_at: string;
   user_id: string;
   user_profile?: {
     username?: string;
@@ -20,6 +25,7 @@ interface TodoPost {
   };
   likes_count?: number;
   is_liked?: boolean;
+  comments_count?: number;
 }
 
 interface UserProfile {
@@ -33,6 +39,8 @@ export default function TimelinePage() {
   const [posts, setPosts] = useState<TodoPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedHashtag, setSelectedHashtag] = useState<string>('');
+  const [showPostForm, setShowPostForm] = useState(false);
 
   const fetchPosts = useCallback(async () => {
     if (!supabase) {
@@ -44,58 +52,50 @@ export default function TimelinePage() {
       setLoading(true);
       setError(null);
 
-      // TODO: 実際の投稿データを取得するためのテーブル設計が必要
-      // 現在はダミーデータで表示
-      const dummyPosts: TodoPost[] = [
-        {
-          id: '1',
-          task: 'React Hooksの学習 (30分)',
-          completed_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          user_id: 'user1',
-          user_profile: {
-            username: 'react_learner',
-            full_name: '田中太郎',
-            icon_url: undefined
-          },
-          likes_count: 5,
-          is_liked: false
-        },
-        {
-          id: '2',
-          task: 'TypeScriptの型定義練習 (45分)',
-          completed_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-          user_id: 'user2',
-          user_profile: {
-            username: 'ts_master',
-            full_name: '佐藤花子',
-            icon_url: undefined
-          },
-          likes_count: 3,
-          is_liked: true
-        },
-        {
-          id: '3',
-          task: 'Next.jsのAPI Routes復習 (60分)',
-          completed_at: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-          user_id: 'user3',
-          user_profile: {
-            username: 'nextjs_fan',
-            full_name: '山田次郎',
-            icon_url: undefined
-          },
-          likes_count: 8,
-          is_liked: false
-        }
-      ];
+      // 実際の投稿データを取得
+      let query = supabase
+        .from('timeline_posts_with_stats')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      setPosts(dummyPosts);
+      // ハッシュタグフィルタリング
+      if (selectedHashtag) {
+        query = query.contains('hashtags', [selectedHashtag]);
+      }
+
+      const { data: postsData, error: postsError } = await query;
+
+      if (postsError) {
+        console.error('投稿取得エラー:', postsError);
+        setError('投稿の取得に失敗しました');
+        return;
+      }
+
+      // 投稿データを整形
+      const formattedPosts: TodoPost[] = (postsData || []).map(post => ({
+        id: post.id,
+        content: post.content,
+        hashtags: post.hashtags || [],
+        created_at: post.created_at,
+        user_id: post.user_id,
+        user_profile: {
+          username: post.username,
+          full_name: post.full_name,
+          icon_url: post.icon_url
+        },
+        likes_count: post.likes_count || 0,
+        is_liked: post.is_liked || false,
+        comments_count: post.comments_count || 0
+      }));
+
+      setPosts(formattedPosts);
     } catch (err) {
       console.error('投稿取得エラー:', err);
       setError('投稿の取得に失敗しました');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedHashtag]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -107,21 +107,49 @@ export default function TimelinePage() {
     if (!user) return;
 
     try {
-      // TODO: いいね機能の実装
-      setPosts(posts.map(post => {
-        if (post.id === postId) {
-          const isLiked = post.is_liked;
-          return {
-            ...post,
-            is_liked: !isLiked,
-            likes_count: (post.likes_count || 0) + (isLiked ? -1 : 1)
-          };
-        }
-        return post;
-      }));
+      // 現在のいいね状態を確認
+      const currentPost = posts.find(post => post.id === postId);
+      if (!currentPost) return;
+
+      const isCurrentlyLiked = currentPost.is_liked;
+
+      if (isCurrentlyLiked) {
+        // いいねを削除
+        const { error } = await supabase!
+          .from('timeline_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+      } else {
+        // いいねを追加
+        const { error } = await supabase!
+          .from('timeline_likes')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            created_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+      }
+
+      // 投稿一覧を更新
+      fetchPosts();
     } catch (err) {
       console.error('いいねエラー:', err);
+      alert('いいねの操作に失敗しました');
     }
+  };
+
+  const handlePostCreated = () => {
+    setShowPostForm(false);
+    fetchPosts();
+  };
+
+  const handleCommentAdded = () => {
+    fetchPosts();
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -202,7 +230,7 @@ export default function TimelinePage() {
 
   return (
     <main className={css({
-      maxW: '2xl',
+      maxW: '4xl',
       mx: 'auto',
       px: '4',
       py: '8',
@@ -223,287 +251,334 @@ export default function TimelinePage() {
         </h1>
         <p className={css({
           fontSize: 'lg',
-          color: 'gray.600'
+          color: 'gray.600',
+          mb: '4'
         })}>
           みんなの学習成果をチェックしよう！
         </p>
+        <button
+          onClick={() => setShowPostForm(!showPostForm)}
+          className={css({
+            px: '6',
+            py: '3',
+            bg: 'blue.600',
+            color: 'white',
+            rounded: 'lg',
+            fontSize: 'md',
+            fontWeight: 'medium',
+            _hover: { bg: 'blue.700' },
+            transition: 'all 0.2s'
+          })}
+        >
+          {showPostForm ? '投稿フォームを閉じる' : '📝 学習成果を投稿'}
+        </button>
       </div>
 
-      {/* 投稿一覧 */}
       <div className={css({
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '4'
+        display: 'grid',
+        gridTemplateColumns: '1fr 2fr',
+        gap: '6',
+        alignItems: 'start'
       })}>
-        {posts.length === 0 ? (
+        {/* サイドバー */}
+        <div className={css({
+          spaceY: '6'
+        })}>
+          {/* ハッシュタグ検索 */}
+          <HashtagSearch
+            onHashtagSelect={setSelectedHashtag}
+            selectedHashtag={selectedHashtag}
+          />
+
+          {/* 統計情報 */}
           <div className={css({
             bg: 'white',
             rounded: 'lg',
-            p: '8',
-            textAlign: 'center',
-            shadow: 'md'
+            p: '4',
+            shadow: 'md',
+            border: '1px solid',
+            borderColor: 'gray.200'
           })}>
-            <div className={css({
-              fontSize: '4xl',
-              mb: '4'
-            })}>
-              📝
-            </div>
             <h3 className={css({
-              fontSize: 'xl',
+              fontSize: 'lg',
               fontWeight: 'bold',
-              color: 'gray.700',
-              mb: '2'
+              color: 'gray.900',
+              mb: '3'
             })}>
-              まだ投稿がありません
+              📊 統計
             </h3>
-            <p className={css({
-              color: 'gray.500'
+            <div className={css({
+              spaceY: '2',
+              fontSize: 'sm',
+              color: 'gray.600'
             })}>
-              TODOを完了して最初の投稿をしてみましょう！
-            </p>
+              <div className={css({
+                display: 'flex',
+                justifyContent: 'space-between'
+              })}>
+                <span>投稿数</span>
+                <span className={css({ fontWeight: 'bold' })}>{posts.length}</span>
+              </div>
+              <div className={css({
+                display: 'flex',
+                justifyContent: 'space-between'
+              })}>
+                <span>総いいね数</span>
+                <span className={css({ fontWeight: 'bold' })}>
+                  {posts.reduce((sum, post) => sum + (post.likes_count || 0), 0)}
+                </span>
+              </div>
+              <div className={css({
+                display: 'flex',
+                justifyContent: 'space-between'
+              })}>
+                <span>総コメント数</span>
+                <span className={css({ fontWeight: 'bold' })}>
+                  {posts.reduce((sum, post) => sum + (post.comments_count || 0), 0)}
+                </span>
+              </div>
+            </div>
           </div>
-        ) : (
-          posts.map(post => (
-            <div
-              key={post.id}
-              className={css({
+        </div>
+
+        {/* メインコンテンツ */}
+        <div className={css({
+          spaceY: '6'
+        })}>
+          {/* 投稿フォーム */}
+          {showPostForm && (
+            <TimelinePostForm onPostCreated={handlePostCreated} />
+          )}
+
+          {/* 投稿一覧 */}
+          <div className={css({
+            spaceY: '4'
+          })}>
+            {posts.length === 0 ? (
+              <div className={css({
                 bg: 'white',
                 rounded: 'lg',
-                p: '6',
-                shadow: 'md',
-                border: '1px solid',
-                borderColor: 'gray.200',
-                transition: 'all 0.2s',
-                _hover: {
-                  shadow: 'lg',
-                  transform: 'translateY(-1px)'
-                }
-              })}
-            >
-              {/* ユーザー情報 */}
-              <div className={css({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '3',
-                mb: '4'
+                p: '8',
+                textAlign: 'center',
+                shadow: 'md'
               })}>
                 <div className={css({
-                  w: '10',
-                  h: '10',
-                  rounded: 'full',
-                  bg: 'blue.100',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 'lg',
+                  fontSize: '4xl',
+                  mb: '4'
+                })}>
+                  📝
+                </div>
+                <h3 className={css({
+                  fontSize: 'xl',
                   fontWeight: 'bold',
-                  color: 'blue.600'
+                  color: 'gray.700',
+                  mb: '2'
                 })}>
-                  {post.user_profile?.icon_url ? (
-                    // TODO: 画像表示の実装
-                    <span>{getUserInitial(post.user_profile)}</span>
-                  ) : (
-                    getUserInitial(post.user_profile)
-                  )}
-                </div>
-                <div>
-                  <div className={css({
-                    fontWeight: 'bold',
-                    color: 'gray.900'
-                  })}>
-                    {getUserDisplayName(post.user_profile)}
-                  </div>
-                  <div className={css({
-                    fontSize: 'sm',
-                    color: 'gray.500'
-                  })}>
-                    {formatTimeAgo(post.completed_at)}
-                  </div>
-                </div>
-              </div>
-
-              {/* 投稿内容 */}
-              <div className={css({
-                mb: '4'
-              })}>
-                <div className={css({
-                  bg: 'green.50',
-                  border: '1px solid',
-                  borderColor: 'green.200',
-                  rounded: 'lg',
-                  p: '4'
+                  {selectedHashtag ? `#${selectedHashtag}の投稿がありません` : 'まだ投稿がありません'}
+                </h3>
+                <p className={css({
+                  color: 'gray.500'
                 })}>
-                  <div className={css({
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '2',
-                    mb: '2'
-                  })}>
-                    <span className={css({
-                      fontSize: 'lg'
-                    })}>
-                      ✅
-                    </span>
-                    <span className={css({
-                      fontSize: 'sm',
-                      fontWeight: 'bold',
-                      color: 'green.700'
-                    })}>
-                      TODO完了
-                    </span>
-                  </div>
-                  <p className={css({
-                    fontSize: 'md',
-                    color: 'gray.900',
-                    lineHeight: 'relaxed'
-                  })}>
-                    {post.task}
-                  </p>
-                </div>
+                  {selectedHashtag
+                    ? '他のハッシュタグを試してみましょう！'
+                    : '学習成果を投稿して最初の投稿をしてみましょう！'
+                  }
+                </p>
               </div>
-
-              {/* アクション */}
-              <div className={css({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4',
-                pt: '3',
-                borderTop: '1px solid',
-                borderColor: 'gray.100'
-              })}>
-                <button
-                  onClick={() => handleLike(post.id)}
+            ) : (
+              posts.map(post => (
+                <div
+                  key={post.id}
                   className={css({
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '2',
-                    px: '3',
-                    py: '2',
+                    bg: 'white',
                     rounded: 'lg',
-                    bg: post.is_liked ? 'red.50' : 'gray.50',
-                    color: post.is_liked ? 'red.600' : 'gray.600',
-                    border: '1px solid',
-                    borderColor: post.is_liked ? 'red.200' : 'gray.200',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    _hover: {
-                      bg: post.is_liked ? 'red.100' : 'gray.100'
-                    }
-                  })}
-                >
-                  <span className={css({
-                    fontSize: 'lg'
-                  })}>
-                    {post.is_liked ? '❤️' : '🤍'}
-                  </span>
-                  <span className={css({
-                    fontSize: 'sm',
-                    fontWeight: 'medium'
-                  })}>
-                    {post.likes_count || 0}
-                  </span>
-                </button>
-
-                <button
-                  className={css({
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '2',
-                    px: '3',
-                    py: '2',
-                    rounded: 'lg',
-                    bg: 'gray.50',
-                    color: 'gray.600',
+                    p: '6',
+                    shadow: 'md',
                     border: '1px solid',
                     borderColor: 'gray.200',
-                    cursor: 'pointer',
                     transition: 'all 0.2s',
                     _hover: {
-                      bg: 'gray.100'
+                      shadow: 'lg',
+                      transform: 'translateY(-1px)'
                     }
                   })}
                 >
-                  <span className={css({
-                    fontSize: 'lg'
-                  })}>
-                    💬
-                  </span>
-                  <span className={css({
-                    fontSize: 'sm',
-                    fontWeight: 'medium'
-                  })}>
-                    コメント
-                  </span>
-                </button>
-
-                <button
-                  className={css({
+                  {/* ユーザー情報 */}
+                  <div className={css({
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '2',
-                    px: '3',
-                    py: '2',
-                    rounded: 'lg',
-                    bg: 'gray.50',
-                    color: 'gray.600',
-                    border: '1px solid',
-                    borderColor: 'gray.200',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    _hover: {
-                      bg: 'gray.100'
-                    }
-                  })}
-                >
-                  <span className={css({
-                    fontSize: 'lg'
+                    justifyContent: 'space-between',
+                    mb: '4'
                   })}>
-                    🔄
-                  </span>
-                  <span className={css({
-                    fontSize: 'sm',
-                    fontWeight: 'medium'
-                  })}>
-                    シェア
-                  </span>
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+                    <div className={css({
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '3'
+                    })}>
+                      <div className={css({
+                        w: '12',
+                        h: '12',
+                        rounded: 'full',
+                        bg: 'blue.100',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 'lg',
+                        fontWeight: 'bold',
+                        color: 'blue.600'
+                      })}>
+                        {post.user_profile?.icon_url ? (
+                          // TODO: 画像表示の実装
+                          <span>{getUserInitial(post.user_profile)}</span>
+                        ) : (
+                          getUserInitial(post.user_profile)
+                        )}
+                      </div>
+                      <div>
+                        <div className={css({
+                          fontWeight: 'bold',
+                          color: 'gray.900'
+                        })}>
+                          {getUserDisplayName(post.user_profile)}
+                        </div>
+                        <div className={css({
+                          fontSize: 'sm',
+                          color: 'gray.500'
+                        })}>
+                          {formatTimeAgo(post.created_at)}
+                        </div>
+                      </div>
+                    </div>
+                    <FollowButton targetUserId={post.user_id} />
+                  </div>
 
-      {/* 開発中のメッセージ */}
-      <div className={css({
-        bg: 'yellow.50',
-        border: '1px solid',
-        borderColor: 'yellow.200',
-        rounded: 'lg',
-        p: '4',
-        mt: '8',
-        textAlign: 'center'
-      })}>
-        <h3 className={css({
-          fontSize: 'lg',
-          fontWeight: 'bold',
-          color: 'yellow.700',
-          mb: '2'
-        })}>
-          🚧 開発中の機能
-        </h3>
-        <p className={css({
-          color: 'yellow.600',
-          mb: '2'
-        })}>
-          現在表示されているのはダミーデータです。
-        </p>
-        <p className={css({
-          fontSize: 'sm',
-          color: 'yellow.500'
-        })}>
-          実際のTODO完了投稿、いいね機能、コメント機能は今後実装予定です。
-        </p>
+                  {/* 投稿内容 */}
+                  <div className={css({
+                    mb: '4'
+                  })}>
+                    <p className={css({
+                      fontSize: 'md',
+                      color: 'gray.900',
+                      lineHeight: 'relaxed',
+                      mb: '3'
+                    })}>
+                      {post.content}
+                    </p>
+
+                    {/* ハッシュタグ */}
+                    {post.hashtags.length > 0 && (
+                      <div className={css({
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '2'
+                      })}>
+                        {post.hashtags.map(tag => (
+                          <span
+                            key={tag}
+                            className={css({
+                              px: '2',
+                              py: '1',
+                              bg: 'blue.50',
+                              color: 'blue.700',
+                              rounded: 'full',
+                              fontSize: 'xs',
+                              fontWeight: 'medium',
+                              cursor: 'pointer',
+                              _hover: { bg: 'blue.100' }
+                            })}
+                            onClick={() => setSelectedHashtag(tag)}
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* アクション */}
+                  <div className={css({
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4',
+                    pt: '3',
+                    borderTop: '1px solid',
+                    borderColor: 'gray.100'
+                  })}>
+                    <button
+                      onClick={() => handleLike(post.id)}
+                      className={css({
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '2',
+                        px: '3',
+                        py: '2',
+                        rounded: 'lg',
+                        bg: post.is_liked ? 'red.50' : 'gray.50',
+                        color: post.is_liked ? 'red.600' : 'gray.600',
+                        border: '1px solid',
+                        borderColor: post.is_liked ? 'red.200' : 'gray.200',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        _hover: {
+                          bg: post.is_liked ? 'red.100' : 'gray.100'
+                        }
+                      })}
+                    >
+                      <span className={css({
+                        fontSize: 'lg'
+                      })}>
+                        {post.is_liked ? '❤️' : '🤍'}
+                      </span>
+                      <span className={css({
+                        fontSize: 'sm',
+                        fontWeight: 'medium'
+                      })}>
+                        {post.likes_count || 0}
+                      </span>
+                    </button>
+
+                    <TimelineComment
+                      postId={post.id}
+                      onCommentAdded={handleCommentAdded}
+                    />
+
+                    <button
+                      className={css({
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '2',
+                        px: '3',
+                        py: '2',
+                        rounded: 'lg',
+                        bg: 'gray.50',
+                        color: 'gray.600',
+                        border: '1px solid',
+                        borderColor: 'gray.200',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        _hover: {
+                          bg: 'gray.100'
+                        }
+                      })}
+                    >
+                      <span className={css({
+                        fontSize: 'lg'
+                      })}>
+                        🔄
+                      </span>
+                      <span className={css({
+                        fontSize: 'sm',
+                        fontWeight: 'medium'
+                      })}>
+                        シェア
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );
