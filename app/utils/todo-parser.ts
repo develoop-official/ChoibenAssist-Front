@@ -1,5 +1,6 @@
 export interface ParsedTodo {
-  task: string;
+  task: string; // タイトル
+  content?: string; // 内容
   study_time: number;
   section?: string;
   goal?: string;
@@ -79,6 +80,7 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
       const taskName = line.replace(/^\d+\.\s*/, '').trim();
       currentTodo = {
         task: taskName,
+        content: '',
         study_time: 1, // デフォルト値、後で更新
         goal: '',
         priority: undefined
@@ -101,7 +103,7 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
       // 内容を抽出
       const contentMatch = line.match(/内容:\s*(.+)/);
       if (contentMatch) {
-        currentTodo.goal = contentMatch[1].trim();
+        currentTodo.content = contentMatch[1].trim();
       }
       
       continue;
@@ -150,15 +152,16 @@ export function flattenTodoSections(sections: TodoSection[]): ParsedTodo[] {
  */
 export function convertToCreateTodoItem(parsedTodo: ParsedTodo) {
   let task = parsedTodo.task;
+  let content = parsedTodo.content || '';
 
-  // セクション情報を追加
-  if (parsedTodo.section) {
-    task = `[${parsedTodo.section}] ${task}`;
+  // 目標情報を内容に追加
+  if (parsedTodo.goal) {
+    content = content ? `${content} (目標: ${parsedTodo.goal})` : `目標: ${parsedTodo.goal}`;
   }
 
-  // 目標情報を追加
-  if (parsedTodo.goal) {
-    task = `${task} (目標: ${parsedTodo.goal})`;
+  // 内容がある場合はtaskに結合（データベースの既存構造に合わせる）
+  if (content) {
+    task = `${task} - ${content}`;
   }
 
   return {

@@ -5,6 +5,8 @@ import React, { useState } from 'react';
 import { CreateTodoItem } from '../types/todo-item';
 import { aiTodoSuggestionStyles } from '../styles/components';
 import { parseMarkdownTodos, flattenTodoSections, convertToCreateTodoItem, ParsedTodo } from '../utils/todo-parser';
+import { css } from '../../styled-system/css';
+import MarkdownRenderer from './ui/MarkdownRenderer';
 
 interface AiTodoSuggestionResultProps {
   content: string;
@@ -74,7 +76,6 @@ export default function AiTodoSuggestionResult({ content, onAddTodos, onCancel }
 
       const createTodoItems = selectedTodoItems.map(convertToCreateTodoItem);
       await onAddTodos(createTodoItems);
-      alert(`${selectedTodoItems.length}個のTODOを追加しました！`);
       setSelectedTodos([]);
       // 追加後にフォームに戻る
       onCancel();
@@ -118,8 +119,34 @@ export default function AiTodoSuggestionResult({ content, onAddTodos, onCancel }
                     />
                     <div className={aiTodoSuggestionStyles.todoContent}>
                       <div className={aiTodoSuggestionStyles.todoTask}>
-                        {todo.task}
+                        <MarkdownRenderer 
+                          content={todo.task}
+                          className={css({
+                            fontSize: 'inherit',
+                            fontWeight: 'inherit',
+                            color: 'inherit',
+                            mb: '0'
+                          })}
+                        />
                       </div>
+                      {todo.content && (
+                        <div className={css({
+                          fontSize: 'xs',
+                          color: 'gray.600',
+                          mt: '1',
+                          lineHeight: '1.3'
+                        })}>
+                          <MarkdownRenderer 
+                            content={todo.content}
+                            className={css({
+                              fontSize: 'inherit',
+                              color: 'inherit',
+                              lineHeight: 'inherit',
+                              mb: '0'
+                            })}
+                          />
+                        </div>
+                      )}
                       <div className={aiTodoSuggestionStyles.todoMeta}>
                         <span>⏱️ {todo.study_time}分</span>
                         {todo.goal && <span>🎯 {todo.goal}</span>}
