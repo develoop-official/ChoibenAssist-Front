@@ -80,6 +80,13 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
       });
 
       // TODO完了データを取得（完了済みのTODOのみ）
+      console.log('ActivityHeatmap: Supabaseクエリ実行', {
+        userId,
+        startDate: dayjs(defaultStartDate).format('YYYY-MM-DD'),
+        endDate: dayjs(defaultEndDate).format('YYYY-MM-DD'),
+        query: `SELECT updated_at, created_at, status, task FROM todo_items WHERE user_id = '${userId}' AND status = 'completed' AND updated_at >= '${dayjs(defaultStartDate).format('YYYY-MM-DD')}' AND updated_at <= '${dayjs(defaultEndDate).format('YYYY-MM-DD')}' ORDER BY updated_at ASC`
+      });
+      
       const { data: todos, error } = await supabase
         .from('todo_items')
         .select('updated_at, created_at, status, task')
@@ -110,6 +117,18 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
           created_at: todo.created_at,
           task: todo.task,
           status: todo.status
+        })),
+        allTodos: todos?.map(todo => ({
+          updated_at: todo.updated_at,
+          created_at: todo.created_at,
+          task: todo.task,
+          status: todo.status,
+          // 日付変換の詳細を確認
+          originalDate: todo.updated_at,
+          dayjsDate: dayjs(todo.updated_at).format('YYYY-MM-DD'),
+          dayjsYear: dayjs(todo.updated_at).year(),
+          dayjsMonth: dayjs(todo.updated_at).month() + 1,
+          dayjsDay: dayjs(todo.updated_at).date()
         }))
       });
 
@@ -127,21 +146,32 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
       
       todos?.forEach(todo => {
         if (todo.updated_at) {
-          // UTC時間から日付部分のみを抽出（タイムゾーン変換を避ける）
-          // 例: '2025-07-19T15:38:28.465733+00:00' → '2025-07-19'
-          const utcDate = todo.updated_at.split('T')[0];
-          todoCountByDate[utcDate] = (todoCountByDate[utcDate] || 0) + 1;
+          // dayjsでローカルタイムゾーンに変換してから日付を取得
+          const localDate = dayjs(todo.updated_at).format('YYYY-MM-DD');
+          todoCountByDate[localDate] = (todoCountByDate[localDate] || 0) + 1;
           
           // 詳細情報も記録
-          if (!todoDetailsByDate[utcDate]) {
-            todoDetailsByDate[utcDate] = [];
+          if (!todoDetailsByDate[localDate]) {
+            todoDetailsByDate[localDate] = [];
           }
-          todoDetailsByDate[utcDate].push({
+          todoDetailsByDate[localDate].push({
             updated_at: todo.updated_at,
             created_at: todo.created_at,
             status: todo.status,
             task: todo.task,
-            formatted_date: utcDate
+            formatted_date: localDate
+          });
+          
+          console.log('ActivityHeatmap: TODO日付処理', {
+            originalUpdatedAt: todo.updated_at,
+            localDate,
+            task: todo.task,
+            // 日付変換の詳細
+            dayjsObject: dayjs(todo.updated_at).toISOString(),
+            dayjsLocal: dayjs(todo.updated_at).format('YYYY-MM-DD'),
+            year: dayjs(todo.updated_at).year(),
+            month: dayjs(todo.updated_at).month() + 1,
+            day: dayjs(todo.updated_at).date()
           });
         }
       });
@@ -159,7 +189,7 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
 
       // アクティビティレベルを計算（0-4の5段階）
       const maxCount = Math.max(...Object.values(todoCountByDate), 1);
-      const activityData: ActivityData[] = dateRange.map(date => {
+      const activityData: ActivityData[] = dateRange.map((date, index) => {
         const count = todoCountByDate[date] || 0;
         let level: 0 | 1 | 2 | 3 | 4 = 0;
         
@@ -169,6 +199,20 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
           else if (ratio >= 0.5) level = 3;
           else if (ratio >= 0.25) level = 2;
           else level = 1;
+          
+          // 7月20日のデータを特別にログ出力
+          if (date === '2025-07-20') {
+            console.log('ActivityHeatmap: 7月20日のデータ位置', {
+              date,
+              index,
+              count,
+              level,
+              weekIndex: Math.floor(index / 7),
+              dayOfWeek: dayjs(date).day(),
+              month: dayjs(date).month() + 1,
+              day: dayjs(date).date()
+            });
+          }
         }
 
         return { date, count, level };
@@ -428,201 +472,54 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
         </div>
       </div>
 
-      {/* 月ラベルを絶対配置でグリッドの上に重ねる */}
+      {/* ヒートマップコンテナ */}
       <div className={css({
         position: 'relative',
         border: '1px solid',
         borderColor: 'gray.200',
-        rounded: 'md'
+        rounded: 'md',
+        overflowX: 'auto'
       })}>
-        {/* スクロールコンテナ（月ラベル分の余白を追加） */}
+        {/* 月ラベル（シンプル配置） */}
         <div className={css({
-          overflowX: 'auto',
-          pt: '8', // 月ラベル分の余白
+          display: 'flex',
+          gap: '4',
+          mb: '2',
+          pl: '8', // 曜日ラベル分の余白
+          pt: '2',
+          minH: '8',
+          overflowX: 'auto'
         })}>
-        
+          {/* 月ラベルを等間隔で配置 */}
+          {['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'].map((month, index) => (
+            <div
+              key={month}
+              className={css({
+                fontSize: 'lg',
+                fontWeight: 'bold',
+                color: 'green.800',
+                bg: 'green.100',
+                px: '4',
+                py: '3',
+                rounded: 'xl',
+                border: '2px solid',
+                borderColor: 'green.400',
+                boxShadow: 'md',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              })}
+            >
+              {month}
+            </div>
+          ))}
         </div>
 
-        {/* 月ラベル（絶対配置でグリッドの上に重ねる） */}
-        {dateRange && (() => {
-          const monthPositions: { month: string; weekIndex: number }[] = [];
-          
-          // 実際の完了済みデータに基づいて月の位置を計算
-          if (activityData.length > 0) {
-            const firstDate = dayjs(activityData[0].date);
-            const lastDate = dayjs(activityData[activityData.length - 1].date);
-            
-            // 実際にデータがある月のみを特定
-            const monthsWithData = new Set<string>();
-            const monthFirstWeeks = new Map<string, number>();
-            
-            // 完了済みデータから月を抽出
-            activityData.forEach((data) => {
-              if (data.count > 0) { // 実際にデータがある日のみ
-                const date = dayjs(data.date);
-                const monthKey = date.format('YYYY-MM');
-                monthsWithData.add(monthKey);
-                
-                // その日付が何週目かを計算（最初の日付からの差分）
-                const daysDiff = date.diff(firstDate, 'day');
-                const weekIndex = Math.floor(daysDiff / 7);
-                
-                console.log('ActivityHeatmap: 完了済みデータ月ラベル計算', {
-                  date: data.date,
-                  monthKey,
-                  count: data.count,
-                  daysDiff,
-                  weekIndex,
-                  firstDate: firstDate.format('YYYY-MM-DD')
-                });
-                
-                if (!monthFirstWeeks.has(monthKey) || weekIndex < monthFirstWeeks.get(monthKey)!) {
-                  monthFirstWeeks.set(monthKey, weekIndex);
-                }
-              }
-            });
-            
-            // 実際にデータがある月のラベルを生成
-            monthFirstWeeks.forEach((weekIndex, monthKey) => {
-              const monthDate = dayjs(monthKey + '-01');
-              monthPositions.push({
-                month: monthDate.format('M月'),
-                weekIndex
-              });
-              
-              console.log('ActivityHeatmap: 完了済みデータ月ラベル生成', {
-                monthKey,
-                month: monthDate.format('M月'),
-                weekIndex,
-                hasData: monthsWithData.has(monthKey)
-              });
-            });
-            
-            // 週インデックスでソート
-            monthPositions.sort((a, b) => a.weekIndex - b.weekIndex);
-            
-            console.log('ActivityHeatmap: 完了済みデータ月ラベル最終結果', {
-              totalMonthsWithData: monthsWithData.size,
-              monthPositions: monthPositions.map(m => ({ month: m.month, weekIndex: m.weekIndex })),
-              monthsWithData: Array.from(monthsWithData)
-            });
-            
-
-          } else {
-            // データがない場合は日付範囲から生成
-            let currentMonth = dayjs(dateRange.start).startOf('month');
-            const endMonth = dayjs(dateRange.end).endOf('month');
-            
-            while (currentMonth.isBefore(endMonth) || currentMonth.isSame(endMonth, 'month')) {
-              // 月の開始日が日付範囲内の何週目かを計算
-              const monthStartDate = currentMonth.startOf('month');
-              const daysDiff = monthStartDate.diff(dayjs(dateRange.start), 'day');
-              const weekIndex = Math.max(0, Math.floor(daysDiff / 7));
-              
-              monthPositions.push({
-                month: currentMonth.format('M月'),
-                weekIndex
-              });
-              
-              currentMonth = currentMonth.add(1, 'month');
-            }
-          }
-          
-          // データが少ない場合は、日付範囲ベースの月ラベルも追加
-          if (activityData.length > 0 && monthPositions.length < 3) {
-            const firstDate = dayjs(activityData[0].date);
-            const lastDate = dayjs(activityData[activityData.length - 1].date);
-            
-            let currentMonth = firstDate.startOf('month');
-            const endMonth = lastDate.endOf('month');
-            
-            while (currentMonth.isBefore(endMonth) || currentMonth.isSame(endMonth, 'month')) {
-              const monthKey = currentMonth.format('YYYY-MM');
-              const existingMonth = monthPositions.find(m => m.month === currentMonth.format('M月'));
-              
-              if (!existingMonth) {
-                const monthStartDate = currentMonth.startOf('month');
-                const daysDiff = monthStartDate.diff(firstDate, 'day');
-                const weekIndex = Math.max(0, Math.floor(daysDiff / 7));
-                
-                monthPositions.push({
-                  month: currentMonth.format('M月'),
-                  weekIndex
-                });
-              }
-              
-              currentMonth = currentMonth.add(1, 'month');
-            }
-            
-            // 週インデックスでソート
-            monthPositions.sort((a, b) => a.weekIndex - b.weekIndex);
-          }
-          
-          // 実際にデータがある月のみを表示
-          const monthsWithData = monthPositions.filter(({ month }) => {
-            // 実際にデータがある月のみを表示
-            return monthPositions.some(m => m.month === month);
-          });
-          
-          // 重複する位置の月を除外（後から来る月を優先）
-          const finalMonths = monthsWithData.filter((month, index) => {
-            if (index === 0) return true; // 最初の月は必ず表示
-            const prevMonth = monthsWithData[index - 1];
-            const minGap = 6; // 6週間の間隔（約1.5ヶ月）
-            const gap = month.weekIndex - prevMonth.weekIndex;
-            return gap >= minGap;
-          });
-          
-          return (
-            <div className={css({
-              position: 'absolute',
-              top: 0,
-              left: '6', // 曜日ラベル幅分だけ右にずらす
-              right: 0,
-              height: '8',
-              pointerEvents: 'none', // クリックをグリッドに透過させる
-              zIndex: 20,
-            })}>
-              {finalMonths.map(({ month, weekIndex }, i) => {
-                const leftPx = weekIndex * 35; // 1週あたり35px
-                
-                // 画面幅を考慮して位置を調整
-                const maxLeft = window.innerWidth - 100; // 右端の余白
-                const adjustedLeft = Math.min(leftPx, maxLeft);
-                
-                return (
-                  <div
-                    key={i}
-                    style={{ position: 'absolute', left: `${adjustedLeft}px` }}
-                    className={css({
-                      fontSize: 'sm',
-                      fontWeight: 'bold',
-                      color: 'blue.600',
-                      bg: 'white',
-                      px: '2',
-                      py: '1',
-                      rounded: 'md',
-                      border: '1px solid',
-                      borderColor: 'blue.300',
-                      boxShadow: 'sm',
-                      whiteSpace: 'nowrap'
-                    })}
-                    title={`${month}の開始週 (週${weekIndex})`}
-                  >
-                    {month}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
-
-                  {/* ヒートマップグリッド */}
-          <div className={css({
-            display: 'flex',
-            gap: '1',
-            py: '2',
-          })}>
+        {/* ヒートマップグリッド */}
+        <div className={css({
+          display: 'flex',
+          gap: '1',
+          py: '2',
+        })}>
         {/* 曜日ラベル */}
         <div className={css({
           display: 'flex',
@@ -649,7 +546,18 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
         </div>
 
         {/* 週ごとのグリッド */}
-        {weeksData.map((week, weekIndex) => (
+        {weeksData.map((week, weekIndex) => {
+          // 7月20日が含まれる週を特別にログ出力
+          const hasJuly20 = week.some(data => data.date === '2025-07-20');
+          if (hasJuly20) {
+            console.log('ActivityHeatmap: 7月20日を含む週の詳細', {
+              weekIndex,
+              weekData: week.map(data => ({ date: data.date, count: data.count })),
+              weekPosition: weekIndex * 140 // 固定値を使用
+            });
+          }
+          
+          return (
           <div key={weekIndex} className={css({
             display: 'flex',
             flexDirection: 'column',
@@ -709,7 +617,8 @@ export default function ActivityHeatmap({ userId, startDate, endDate }: Activity
             );
             })}
           </div>
-        ))}
+          );
+        })}
         </div>
       </div>
 
