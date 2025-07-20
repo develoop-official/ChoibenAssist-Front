@@ -126,7 +126,7 @@ export default function ProfilePage() {
 
   return (
     <main className={css({
-      bg: 'gray.50',
+      bg: 'primary.50',
       minH: '100vh',
       py: '8',
       px: '4',
