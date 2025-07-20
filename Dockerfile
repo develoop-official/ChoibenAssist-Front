@@ -35,6 +35,10 @@ ARG BRANCH_NAME
 ENV NODE_ENV=${BRANCH_NAME:-production}
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Supabase環境変数のデフォルト値を設定（CI/CDで上書きされる）
+ENV NEXT_PUBLIC_SUPABASE_URL=""
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 

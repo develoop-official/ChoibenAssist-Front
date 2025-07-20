@@ -90,8 +90,8 @@ test:
     - docker images | grep $DOCKER_IMAGE_NAME
   script:
     # 環境変数の存在確認
-    - if [ -z "$SUPABASE_URL" ]; then echo "SUPABASE_URL is not set"; exit 1; fi
-    - if [ -z "$SUPABASE_ANON_KEY" ]; then echo "SUPABASE_ANON_KEY is not set"; exit 1; fi
+    - if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ]; then echo "NEXT_PUBLIC_SUPABASE_URL is not set"; exit 1; fi
+    - if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then echo "NEXT_PUBLIC_SUPABASE_ANON_KEY is not set"; exit 1; fi
     - if [ -z "$BACKEND_API_URL" ]; then echo "BACKEND_API_URL is not set"; exit 1; fi
     - if [ -z "$API_SECRET_KEY" ]; then echo "API_SECRET_KEY is not set"; exit 1; fi
     # ビルドしたイメージでテスト実行
@@ -143,8 +143,8 @@ deploy_production:
         --restart unless-stopped \
         -p 3001:3001 \
         --env NODE_ENV=production \
-        --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+        --env NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
         --env BACKEND_API_URL="$BACKEND_API_URL" \
         --env API_SECRET_KEY="$API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
@@ -202,8 +202,8 @@ deploy_staging:
         --restart unless-stopped \
         -p 3002:3001 \
         --env NODE_ENV=development \
-        --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+        --env NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
         --env BACKEND_API_URL="$BACKEND_API_URL" \
         --env API_SECRET_KEY="$API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
