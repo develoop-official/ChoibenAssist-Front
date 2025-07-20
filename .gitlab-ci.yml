@@ -92,7 +92,7 @@ test:
     # 環境変数の存在確認
     - if [ -z "$SUPABASE_URL" ]; then echo "SUPABASE_URL is not set"; exit 1; fi
     - if [ -z "$SUPABASE_ANON_KEY" ]; then echo "SUPABASE_ANON_KEY is not set"; exit 1; fi
-    - if [ -z "$BACKEND_API_URLL" ]; then echo "BACKEND_API_URL is not set"; exit 1; fi
+    - if [ -z "$BACKEND_API_URL" ]; then echo "BACKEND_API_URL is not set"; exit 1; fi
     - if [ -z "$API_SECRET_KEY" ]; then echo "API_SECRET_KEY is not set"; exit 1; fi
     # ビルドしたイメージでテスト実行
     - |

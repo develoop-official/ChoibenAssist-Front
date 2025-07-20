@@ -11,7 +11,7 @@ export const useAuth = () => {
   useEffect(() => {
     // Supabaseクライアントが存在しない場合
     if (!supabase) {
-      setError('Supabaseが設定されていません');
+      setError('Supabaseが設定されていません。lib/supabase.tsファイルを確認し、環境変数SUPABASE_URLとSUPABASE_ANON_KEYが正しく設定されているか確認してください。');
       setLoading(false);
       return;
     }
@@ -69,7 +69,7 @@ export const useAuth = () => {
 
   const signInWithEmail = async (email: string, password: string) => {
     if (!supabase) {
-      return { data: null, error: new Error('Supabaseが設定されていません') };
+      return { data: null, error: new Error('Supabaseが設定されていません。lib/supabase.tsファイルを確認し、環境変数SUPABASE_URLとSUPABASE_ANON_KEYが正しく設定されているか確認してください。') };
     }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -80,7 +80,7 @@ export const useAuth = () => {
 
   const signUpWithEmail = async (email: string, password: string) => {
     if (!supabase) {
-      return { data: null, error: new Error('Supabaseが設定されていません') };
+      return { data: null, error: new Error('Supabaseが設定されていません。lib/supabase.tsファイルを確認し、環境変数SUPABASE_URLとSUPABASE_ANON_KEYが正しく設定されているか確認してください。') };
     }
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -91,7 +91,7 @@ export const useAuth = () => {
 
   const signInWithProvider = async (provider: 'google' | 'github' | 'twitter') => {
     if (!supabase) {
-      return { data: null, error: new Error('Supabaseが設定されていません') };
+      return { data: null, error: new Error('Supabaseが設定されていません。lib/supabase.tsファイルを確認し、環境変数SUPABASE_URLとSUPABASE_ANON_KEYが正しく設定されているか確認してください。') };
     }
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -104,7 +104,7 @@ export const useAuth = () => {
 
   const signOut = async () => {
     if (!supabase) {
-      return { error: new Error('Supabaseが設定されていません') };
+      return { error: new Error('Supabaseが設定されていません。lib/supabase.tsファイルを確認し、環境変数SUPABASE_URLとSUPABASE_ANON_KEYが正しく設定されているか確認してください。') };
     }
     try {
       // ローカルストレージもクリア

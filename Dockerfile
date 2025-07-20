@@ -50,6 +50,12 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy lib directory for Supabase configuration
+COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
+
+# Copy other necessary directories that might not be included in standalone
+COPY --from=builder --chown=nextjs:nodejs /app/app ./app
+
 # Copy package.json for runtime (without installing dependencies)
 COPY --from=builder /app/package.json ./package.json
 
