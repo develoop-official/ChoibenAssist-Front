@@ -109,19 +109,23 @@ ${todo.goal ? `### 🎯 学習目標\n${todo.goal}\n` : ''}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !todo || !content.trim()) return;
+    if (!user || !todo) return;
 
     try {
       setIsSubmitting(true);
 
       const hashtags = extractHashtags(content);
 
+      // 内容が空の場合はデフォルトコンテンツを生成
+      const postContent = content.trim() || generateDefaultContent(todo);
+      const postHashtags = content.trim() ? hashtags : extractHashtags(postContent);
+
       const { error } = await supabase!
         .from('timeline_posts')
         .insert({
           user_id: user.id,
-          content: content.trim(),
-          hashtags: hashtags,
+          content: postContent,
+          hashtags: postHashtags,
           is_public: isPublic,
           created_at: new Date().toISOString(),
           todo_id: todo.id // Todoとの紐付け
@@ -607,7 +611,7 @@ ${todo.goal ? `### 🎯 学習目標\n${todo.goal}\n` : ''}
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting || !content.trim()}
+                disabled={isSubmitting}
                 className={css({
                   px: '6',
                   py: '2',
