@@ -33,30 +33,37 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router]);
 
-  // TODOリストから学習時間を計算（実際のstudy_timeを使用）
+  // 今日完了したTODOの学習時間を計算
   const today = new Date();
-  const todayTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at);
-    return todoDate.toDateString() === today.toDateString();
+  const todayCompletedTodos = todos.filter(todo => {
+    if (todo.status !== 'completed') return false;
+    const completedDate = new Date(todo.updated_at);
+    return completedDate.toDateString() === today.toDateString();
   });
-  const todayTotalMinutes = todayTodos.reduce((total, todo) => total + todo.study_time, 0);
+  const todayTotalMinutes = todayCompletedTodos.reduce((total, todo) => total + todo.study_time, 0);
+  
+  // デバッグ用ログ
+  console.log('今日完了したTODO:', todayCompletedTodos);
+  console.log('今日の合計学習時間（分）:', todayTotalMinutes);
 
-  // 今週の学習時間を計算
+  // 今週完了したTODOの学習時間を計算
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - today.getDay());
-  const weekTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at);
-    return todoDate >= weekStart;
+  const weekCompletedTodos = todos.filter(todo => {
+    if (todo.status !== 'completed') return false;
+    const completedDate = new Date(todo.updated_at);
+    return completedDate >= weekStart;
   });
-  const weekTotalMinutes = weekTodos.reduce((total, todo) => total + todo.study_time, 0);
+  const weekTotalMinutes = weekCompletedTodos.reduce((total, todo) => total + todo.study_time, 0);
 
-  // 今月の学習時間を計算
+  // 今月完了したTODOの学習時間を計算
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const monthTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at);
-    return todoDate >= monthStart;
+  const monthCompletedTodos = todos.filter(todo => {
+    if (todo.status !== 'completed') return false;
+    const completedDate = new Date(todo.updated_at);
+    return completedDate >= monthStart;
   });
-  const monthTotalMinutes = monthTodos.reduce((total, todo) => total + todo.study_time, 0);
+  const monthTotalMinutes = monthCompletedTodos.reduce((total, todo) => total + todo.study_time, 0);
 
   // 完了したTODOの数
   const completedTodos = todos.filter(todo => todo.status === 'completed');
