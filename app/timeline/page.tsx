@@ -49,8 +49,6 @@ function TimelineContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedHashtag, setSelectedHashtag] = useState<string>('');
-  const [completedTodo, setCompletedTodo] = useState<any>(null);
-  const [showCompletedTodoModal, setShowCompletedTodoModal] = useState(false);
   const [baseUrl, setBaseUrl] = useState<string>('');
 
   // クライアントサイドでのみbaseUrlを設定
@@ -58,30 +56,7 @@ function TimelineContent() {
     setBaseUrl(window.location.origin);
   }, []);
 
-  // URLパラメータから完了したTODOの情報を取得
-  useEffect(() => {
-    const todoId = searchParams.get('completed_todo');
-    if (todoId) {
-      fetchCompletedTodo(todoId);
-      setShowCompletedTodoModal(true);
-    }
-  }, [searchParams]);
 
-  const fetchCompletedTodo = async (todoId: string) => {
-    try {
-      const { data, error } = await supabase!
-        .from('todo_items')
-        .select('*')
-        .eq('id', todoId)
-        .single();
-      
-      if (!error && data) {
-        setCompletedTodo(data);
-      }
-    } catch (err) {
-      console.error('完了したTODOの取得エラー:', err);
-    }
-  };
 
   const fetchPosts = useCallback(async () => {
     if (!supabase) {
@@ -220,8 +195,6 @@ function TimelineContent() {
   };
 
   const handlePostCreated = () => {
-    setShowCompletedTodoModal(false);
-    setCompletedTodo(null);
     fetchPosts();
   };
 
@@ -235,11 +208,6 @@ function TimelineContent() {
 
   const handleCommentAdded = () => {
     fetchPosts();
-  };
-
-  const handleCloseCompletedTodoModal = () => {
-    setShowCompletedTodoModal(false);
-    setCompletedTodo(null);
   };
 
   if (authLoading || loading) {
@@ -446,148 +414,7 @@ function TimelineContent() {
         </div>
       </div>
 
-      {/* 完了したTODOのモーダル */}
-      {showCompletedTodoModal && completedTodo && (
-        <div className={css({
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          right: '0',
-          bottom: '0',
-          bg: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: '1000',
-          p: '4'
-        })}>
-          <div className={css({
-            bg: 'white',
-            rounded: 'xl',
-            p: '6',
-            maxW: 'md',
-            w: 'full',
-            shadow: '2xl',
-            border: '2px solid',
-            borderColor: 'gray.300'
-          })}>
-            <div className={css({
-              textAlign: 'center',
-              mb: '6'
-            })}>
-              <div className={css({
-                fontSize: '4xl',
-                mb: '3'
-              })}>
-                🎉
-              </div>
-              <h2 className={css({
-                fontSize: 'xl',
-                fontWeight: 'bold',
-                color: 'green.700',
-                mb: '2'
-              })}>
-                TODO完了おめでとうございます！
-              </h2>
-              <p className={css({
-                color: 'gray.600',
-                mb: '4'
-              })}>
-                学習成果をタイムラインに投稿して、みんなと共有しましょう！
-              </p>
-            </div>
 
-            {/* 完了したTODOの詳細 */}
-            <div className={css({
-              bg: 'green.50',
-              border: '1px solid',
-              borderColor: 'green.200',
-              rounded: 'lg',
-              p: '4',
-              mb: '6'
-            })}>
-              <div className={css({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '2',
-                mb: '3'
-              })}>
-                <span className={css({
-                  fontSize: 'lg'
-                })}>
-                  ✅
-                </span>
-                <span className={css({
-                  fontSize: 'md',
-                  fontWeight: 'bold',
-                  color: 'green.700'
-                })}>
-                  完了したTODO
-                </span>
-              </div>
-              <div className={css({
-                spaceY: '2',
-                fontSize: 'sm',
-                color: 'green.600'
-              })}>
-                <div><strong>タスク:</strong> {completedTodo.task}</div>
-                <div><strong>学習時間:</strong> {completedTodo.study_time}分</div>
-                {completedTodo.due_date && (
-                  <div><strong>期限:</strong> {completedTodo.due_date}</div>
-                )}
-                {completedTodo.priority && (
-                  <div><strong>優先度:</strong> {completedTodo.priority === 1 ? '高' : completedTodo.priority === 2 ? '中' : '低'}</div>
-                )}
-                {completedTodo.goal && (
-                  <div><strong>目標:</strong> {completedTodo.goal}</div>
-                )}
-              </div>
-            </div>
-
-            {/* アクションボタン */}
-            <div className={css({
-              display: 'flex',
-              gap: '3'
-            })}>
-              <button
-                onClick={() => {
-                  setShowCompletedTodoModal(false);
-                }}
-                className={css({
-                  flex: '1',
-                  px: '4',
-                  py: '3',
-                  bg: 'green.500',
-                  color: 'white',
-                  rounded: 'lg',
-                  fontWeight: 'bold',
-                  fontSize: 'md',
-                  _hover: { bg: 'green.600' },
-                  transition: 'all 0.2s'
-                })}
-              >
-                📝 投稿する
-              </button>
-              <button
-                onClick={handleCloseCompletedTodoModal}
-                className={css({
-                  px: '4',
-                  py: '3',
-                  bg: 'gray.300',
-                  color: 'gray.700',
-                  rounded: 'lg',
-                  fontWeight: 'bold',
-                  fontSize: 'md',
-                  _hover: { bg: 'gray.400' },
-                  transition: 'all 0.2s'
-                })}
-              >
-                後で
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

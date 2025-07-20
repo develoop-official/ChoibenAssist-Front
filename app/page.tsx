@@ -10,6 +10,7 @@ import LoadingSpinner from './components/ui/LoadingSpinner';
 import StatCard from './components/StatCard';
 import AiTodoSuggestionCard from './components/AiTodoSuggestionCard';
 import TodoCard from './components/TodoCard';
+import TodoCompletionModal from './components/TodoCompletionModal';
 import StudyProgressChart from './components/StudyProgressChart';
 import { useAuth } from './hooks/useAuth';
 import { useTodos } from './hooks/useTodos';
@@ -19,12 +20,14 @@ import { CreateTodoItem } from './types/todo-item';
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { todos, loading: todosLoading, addTodos } = useTodos();
+  const { todos, loading: todosLoading, addTodos, updateStatus, deleteTodo } = useTodos();
   const [profile, setProfile] = useState<any>(null);
 
   const [completingTodoId, setCompletingTodoId] = useState<string | null>(null);
   const [completedTodoId, setCompletedTodoId] = useState<string | null>(null);
   const [deletingTodoId, setDeletingTodoId] = useState<string | null>(null);
+  const [completedTodoForModal, setCompletedTodoForModal] = useState<any>(null);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   // 未認証の場合はログインページにリダイレクト
   useEffect(() => {
@@ -106,27 +109,24 @@ export default function DashboardPage() {
   const handleCompleteTodo = async (todoId: string) => {
     try {
       setCompletingTodoId(todoId);
-      if (!supabase) {
-        throw new Error('Supabase client is not initialized');
-      }
       
-      const { error } = await supabase
-        .from('todo_items')
-        .update({ status: 'completed' })
-        .eq('id', todoId);
-
-      if (error) {
-        throw error;
-      }
-
+      // useTodosフックのupdateStatusを使用してTODOを完了
+      await updateStatus(todoId, 'completed');
+      
       // 完了アニメーションを表示
       setCompletedTodoId(todoId);
       setCompletingTodoId(null);
       
-      // 2秒後にタイムラインに遷移
+      // 完了したTODOを取得してモーダルを表示
+      const completedTodo = todos.find(todo => todo.id === todoId);
+      if (completedTodo) {
+        setCompletedTodoForModal(completedTodo);
+        setShowCompletionModal(true);
+      }
+      
+      // 2秒後に完了アニメーションを消す
       setTimeout(() => {
         setCompletedTodoId(null);
-        router.push(`/timeline?completed_todo=${todoId}`);
       }, 2000);
     } catch (error) {
       console.error('TODO完了エラー:', error);
@@ -158,6 +158,11 @@ export default function DashboardPage() {
     } finally {
       setDeletingTodoId(null);
     }
+  };
+
+  const handlePostCreated = () => {
+    // 投稿成功時にタイムラインに遷移
+    router.push('/timeline');
   };
 
   if (authLoading) {
@@ -409,6 +414,17 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* TODO完了モーダル */}
+      <TodoCompletionModal
+        todo={completedTodoForModal}
+        isOpen={showCompletionModal}
+        onClose={() => {
+          setShowCompletionModal(false);
+          setCompletedTodoForModal(null);
+        }}
+        onPostCreated={handlePostCreated}
+      />
     </div>
   );
 }
