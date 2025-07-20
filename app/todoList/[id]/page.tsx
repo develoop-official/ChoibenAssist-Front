@@ -302,7 +302,7 @@ export default function TodoDetailPage() {
             )}
             <div className={css({ display: "flex", alignItems: "center", gap: "2" })}>
               <span className={css({ fontSize: "lg" })}>⏱️</span>
-              <span className={css({ fontSize: "sm", color: "blue.600" })}>学習時間: {todo.study_time}時間</span>
+              <span className={css({ fontSize: "sm", color: "blue.600" })}>学習時間: {todo.study_time}分</span>
             </div>
             {todo.priority && (
               <div className={css({ display: "flex", alignItems: "center", gap: "2" })}>

@@ -6,37 +6,24 @@ import Link from 'next/link';
 
 import { css } from '../styled-system/css';
 
-import { generateGeneralTodo } from './actions/todo-actions';
-import AiTodoSuggestion from './components/AiTodoSuggestion';
+import AiTodoSuggestionCard from './components/AiTodoSuggestionCard';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import StatCard from './components/StatCard';
 import TodoCard from './components/TodoCard';
 import { useAuth } from './hooks/useAuth';
 import { useTodos } from './hooks/useTodos';
-import { buttonStyles, sectionStyles, formStyles, statusStyles } from './styles/components';
+import { sectionStyles } from './styles/components';
 import { CreateTodoItem } from './types/todo-item';
 import { supabase } from '../lib/supabase';
 
-interface TodoSuggestionResponse {
-  success: boolean;
-  content: string;
-  response_type: string;
-}
+
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { todos, loading: todosLoading, addTodos } = useTodos();
+  const [profile, setProfile] = useState<any>(null);
 
-  const [todoSuggestionForm, setTodoSuggestionForm] = useState({
-    time_available: 60,
-    recent_progress: '',
-    weak_areas: '',
-    daily_goal: ''
-  });
-  const [todoSuggestionLoading, setTodoSuggestionLoading] = useState(false);
-  const [todoSuggestionResult, setTodoSuggestionResult] = useState<TodoSuggestionResponse | null>(null);
-  const [todoSuggestionError, setTodoSuggestionError] = useState('');
   const [completingTodoId, setCompletingTodoId] = useState<string | null>(null);
   const [completedTodoId, setCompletedTodoId] = useState<string | null>(null);
 
@@ -53,7 +40,7 @@ export default function DashboardPage() {
     const todoDate = new Date(todo.created_at);
     return todoDate.toDateString() === today.toDateString();
   });
-  const todayTotalMinutes = todayTodos.reduce((total, todo) => total + (todo.study_time * 60), 0);
+  const todayTotalMinutes = todayTodos.reduce((total, todo) => total + todo.study_time, 0);
 
   // 今週の学習時間を計算
   const weekStart = new Date(today);
@@ -62,7 +49,7 @@ export default function DashboardPage() {
     const todoDate = new Date(todo.created_at);
     return todoDate >= weekStart;
   });
-  const weekTotalMinutes = weekTodos.reduce((total, todo) => total + (todo.study_time * 60), 0);
+  const weekTotalMinutes = weekTodos.reduce((total, todo) => total + todo.study_time, 0);
 
   // 今月の学習時間を計算
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -70,43 +57,35 @@ export default function DashboardPage() {
     const todoDate = new Date(todo.created_at);
     return todoDate >= monthStart;
   });
-  const monthTotalMinutes = monthTodos.reduce((total, todo) => total + (todo.study_time * 60), 0);
+  const monthTotalMinutes = monthTodos.reduce((total, todo) => total + todo.study_time, 0);
 
   // 完了したTODOの数
   const completedTodos = todos.filter(todo => todo.status === 'completed');
 
-  const handleTodoSuggestion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!todoSuggestionForm.time_available || todoSuggestionForm.time_available < 1 || todoSuggestionForm.time_available > 480) {
-      setTodoSuggestionError('勉強時間は1分〜480分の間で指定してください。');
-      return;
+  // プロフィール取得
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      if (!supabase || !user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!error && data) {
+          setProfile(data);
+        }
+      } catch (err) {
+        console.error('プロフィール取得エラー:', err);
+      }
+    };
+
+    if (user && supabase) {
+      fetchProfile();
     }
-    try {
-      setTodoSuggestionLoading(true);
-      setTodoSuggestionError('');
-      setTodoSuggestionResult(null);
-
-      // 実際のAI APIを呼び出し
-      const weakAreasArray = todoSuggestionForm.weak_areas
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
-
-      const result = await generateGeneralTodo(
-        todoSuggestionForm.time_available,
-        todoSuggestionForm.recent_progress,
-        weakAreasArray,
-        todoSuggestionForm.daily_goal
-      );
-
-      setTodoSuggestionResult(result);
-    } catch (_err) {
-      console.error('TODO提案エラー:', _err);
-      setTodoSuggestionError('TODO提案の取得に失敗しました。');
-    } finally {
-      setTodoSuggestionLoading(false);
-    }
-  };
+  }, [user]);
 
   const handleAddToTodoList = async (todos: CreateTodoItem[]) => {
     try {
@@ -245,113 +224,10 @@ export default function DashboardPage() {
           </div>
 
           {/* AI TODO提案 */}
-          <div className={sectionStyles.primary + ' ' + css({
-            h: 'fit-content'
-          })}>
-            <h2 className={sectionStyles.title}>
-              AI TODO提案
-            </h2>
-
-            <form onSubmit={handleTodoSuggestion} className={css({
-              spaceY: '4'
-            })}>
-              <div>
-                <label className={formStyles.label}>
-                  勉強時間（分）
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="480"
-                  value={todoSuggestionForm.time_available}
-                  onChange={(e) => setTodoSuggestionForm(prev => ({
-                    ...prev,
-                    time_available: parseInt(e.target.value) || 0
-                  }))}
-                  className={formStyles.input}
-                />
-              </div>
-
-              <div>
-                <label className={formStyles.label}>
-                  最近の進捗
-                </label>
-                <textarea
-                  value={todoSuggestionForm.recent_progress}
-                  onChange={(e) => setTodoSuggestionForm(prev => ({
-                    ...prev,
-                    recent_progress: e.target.value
-                  }))}
-                  placeholder="最近何を勉強しましたか？"
-                  className={formStyles.textarea}
-                />
-              </div>
-
-              <div>
-                <label className={formStyles.label}>
-                  苦手分野（カンマ区切り）
-                </label>
-                <input
-                  type="text"
-                  value={todoSuggestionForm.weak_areas}
-                  onChange={(e) => setTodoSuggestionForm(prev => ({
-                    ...prev,
-                    weak_areas: e.target.value
-                  }))}
-                  placeholder="例：数学, 英語"
-                  className={formStyles.input}
-                />
-              </div>
-
-              <div>
-                <label className={formStyles.label}>
-                  今日の目標
-                </label>
-                <input
-                  type="text"
-                  value={todoSuggestionForm.daily_goal}
-                  onChange={(e) => setTodoSuggestionForm(prev => ({
-                    ...prev,
-                    daily_goal: e.target.value
-                  }))}
-                  placeholder="今日達成したい目標"
-                  className={formStyles.input}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={todoSuggestionLoading}
-                className={buttonStyles.primary + ' ' + css({ w: 'full' })}
-              >
-                {todoSuggestionLoading ? '生成中...' : 'TODOを生成'}
-              </button>
-            </form>
-
-            {todoSuggestionError && (
-              <div className={statusStyles.error}>
-                {todoSuggestionError}
-              </div>
-            )}
-
-            {todoSuggestionResult && (
-              <div className={statusStyles.success}>
-                <h3 className={css({
-                  fontSize: 'lg',
-                  fontWeight: 'bold',
-                  color: 'success.800',
-                  mb: '2'
-                })}>
-                  AI提案
-                </h3>
-
-                <AiTodoSuggestion
-                  content={todoSuggestionResult.content}
-                  onAddTodos={handleAddToTodoList}
-                />
-              </div>
-            )}
-          </div>
+          <AiTodoSuggestionCard
+            onAddTodos={handleAddToTodoList}
+            scrapboxProjectName={profile?.scrapbox_project_name}
+          />
         </div>
 
         {/* 完了済みTODO */}

@@ -38,13 +38,16 @@ export default function RootLayout({ children }: RootLayoutProps) {
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body className={css({
-        fontFamily: "var(--font-geist-sans)",
-        bg: "primary.50",
-        minH: "100vh",
-        display: "flex",
-        flexDirection: "column"
-      })}>
+      <body 
+        className={css({
+          fontFamily: "var(--font-geist-sans)",
+          bg: "primary.50",
+          minH: "100vh",
+          display: "flex",
+          flexDirection: "column"
+        })}
+        suppressHydrationWarning={true}
+      >
         <Header />
 
         <main className={css({

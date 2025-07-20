@@ -422,7 +422,7 @@ function PostDetailContent() {
               color: 'green.600'
             })}>
               <div><strong>タスク:</strong> {post.todo.task}</div>
-              <div><strong>学習時間:</strong> {post.todo.study_time}時間</div>
+                              <div><strong>学習時間:</strong> {post.todo.study_time}分</div>
               {post.todo.due_date && (
                 <div><strong>期限:</strong> {post.todo.due_date}</div>
               )}

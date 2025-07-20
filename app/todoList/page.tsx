@@ -227,7 +227,7 @@ function TodoItem({ todo, isMyTodo, _onStatusUpdate, onCompletion, removingId, _
             </div>
           )}
           <div className={css({ fontSize: compact ? "xs" : "sm", color: "blue.600", mt: "1", fontWeight: "medium" })}>
-            学習時間: {todo.study_time}時間
+                          学習時間: {todo.study_time}分
           </div>
           <div className={css({ fontSize: "xs", color: "gray.400", mt: "1" })}>
             作成日: {todo.created_at.slice(0, 10)}

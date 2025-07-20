@@ -16,7 +16,7 @@ export default function CreateTodoPage() {
   const [formData, setFormData] = useState({
     task: '',
     due_date: '',
-    study_time: 1, // デフォルト1時間
+    study_time: 60, // デフォルト60分
     status: 'pending' as const
   });
   const [loading, setLoading] = useState(false);
