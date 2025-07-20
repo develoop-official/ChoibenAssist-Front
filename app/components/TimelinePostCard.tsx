@@ -155,7 +155,9 @@ export default function TimelinePostCard({
               </div>
             </div>
           </div>
-          <FollowButton targetUserId={post.user_id} />
+          <div onClick={(e) => e.preventDefault()}>
+            <FollowButton targetUserId={post.user_id} />
+          </div>
         </div>
 
         {/* Todo完了バッジ */}

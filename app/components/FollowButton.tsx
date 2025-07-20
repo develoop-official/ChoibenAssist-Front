@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { supabase } from '../../lib/supabase';
-import { css } from '../../styled-system/css';
+import { css, cx } from '../../styled-system/css';
+import { followButtonStyles } from '../styles/components';
 import { useAuth } from '../hooks/useAuth';
 
 interface FollowButtonProps {
@@ -85,7 +86,11 @@ export default function FollowButton({
     checkFollowStatus();
   }, [checkFollowStatus]);
 
-  const handleFollowToggle = async () => {
+  const handleFollowToggle = async (e: React.MouseEvent) => {
+    // イベントの伝播を防ぐ（親要素のクリックイベントを防止）
+    e.preventDefault();
+    e.stopPropagation();
+
     if (!user || !targetUserId || isLoading || !isAvailable) return;
 
     // 自分自身をフォローしようとしている場合は処理をスキップ
@@ -148,17 +153,8 @@ export default function FollowButton({
   // エラーメッセージを表示
   if (errorMessage) {
     return (
-      <div className={css({
-        px: '4',
-        py: '2',
-        rounded: 'md',
-        fontSize: 'sm',
-        bg: 'red.50',
-        color: 'red.700',
-        border: '1px solid',
-        borderColor: 'red.200'
-      })}>
-        {errorMessage}
+      <div className={cx(followButtonStyles.error)}>
+        エラー
       </div>
     );
   }
@@ -173,21 +169,18 @@ export default function FollowButton({
     return (
       <button
         disabled
-        className={css({
-          px: '4',
-          py: '2',
-          rounded: 'full',
-          fontSize: 'sm',
-          fontWeight: 'medium',
-          bg: 'gray.100',
-          color: 'gray.500',
-          border: '1px solid',
-          borderColor: 'gray.300',
-          cursor: 'not-allowed',
-          opacity: '0.5'
-        })}
+        className={cx(followButtonStyles.base, followButtonStyles.loading)}
       >
-        読み込み中...
+        <span className={css({
+          w: '3',
+          h: '3',
+          border: '1px solid',
+          borderColor: 'currentColor',
+          borderTopColor: 'transparent',
+          rounded: 'full',
+          animation: 'spin 1s linear infinite'
+        })} />
+        読み込み中
       </button>
     );
   }
@@ -196,53 +189,32 @@ export default function FollowButton({
     <button
       onClick={handleFollowToggle}
       disabled={isLoading}
-      className={css({
-        px: '4',
-        py: '2',
-        rounded: 'full',
-        fontSize: 'sm',
-        fontWeight: 'medium',
-        transition: 'all 0.2s',
-        cursor: 'pointer',
-        _disabled: { opacity: '0.5', cursor: 'not-allowed' },
-        ...(isFollowing
-          ? {
-              bg: 'gray.100',
-              color: 'gray.700',
-              border: '1px solid',
-              borderColor: 'gray.300',
-              _hover: { bg: 'gray.200' }
-            }
-          : {
-              bg: 'blue.600',
-              color: 'white',
-              border: '1px solid',
-              borderColor: 'blue.600',
-              _hover: { bg: 'blue.700' }
-            }
-        )
-      })}
+      className={cx(
+        followButtonStyles.base,
+        isFollowing ? followButtonStyles.following : followButtonStyles.notFollowing,
+        isLoading && followButtonStyles.loading
+      )}
     >
       {isLoading ? (
-        <span className={css({ display: 'flex', alignItems: 'center', gap: '2' })}>
+        <>
           <span className={css({
-            w: '4',
-            h: '4',
-            border: '2px solid',
+            w: '3',
+            h: '3',
+            border: '1px solid',
             borderColor: 'currentColor',
             borderTopColor: 'transparent',
             rounded: 'full',
             animation: 'spin 1s linear infinite'
           })} />
-          {isFollowing ? 'フォロー解除中...' : 'フォロー中...'}
-        </span>
+          <span>{isFollowing ? '解除中' : 'フォロー中'}</span>
+        </>
       ) : (
-        <span className={css({ display: 'flex', alignItems: 'center', gap: '2' })}>
-          <span className={css({ fontSize: 'lg' })}>
-            {isFollowing ? '👥' : '➕'}
+        <>
+          <span className={css({ fontSize: 'sm' })}>
+            {isFollowing ? '✓' : '+'}
           </span>
-          {isFollowing ? 'フォロー中' : 'フォロー'}
-        </span>
+          <span>{isFollowing ? 'フォロー中' : 'フォロー'}</span>
+        </>
       )}
     </button>
   );

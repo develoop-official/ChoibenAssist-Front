@@ -402,3 +402,63 @@ export const sectionStyles = {
     color: 'primary.600'
   })
 };
+
+// Follow button styles - 薄いデザイン
+export const followButtonStyles = {
+  base: css({
+    px: '3',
+    py: '1.5',
+    rounded: 'full',
+    fontSize: 'xs',
+    fontWeight: 'medium',
+    transition: 'all 0.2s ease-in-out',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.5',
+    _disabled: { 
+      opacity: '0.5', 
+      cursor: 'not-allowed' 
+    }
+  }),
+
+  following: css({
+    bg: 'gray.50',
+    color: 'gray.600',
+    border: '1px solid',
+    borderColor: 'gray.200',
+    _hover: { 
+      bg: 'gray.100',
+      borderColor: 'gray.300'
+    }
+  }),
+
+  notFollowing: css({
+    bg: 'primary.50',
+    color: 'primary.700',
+    border: '1px solid',
+    borderColor: 'primary.200',
+    _hover: { 
+      bg: 'primary.100',
+      borderColor: 'primary.300'
+    }
+  }),
+
+  loading: css({
+    bg: 'gray.50',
+    color: 'gray.500',
+    border: '1px solid',
+    borderColor: 'gray.200'
+  }),
+
+  error: css({
+    bg: 'red.50',
+    color: 'red.600',
+    border: '1px solid',
+    borderColor: 'red.200',
+    px: '3',
+    py: '2',
+    rounded: 'md',
+    fontSize: 'xs'
+  })
+};
