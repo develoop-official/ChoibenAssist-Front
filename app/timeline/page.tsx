@@ -225,6 +225,14 @@ function TimelineContent() {
     fetchPosts();
   };
 
+  const handlePostUpdated = () => {
+    fetchPosts();
+  };
+
+  const handlePostDeleted = () => {
+    fetchPosts();
+  };
+
   const handleCommentAdded = () => {
     fetchPosts();
   };
@@ -378,7 +386,11 @@ function TimelineContent() {
           spaceY: '4'
         })}>
           {/* 投稿フォーム */}
-          <TimelinePostForm onPostCreated={handlePostCreated} />
+          <TimelinePostForm 
+            onPostCreated={handlePostCreated}
+            onPostUpdated={handlePostUpdated}
+            onPostDeleted={handlePostDeleted}
+          />
 
           {/* 投稿一覧 */}
           <div className={css({
@@ -425,6 +437,8 @@ function TimelineContent() {
                   onLike={handleLike}
                   onCommentAdded={handleCommentAdded}
                   onHashtagClick={setSelectedHashtag}
+                  onPostUpdated={handlePostUpdated}
+                  onPostDeleted={handlePostDeleted}
                   baseUrl={baseUrl}
                   createPostShareData={createPostShareData}
                 />

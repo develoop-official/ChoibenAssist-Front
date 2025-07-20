@@ -10,9 +10,11 @@ import { useAuth } from '../hooks/useAuth';
 
 interface TimelinePostFormProps {
   onPostCreated: () => void;
+  onPostUpdated?: () => void;
+  onPostDeleted?: () => void;
 }
 
-export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProps) {
+export default function TimelinePostForm({ onPostCreated, onPostUpdated, onPostDeleted }: TimelinePostFormProps) {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [content, setContent] = useState('');
@@ -29,6 +31,28 @@ export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProp
       fetchCompletedTodo(todoId);
     }
   }, [searchParams]);
+
+  // 投稿の作成・更新・削除を監視
+  useEffect(() => {
+    // 投稿作成時の更新
+    if (onPostCreated) {
+      onPostCreated();
+    }
+  }, [onPostCreated]);
+
+  // 投稿更新時の処理
+  useEffect(() => {
+    if (onPostUpdated) {
+      onPostUpdated();
+    }
+  }, [onPostUpdated]);
+
+  // 投稿削除時の処理
+  useEffect(() => {
+    if (onPostDeleted) {
+      onPostDeleted();
+    }
+  }, [onPostDeleted]);
 
   const fetchCompletedTodo = async (todoId: string) => {
     try {

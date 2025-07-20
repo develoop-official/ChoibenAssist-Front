@@ -37,6 +37,8 @@ interface TimelinePostCardProps {
   onLike: (postId: string) => void;
   onCommentAdded: () => void;
   onHashtagClick: (hashtag: string) => void;
+  onPostUpdated?: () => void;
+  onPostDeleted?: () => void;
   baseUrl: string;
   createPostShareData: (post: TodoPost, url: string) => any;
 }
@@ -46,6 +48,8 @@ export default function TimelinePostCard({
   onLike,
   onCommentAdded,
   onHashtagClick,
+  onPostUpdated,
+  onPostDeleted,
   baseUrl,
   createPostShareData
 }: TimelinePostCardProps) {
