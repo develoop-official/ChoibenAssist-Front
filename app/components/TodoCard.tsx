@@ -5,10 +5,11 @@ import React from 'react';
 
 import { todoCardStyles } from '../styles/components';
 import { css } from '../../styled-system/css';
+import MarkdownRenderer from './ui/MarkdownRenderer';
 
 interface TodoItem {
   id: string;
-  task: string;
+  task: string; // タイトルと内容が結合されている
   status: string;
   created_at: string;
   study_time?: number;
@@ -36,6 +37,17 @@ export default function TodoCard({
   linkPrefix = '/todoList',
   deletingTodoId
 }: TodoCardProps) {
+  // taskフィールドからタイトルと内容を分離
+  const parseTask = (task: string) => {
+    const parts = task.split(' - ');
+    return {
+      title: parts[0],
+      content: parts.slice(1).join(' - ')
+    };
+  };
+
+  const { title, content } = parseTask(todo.task);
+
   const getCardStyle = () => {
     if (completed) return todoCardStyles.completing;
     if (todo.status === 'completed') return todoCardStyles.completed;
@@ -77,18 +89,54 @@ export default function TodoCard({
           alignItems: 'flex-start',
           gap: '2'
         })}>
-          <Link href={`${linkPrefix}/${todo.id}`} className={todoCardStyles.link}>
-            <h3 className={css({
-              fontSize: showDetails ? 'lg' : 'sm',
-              fontWeight: 'bold',
-              color: !showDetails && todo.status === 'completed' ? 'success.700' : 'primary.800',
-              cursor: 'pointer',
-              textDecoration: !showDetails && todo.status === 'completed' ? 'line-through' : 'none',
-              lineHeight: '1.4'
-            })}>
-              {todo.task}
-            </h3>
-          </Link>
+          <div className={css({
+            flex: '1',
+            minW: '0'
+          })}>
+            <Link href={`${linkPrefix}/${todo.id}`} className={todoCardStyles.link}>
+              <h3 className={css({
+                fontSize: showDetails ? 'lg' : 'sm',
+                fontWeight: 'bold',
+                color: !showDetails && todo.status === 'completed' ? 'success.700' : 'primary.800',
+                cursor: 'pointer',
+                textDecoration: !showDetails && todo.status === 'completed' ? 'line-through' : 'none',
+                lineHeight: '1.4',
+                mb: '1'
+              })}>
+                <MarkdownRenderer 
+                  content={title}
+                  className={css({
+                    fontSize: 'inherit',
+                    fontWeight: 'inherit',
+                    color: 'inherit',
+                    textDecoration: 'inherit',
+                    lineHeight: 'inherit',
+                    mb: '0'
+                  })}
+                />
+              </h3>
+            </Link>
+            
+            {/* 内容の表示 */}
+            {showDetails && content && (
+              <div className={css({
+                fontSize: 'sm',
+                color: 'gray.600',
+                lineHeight: '1.4',
+                mb: '2'
+              })}>
+                <MarkdownRenderer 
+                  content={content}
+                  className={css({
+                    fontSize: 'inherit',
+                    color: 'inherit',
+                    lineHeight: 'inherit',
+                    mb: '0'
+                  })}
+                />
+              </div>
+            )}
+          </div>
           
           <div className={css({
             display: 'flex',
