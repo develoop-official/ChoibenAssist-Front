@@ -168,7 +168,7 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
         bgGradient: 'to-r',
         gradientFrom: 'primary.500',
         gradientTo: 'primary.600',
-        px: '6',
+        px: '4',
         py: '4',
         color: 'white'
       })}>

@@ -275,13 +275,14 @@ function TimelineContent() {
 
       <div className={css({
         display: 'grid',
-        gridTemplateColumns: '1fr 2fr',
+        gridTemplateColumns: { base: '1fr', lg: '1fr 2fr' },
         gap: '6',
         alignItems: 'start'
       })}>
-        {/* サイドバー */}
+        {/* サイドバー - PCのみ表示 */}
         <div className={css({
-          spaceY: '6'
+          spaceY: '6',
+          display: { base: 'none', lg: 'block' }
         })}>
           {/* ハッシュタグ検索 */}
           <HashtagSearch

@@ -24,6 +24,12 @@ interface StudyPost {
   likes_count: number;
   comments_count: number;
   is_liked: boolean;
+  todo?: {
+    id: string;
+    task: string;
+    study_time: number;
+    due_date?: string;
+  };
 }
 
 interface StudyPostsProps {
@@ -44,7 +50,15 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
       // まずtimeline_posts_with_statsビューから投稿を取得を試行
       const { data, error } = await supabase
         .from('timeline_posts_with_stats')
-        .select('*')
+        .select(`
+          *,
+          todo_items (
+            id,
+            task,
+            study_time,
+            due_date
+          )
+        `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(limit);
@@ -84,7 +98,12 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
       } else if (error) {
         throw error;
       } else {
-        setPosts(data || []);
+        // TODO情報を含めて投稿データを設定
+        const postsWithTodos = (data || []).map(post => ({
+          ...post,
+          todo: post.todo_items
+        }));
+        setPosts(postsWithTodos);
       }
     } catch (error) {
       console.error('学習投稿取得エラー:', error);
@@ -134,9 +153,9 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
   return (
     <div className={css({
       bg: 'white',
-      rounded: '2xl',
+      rounded: { base: 'lg', md: '2xl' },
       shadow: 'md',
-      p: '6',
+      p: { base: '4', md: '6' },
       border: '1px solid',
       borderColor: 'gray.100'
     })}>
@@ -147,7 +166,7 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
         mb: '4'
       })}>
         <h3 className={css({
-          fontSize: 'xl',
+          fontSize: { base: 'lg', md: 'xl' },
           fontWeight: 'bold',
           color: 'gray.900'
         })}>
@@ -156,10 +175,10 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
         <span className={css({
           bg: 'primary.50',
           color: 'primary.700',
-          px: '3',
+          px: { base: '2', md: '3' },
           py: '1',
           rounded: 'full',
-          fontSize: 'sm',
+          fontSize: { base: 'xs', md: 'sm' },
           fontWeight: 'medium'
         })}>
           {posts.length}件
@@ -189,14 +208,14 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
       ) : (
         <div className={css({
           spaceY: '4',
-          maxH: '96',
+          maxH: { base: '80', md: '96' },
           overflowY: 'auto'
         })}>
           {posts.map((post) => (
             <article
               key={post.id}
               className={css({
-                p: '4',
+                p: { base: '3', md: '4' },
                 border: '1px solid',
                 borderColor: 'gray.200',
                 rounded: 'lg',
@@ -204,6 +223,48 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
                 transition: 'all 0.2s'
               })}
             >
+              {/* TODO完了バッジ */}
+              {post.todo && (
+                <div className={css({
+                  mb: '3',
+                  p: '2',
+                  bg: 'green.50',
+                  border: '1px solid',
+                  borderColor: 'green.200',
+                  rounded: 'md'
+                })}>
+                  <div className={css({
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2',
+                    mb: '1'
+                  })}>
+                    <span className={css({
+                      fontSize: { base: 'sm', md: 'md' }
+                    })}>
+                      ✅
+                    </span>
+                    <span className={css({
+                      fontSize: { base: 'xs', md: 'sm' },
+                      fontWeight: 'bold',
+                      color: 'green.700'
+                    })}>
+                      Todo完了
+                    </span>
+                  </div>
+                  <div className={css({
+                    fontSize: { base: 'xs', md: 'sm' },
+                    color: 'green.600'
+                  })}>
+                    <div><strong>タスク:</strong> {post.todo.task}</div>
+                    <div><strong>学習時間:</strong> {post.todo.study_time}分</div>
+                    {post.todo.due_date && (
+                      <div><strong>期限:</strong> {post.todo.due_date}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <header className={css({ mb: '3' })}>
                 <div className={css({
                   display: 'flex',
@@ -212,7 +273,7 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
                   gap: '2'
                 })}>
                   <time className={css({
-                    fontSize: 'sm',
+                    fontSize: { base: 'xs', md: 'sm' },
                     color: 'gray.500'
                   })}>
                     {dayjs(post.created_at).format('YYYY/MM/DD HH:mm')}
@@ -221,7 +282,7 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
                   <div className={css({
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '3'
+                    gap: { base: '2', md: '3' }
                   })}>
                     {/* いいね数 */}
                     <div className={css({
@@ -229,7 +290,7 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
                       alignItems: 'center',
                       gap: '1',
                       color: post.is_liked ? 'red.500' : 'gray.500',
-                      fontSize: 'sm'
+                      fontSize: { base: 'xs', md: 'sm' }
                     })}>
                       <span>{post.is_liked ? '❤️' : '🤍'}</span>
                       <span>{post.likes_count}</span>
@@ -241,7 +302,7 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
                       alignItems: 'center',
                       gap: '1',
                       color: 'gray.500',
-                      fontSize: 'sm'
+                      fontSize: { base: 'xs', md: 'sm' }
                     })}>
                       <span>💬</span>
                       <span>{post.comments_count}</span>
@@ -286,7 +347,7 @@ export default function StudyPosts({ userId, limit = 5 }: StudyPostsProps) {
 
               <div className={css({
                 color: 'gray.600',
-                fontSize: 'sm',
+                fontSize: { base: 'xs', md: 'sm' },
                 lineHeight: 'relaxed'
               })}>
                 <MarkdownRenderer content={truncateContent(post.content)} />
