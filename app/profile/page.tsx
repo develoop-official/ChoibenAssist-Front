@@ -19,6 +19,7 @@ interface UserProfile {
   icon_url?: string;
   bio?: string;
   scrapbox_project_name?: string;
+  target_study_time?: number;
   created_at: string;
   updated_at: string;
 }
@@ -73,6 +74,7 @@ export default function ProfilePage() {
         icon_url: '',
         bio: '',
         scrapbox_project_name: '',
+        target_study_time: 120, // デフォルト2時間
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
