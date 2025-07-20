@@ -519,7 +519,7 @@ function TimelineContent() {
                 color: 'green.600'
               })}>
                 <div><strong>タスク:</strong> {completedTodo.task}</div>
-                <div><strong>学習時間:</strong> {completedTodo.study_time}時間</div>
+                <div><strong>学習時間:</strong> {completedTodo.study_time}分</div>
                 {completedTodo.due_date && (
                   <div><strong>期限:</strong> {completedTodo.due_date}</div>
                 )}

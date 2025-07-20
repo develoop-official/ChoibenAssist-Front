@@ -47,14 +47,14 @@ export default function TimelinePostForm({ onPostCreated }: TimelinePostFormProp
 ${data.task}
 
 ### ⏱️ 学習時間
-${data.study_time}時間
+${data.study_time}分
 
 ${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
 ### 💡 学習内容・感想
 （ここに学習内容や感想を書いてください）
 
 ### 🏷️ タグ
-#学習完了 #${data.study_time}時間学習${data.goal ? ' #目標達成' : ''}`;
+#学習完了 #${data.study_time}分学習${data.goal ? ' #目標達成' : ''}`;
         setContent(todoContent);
       }
     } catch (err) {
@@ -164,7 +164,7 @@ ${data.goal ? `### 🎯 学習目標\n${data.goal}\n` : ''}
             fontSize: 'xs',
             color: 'green.600'
           })}>
-            タスク: {completedTodo.task} | 学習時間: {completedTodo.study_time}時間
+            タスク: {completedTodo.task} | 学習時間: {completedTodo.study_time}分
           </div>
         </div>
       )}

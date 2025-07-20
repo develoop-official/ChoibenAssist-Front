@@ -16,13 +16,47 @@ export interface TodoSection {
  * AIが生成したマークダウン形式のTODOリストを解析
  */
 export function parseMarkdownTodos(content: string): TodoSection[] {
-  const lines = content.split('\n').map(line => line.trim()).filter(Boolean);
+  console.log('🔍 TODO解析開始 - 生コンテンツ:', content);
+  
+  const lines = content.split('\n');
   const sections: TodoSection[] = [];
   let currentSection: TodoSection | null = null;
+  let currentTodo: ParsedTodo | null = null;
+  let currentTodoLines: string[] = [];
 
-  for (const line of lines) {
+  // デフォルトセクションを作成
+  currentSection = {
+    title: 'AI提案TODO',
+    todos: [],
+    totalTime: 0
+  };
+  sections.push(currentSection);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // 空行をスキップ
+    if (!line) {
+      // 空行でTODOの終了を判定
+      if (currentTodo && currentSection) {
+        currentSection.todos.push(currentTodo);
+        currentSection.totalTime += currentTodo.study_time;
+        currentTodo = null;
+        currentTodoLines = [];
+      }
+      continue;
+    }
+
     // セクション見出しを検出（## または ### で始まる行）
     if (line.startsWith('##') || line.startsWith('###')) {
+      // 前のTODOがあれば保存
+      if (currentTodo && currentSection) {
+        currentSection.todos.push(currentTodo);
+        currentSection.totalTime += currentTodo.study_time;
+        currentTodo = null;
+        currentTodoLines = [];
+      }
+      
       const title = line.replace(/^#+\s*/, '').trim();
       currentSection = {
         title,
@@ -33,103 +67,64 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
       continue;
     }
 
-    // TODOアイテムを検出（- または • または * で始まる行）
-    if (line.match(/^[-•*]\s/)) {
-      const todo = parseTodoLine(line);
-      if (todo && currentSection) {
-        currentSection.todos.push(todo);
-        currentSection.totalTime += todo.study_time;
-      }
-      continue;
-    }
-
     // 番号付きリストを検出（1. 2. などで始まる行）
     if (line.match(/^\d+\.\s/)) {
-      const todo = parseTodoLine(line);
-      if (todo && currentSection) {
-        currentSection.todos.push(todo);
-        currentSection.totalTime += todo.study_time;
+      // 前のTODOがあれば保存
+      if (currentTodo && currentSection) {
+        currentSection.todos.push(currentTodo);
+        currentSection.totalTime += currentTodo.study_time;
       }
+      
+      // 新しいTODOの開始
+      const taskName = line.replace(/^\d+\.\s*/, '').trim();
+      currentTodo = {
+        task: taskName,
+        study_time: 1, // デフォルト値、後で更新
+        goal: '',
+        priority: undefined
+      };
+      currentTodoLines = [taskName];
       continue;
     }
 
-    // セクションがない場合はデフォルトセクションを作成
-    if (!currentSection) {
-      currentSection = {
-        title: 'AI提案TODO',
-        todos: [],
-        totalTime: 0
-      };
-      sections.push(currentSection);
+    // 現在のTODOの詳細情報を収集
+    if (currentTodo && line.startsWith('-')) {
+      currentTodoLines.push(line);
+      
+      // 推定時間を抽出
+      const timeMatch = line.match(/推定時間:\s*(\d+)\s*min/);
+      if (timeMatch) {
+        const minutes = parseInt(timeMatch[1]);
+        currentTodo.study_time = minutes; // 分のまま保持
+      }
+      
+      // 内容を抽出
+      const contentMatch = line.match(/内容:\s*(.+)/);
+      if (contentMatch) {
+        currentTodo.goal = contentMatch[1].trim();
+      }
+      
+      continue;
     }
 
-    // 通常のテキスト行もTODOとして解析を試行
-    const todo = parseTodoLine(line);
-    if (todo) {
-      currentSection.todos.push(todo);
-      currentSection.totalTime += todo.study_time;
+    // 補足情報を抽出
+    if (currentTodo && line.startsWith('補足:')) {
+      const note = line.replace(/^補足:\s*/, '').trim();
+      if (note) {
+        currentTodo.goal = currentTodo.goal ? `${currentTodo.goal} (補足: ${note})` : `補足: ${note}`;
+      }
+      continue;
     }
   }
 
+  // 最後のTODOを保存
+  if (currentTodo && currentSection) {
+    currentSection.todos.push(currentTodo);
+    currentSection.totalTime += currentTodo.study_time;
+  }
+
+  console.log('✅ TODO解析完了 - 結果:', JSON.stringify(sections, null, 2));
   return sections;
-}
-
-/**
- * 個別のTODO行を解析
- */
-function parseTodoLine(line: string): ParsedTodo | null {
-  // 行頭の記号や番号を除去
-  const cleanLine = line.replace(/^[-•*\d\.\s]+/, '').trim();
-  if (!cleanLine) return null;
-
-  // 時間情報を抽出（例: "30分"、"1時間"、"1.5時間"）
-  const timeMatch = cleanLine.match(/(\d+(?:\.\d+)?)\s*(分|時間|h|hour)/);
-  let studyTime = 1; // デフォルト1時間
-  let taskText = cleanLine;
-
-  if (timeMatch) {
-    const timeValue = parseFloat(timeMatch[1]);
-    const timeUnit = timeMatch[2];
-
-    if (timeUnit === '分') {
-      studyTime = timeValue / 60; // 分を時間に変換
-    } else if (timeUnit === '時間' || timeUnit === 'h' || timeUnit === 'hour') {
-      studyTime = timeValue;
-    }
-
-    // 時間情報を除去してタスクテキストを取得
-    taskText = cleanLine.replace(timeMatch[0], '').trim();
-  }
-
-  // 優先度を抽出（例: "優先度: 高"、"Priority: 1"）
-  const priorityMatch = taskText.match(/優先度[：:]\s*(高|中|低|1|2|3)/);
-  let priority: number | undefined;
-  if (priorityMatch) {
-    const priorityText = priorityMatch[1];
-    if (priorityText === '高' || priorityText === '1') {
-      priority = 1;
-    } else if (priorityText === '中' || priorityText === '2') {
-      priority = 2;
-    } else if (priorityText === '低' || priorityText === '3') {
-      priority = 3;
-    }
-    taskText = taskText.replace(priorityMatch[0], '').trim();
-  }
-
-  // 目標情報を抽出（例: "目標: リスニング力向上"）
-  const goalMatch = taskText.match(/目標[：:]\s*([^、。]+)/);
-  let goal: string | undefined;
-  if (goalMatch) {
-    goal = goalMatch[1].trim();
-    taskText = taskText.replace(goalMatch[0], '').trim();
-  }
-
-  return {
-    task: taskText,
-    study_time: studyTime,
-    goal,
-    priority
-  };
 }
 
 /**

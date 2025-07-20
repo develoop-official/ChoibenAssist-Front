@@ -19,7 +19,7 @@ export default function TodoEditPage() {
   const [formData, setFormData] = useState({
     task: "",
     due_date: "",
-    study_time: 1,
+    study_time: 60,
     priority: 3,
     goal: "",
     notes: ""
@@ -44,7 +44,7 @@ export default function TodoEditPage() {
           setFormData({
             task: data.task,
             due_date: data.due_date || "",
-            study_time: data.study_time || 1,
+            study_time: data.study_time || 60,
             priority: data.priority || 3,
             goal: data.goal || "",
             notes: data.notes || ""

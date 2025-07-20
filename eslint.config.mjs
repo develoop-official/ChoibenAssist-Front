@@ -62,7 +62,7 @@ const eslintConfig = [
       // 空白・フォーマットルール
       "no-trailing-spaces": "off",
       "eol-last": "off",
-      "no-multiple-empty-lines": ["error", { "max": 2 }],
+      "no-multiple-empty-lines": "off",
       
       // セキュリティルール
       "no-eval": "error",

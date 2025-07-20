@@ -1,33 +1,40 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
-import { css } from '../../styled-system/css';
+import React from 'react';
+
 import { todoCardStyles } from '../styles/components';
+import { css } from '../../styled-system/css';
 
 interface TodoItem {
   id: string;
   task: string;
   status: string;
   created_at: string;
+  study_time?: number;
+  goal?: string;
 }
 
 interface TodoCardProps {
   todo: TodoItem;
   onComplete?: (todoId: string) => void;
+  onDelete?: (todoId: string) => void;
   completing?: boolean;
   completed?: boolean;
   showDetails?: boolean;
   linkPrefix?: string;
+  deletingTodoId?: string | null; // 追加
 }
 
 export default function TodoCard({
   todo,
   onComplete,
+  onDelete,
   completing = false,
   completed = false,
   showDetails = true,
-  linkPrefix = '/todoList'
+  linkPrefix = '/todoList',
+  deletingTodoId
 }: TodoCardProps) {
   const getCardStyle = () => {
     if (completed) return todoCardStyles.completing;
@@ -60,66 +67,102 @@ export default function TodoCard({
       
       <div className={css({
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: showDetails ? 'center' : 'flex-start',
-        mb: showDetails ? '2' : '0',
-        gap: '2'
+        flexDirection: 'column',
+        gap: '3'
       })}>
-        <Link href={`${linkPrefix}/${todo.id}`} className={todoCardStyles.link}>
-          <div className={css({
-            display: 'flex',
-            alignItems: 'center',
-            gap: '2',
-            flex: '1'
-          })}>
-            {!showDetails && (
-              <div className={css({
-                w: '4',
-                h: '4',
-                rounded: 'full',
-                bg: todo.status === 'completed' ? 'success.500' : 'primary.300'
-              })} />
-            )}
+        {/* タイトルとアクションボタン */}
+        <div className={css({
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: '2'
+        })}>
+          <Link href={`${linkPrefix}/${todo.id}`} className={todoCardStyles.link}>
             <h3 className={css({
               fontSize: showDetails ? 'lg' : 'sm',
               fontWeight: 'bold',
               color: !showDetails && todo.status === 'completed' ? 'success.700' : 'primary.800',
               cursor: 'pointer',
-              textDecoration: !showDetails && todo.status === 'completed' ? 'line-through' : 'none'
+              textDecoration: !showDetails && todo.status === 'completed' ? 'line-through' : 'none',
+              lineHeight: '1.4'
             })}>
               {todo.task}
             </h3>
-          </div>
-        </Link>
-        
-        <div className={css({
-          display: 'flex',
-          alignItems: 'center',
-          gap: '2'
-        })}>
-          {showDetails && (
-            <span className={getStatusStyle()}>
-              {todo.status === 'completed' ? '完了' : '未完了'}
-            </span>
-          )}
+          </Link>
           
-          {todo.status !== 'completed' && onComplete && (
-            <button
-              onClick={() => onComplete(todo.id)}
-              disabled={completing}
-              className={todoCardStyles.completeButton}
-            >
-              {completing ? '完了中...' : '完了'}
-            </button>
-          )}
+          <div className={css({
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2'
+          })}>
+            {showDetails && (
+              <span className={getStatusStyle()}>
+                {todo.status === 'completed' ? '完了' : '未完了'}
+              </span>
+            )}
+            
+            {todo.status !== 'completed' && onComplete && (
+              <button
+                onClick={() => onComplete(todo.id)}
+                disabled={completing}
+                className={todoCardStyles.completeButton}
+              >
+                {completing ? '完了中...' : '完了'}
+              </button>
+            )}
+
+            {onDelete && (
+              <button
+                onClick={() => onDelete(todo.id)}
+                disabled={completing || deletingTodoId === todo.id}
+                className={css({
+                  px: '2',
+                  py: '1',
+                  bg: 'red.500',
+                  color: 'white',
+                  rounded: 'sm',
+                  fontSize: 'xs',
+                  fontWeight: 'medium',
+                  transition: 'all 0.2s',
+                  cursor: 'pointer',
+                  _hover: { bg: 'red.600' },
+                  _disabled: { opacity: 0.6, cursor: 'not-allowed' }
+                })}
+              >
+                {deletingTodoId === todo.id ? '削除中...' : '削除'}
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* 詳細情報 */}
+        {showDetails && (
+          <div className={css({
+            spaceY: '2'
+          })}>
+            {todo.goal && (
+              <div className={css({
+                fontSize: 'sm',
+                color: 'gray.600',
+                lineHeight: '1.4'
+              })}>
+                🎯 {todo.goal}
+              </div>
+            )}
+            
+            <div className={css({
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              fontSize: 'sm',
+              color: 'gray.500'
+            })}>
+              <span>⏱️ {todo.study_time || 0}分</span>
+              <span>{new Date(todo.created_at).toLocaleDateString('ja-JP')}</span>
+            </div>
+          </div>
+        )}
       </div>
-      
-      {showDetails && (
-        <div className={todoCardStyles.date}>
-          {new Date(todo.created_at).toLocaleDateString('ja-JP')}
-        </div>
-      )}
     </div>
   );
 }
