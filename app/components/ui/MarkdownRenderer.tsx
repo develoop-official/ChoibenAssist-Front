@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -12,6 +13,32 @@ interface MarkdownRendererProps {
 }
 
 export default function MarkdownRenderer({ content, className, onHashtagClick }: MarkdownRendererProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // コンポーネントのアンマウント時にクリーンアップ
+  useEffect(() => {
+    return () => {
+      // コンポーネントがアンマウントされる際のクリーンアップ
+      try {
+        if (containerRef.current) {
+          // イベントリスナーを削除
+          const elements = containerRef.current.querySelectorAll('[data-hashtag]');
+          elements.forEach(element => {
+            element.removeEventListener('click', () => {});
+          });
+        }
+      } catch (error) {
+        // エラーが発生してもアプリケーションをクラッシュさせない
+        console.warn('MarkdownRenderer cleanup error:', error);
+      }
+    };
+  }, []);
+
+  // コンテンツが空の場合は何も表示しない
+  if (!content || typeof content !== 'string') {
+    return null;
+  }
+
   const markdownStyles = css({
     '& p': {
       mb: '2',
@@ -107,7 +134,12 @@ export default function MarkdownRenderer({ content, className, onHashtagClick }:
         return (
           <span
             key={index}
-            onClick={() => onHashtagClick?.(part)}
+            data-hashtag={part}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onHashtagClick?.(part);
+            }}
             className={css({
               display: 'inline-block',
               bg: 'blue.100',
@@ -147,13 +179,22 @@ export default function MarkdownRenderer({ content, className, onHashtagClick }:
   };
 
   return (
-    <div className={`${markdownStyles} ${className || ''}`}>
-      <ReactMarkdown 
-        remarkPlugins={[remarkGfm]}
-        components={components}
-      >
-        {content}
-      </ReactMarkdown>
+    <div ref={containerRef} className={`${markdownStyles} ${className || ''}`}>
+      {(() => {
+        try {
+          return (
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={components}
+            >
+              {content}
+            </ReactMarkdown>
+          );
+        } catch (error) {
+          console.warn('ReactMarkdown error:', error);
+          return <div className={css({ color: 'gray.500' })}>{content}</div>;
+        }
+      })()}
     </div>
   );
 }
