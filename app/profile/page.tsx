@@ -130,26 +130,21 @@ export default function ProfilePage() {
     <main className={css({
       bg: 'primary.50',
       minH: '100vh',
-      py: '8',
-      px: '4',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
+      py: { base: '4', md: '8' },
+      px: { base: '2', md: '4' }
     })}>
       <div className={css({
         maxW: '6xl',
         w: 'full',
-        mx: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '8'
+        mx: 'auto'
       })}>
 
         {error && (
           <div className={css({
             w: 'full',
-            maxW: '4xl'
+            maxW: '4xl',
+            mx: 'auto',
+            mb: '6'
           })}>
             <ErrorMessage message={error} />
           </div>
@@ -169,42 +164,32 @@ export default function ProfilePage() {
           <div className={css({
             w: 'full',
             maxW: '4xl',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8'
+            mx: 'auto',
+            spaceY: { base: '6', md: '8' }
           })}>
-            {/* プロフィール情報と最近の投稿 */}
-            <div className={css({
-              display: 'grid',
-              gridTemplateColumns: { base: '1fr', lg: '1fr 1fr' },
-              gap: '8',
-              w: 'full'
-            })}>
-              {/* 左側：プロフィールカード */}
-              {user && profile && (
-                <div className={css({
-                  display: 'flex',
-                  justifyContent: 'center'
-                })}>
-                  <ProfileCard 
-                    profile={profile}
-                    user={user}
-                    onProfileUpdate={handleProfileUpdate}
-                  />
-                </div>
-              )}
+            {/* プロフィールカード */}
+            {user && profile && (
+              <div className={css({
+                w: 'full',
+                justifyContent: 'center',
+                alignItems: 'center'
+              })}>
+                <ProfileCard 
+                  profile={profile}
+                  user={user}
+                  onProfileUpdate={handleProfileUpdate}
+                />
+              </div>
+            )}
 
-              {/* 右側：最近の学習投稿 */}
-              {user && (
-                <div className={css({
-                  display: 'flex',
-                  justifyContent: 'center'
-                })}>
-                  <StudyPosts userId={user.id} limit={5} />
-                </div>
-              )}
-            </div>
+            {/* 最近の学習投稿 */}
+            {user && (
+              <div className={css({
+                w: 'full'
+              })}>
+                <StudyPosts userId={user.id} limit={5} />
+              </div>
+            )}
 
             {/* 学習アクティビティヒートマップ */}
             {user && (
