@@ -388,8 +388,6 @@ function TimelineContent() {
           {/* 投稿フォーム */}
           <TimelinePostForm 
             onPostCreated={handlePostCreated}
-            onPostUpdated={handlePostUpdated}
-            onPostDeleted={handlePostDeleted}
           />
 
           {/* 投稿一覧 */}
