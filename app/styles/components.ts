@@ -516,9 +516,9 @@ export const aiTodoSuggestionStyles = {
   resultContainer: css({
     mt: '4',
     p: '4',
-    bg: 'success.50',
+    bg: 'primary.50',
     border: '1px solid',
-    borderColor: 'success.200',
+    borderColor: 'primary.200',
     rounded: 'md'
   }),
 
@@ -532,7 +532,7 @@ export const aiTodoSuggestionStyles = {
   resultTitle: css({
     fontSize: 'lg',
     fontWeight: 'bold',
-    color: 'success.800'
+    color: 'primary.800'
   }),
 
   actionButtons: css({
@@ -568,14 +568,14 @@ export const aiTodoSuggestionStyles = {
     bg: 'white',
     rounded: 'md',
     border: '1px solid',
-    borderColor: 'success.200'
+    borderColor: 'primary.200'
   }),
 
   statsContent: css({
     display: 'flex',
     justifyContent: 'space-between',
     fontSize: 'sm',
-    color: 'success.700'
+    color: 'primary.700'
   }),
 
   sectionsContainer: css({
@@ -586,16 +586,16 @@ export const aiTodoSuggestionStyles = {
 
   section: css({
     border: '1px solid',
-    borderColor: 'success.200',
+    borderColor: 'primary.200',
     rounded: 'md',
     overflow: 'hidden'
   }),
 
   sectionHeader: css({
     p: '3',
-    bg: 'success.100',
+    bg: 'primary.100',
     borderBottom: '1px solid',
-    borderColor: 'success.200',
+    borderColor: 'primary.200',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -605,7 +605,7 @@ export const aiTodoSuggestionStyles = {
   sectionTitle: css({
     fontSize: 'md',
     fontWeight: 'bold',
-    color: 'success.800'
+    color: 'primary.800'
   }),
 
   sectionInfo: css({
@@ -616,12 +616,12 @@ export const aiTodoSuggestionStyles = {
 
   sectionCount: css({
     fontSize: 'xs',
-    color: 'success.600'
+    color: 'primary.600'
   }),
 
   sectionArrow: css({
     fontSize: 'lg',
-    color: 'success.600',
+    color: 'primary.600',
     transition: 'transform 0.2s'
   }),
 
@@ -642,19 +642,19 @@ export const aiTodoSuggestionStyles = {
   }),
 
   todoItemSelected: css({
-    bg: 'success.50',
+    bg: 'primary.50',
     border: '1px solid',
-    borderColor: 'success.200'
+    borderColor: 'primary.200'
   }),
 
   todoItemHover: css({
-    _hover: { bg: 'success.50' }
+    _hover: { bg: 'primary.50' }
   }),
 
   todoCheckbox: css({
     w: '4',
     h: '4',
-    accentColor: 'success.600',
+    accentColor: 'primary.600',
     cursor: 'pointer'
   }),
 
@@ -695,34 +695,34 @@ export const aiTodoSuggestionStyles = {
     mt: '4',
     pt: '3',
     borderTop: '1px solid',
-    borderColor: 'success.200'
+    borderColor: 'primary.200'
   }),
 
   addButton: css({
     px: '4',
     py: '2',
-    bg: 'success.600',
+    bg: 'primary.600',
     color: 'white',
     rounded: 'md',
     fontSize: 'sm',
     fontWeight: 'medium',
     transition: 'all 0.2s',
     cursor: 'pointer',
-    _hover: { bg: 'success.700' },
+    _hover: { bg: 'primary.700' },
     _disabled: { opacity: '0.5', cursor: 'not-allowed' }
   }),
 
   addAllButton: css({
     px: '4',
     py: '2',
-    bg: 'blue.600',
+    bg: 'primary.600',
     color: 'white',
     rounded: 'md',
     fontSize: 'sm',
     fontWeight: 'medium',
     transition: 'all 0.2s',
     cursor: 'pointer',
-    _hover: { bg: 'blue.700' },
+    _hover: { bg: 'primary.700' },
     _disabled: { opacity: '0.5', cursor: 'not-allowed' }
   }),
 

@@ -17,6 +17,7 @@ interface UserProfile {
   icon_url?: string;
   bio?: string;
   scrapbox_project_name?: string;
+  target_study_time?: number;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +28,7 @@ interface FormData {
   icon_url: string;
   bio: string;
   scrapbox_project_name: string;
+  target_study_time: number;
 }
 
 interface User {
@@ -49,7 +51,8 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
     full_name: profile?.full_name || '',
     icon_url: profile?.icon_url || '',
     bio: profile?.bio || '',
-    scrapbox_project_name: profile?.scrapbox_project_name || ''
+    scrapbox_project_name: profile?.scrapbox_project_name || '',
+    target_study_time: profile?.target_study_time || 0
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,6 +75,7 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
           icon_url: formData.icon_url,
           bio: formData.bio,
           scrapbox_project_name: formData.scrapbox_project_name,
+          target_study_time: formData.target_study_time,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -85,6 +89,7 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
         icon_url: formData.icon_url,
         bio: formData.bio,
         scrapbox_project_name: formData.scrapbox_project_name,
+        target_study_time: formData.target_study_time,
         updated_at: new Date().toISOString()
       };
 
@@ -105,7 +110,8 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
         full_name: profile.full_name || '',
         icon_url: profile.icon_url || '',
         bio: profile.bio || '',
-        scrapbox_project_name: profile.scrapbox_project_name || ''
+        scrapbox_project_name: profile.scrapbox_project_name || '',
+        target_study_time: profile.target_study_time || 0
       });
     }
     setEditMode(false);
@@ -310,11 +316,31 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
                   fontSize: 'sm',
                   fontWeight: 'medium',
                   border: '1px solid',
-                  borderColor: 'green.200'
+                  borderColor: 'green.200',
+                  mb: '2'
                 })}>
                   📚 Scrapbox: {profile.scrapbox_project_name}
                 </div>
               )}
+
+              {/* 目標勉強時間 */}
+              <div className={css({
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '2',
+                bg: 'blue.50',
+                color: 'blue.700',
+                px: '3',
+                py: '1',
+                rounded: 'full',
+                fontSize: 'sm',
+                fontWeight: 'medium',
+                border: '1px solid',
+                borderColor: 'blue.200',
+                mb: '2'
+              })}>
+                ⏰ 目標勉強時間: {Math.floor((profile.target_study_time || 0) / 60)}時間{(profile.target_study_time || 0) % 60}分
+              </div>
 
               <div className={css({
                 display: 'flex',
@@ -467,6 +493,29 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
                   mt: '1'
                 })}>
                   設定するとTODO提案機能でScrapboxの情報を活用できます
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="target_study_time_input" className={formStyles.label}>
+                  1日の目標勉強時間（分）
+                </label>
+                <input
+                  id="target_study_time_input"
+                  type="number"
+                  min="0"
+                  step="15"
+                  placeholder="例: 120（2時間）"
+                  value={formData.target_study_time}
+                  onChange={(e) => setFormData(prev => ({ ...prev, target_study_time: parseInt(e.target.value) || 0 }))}
+                  className={formStyles.input}
+                />
+                <p className={css({
+                  fontSize: 'xs',
+                  color: 'gray.500',
+                  mt: '1'
+                })}>
+                  1日の目標勉強時間を分単位で設定してください（例: 120分 = 2時間）
                 </p>
               </div>
 
