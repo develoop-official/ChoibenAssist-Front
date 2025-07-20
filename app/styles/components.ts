@@ -462,3 +462,267 @@ export const followButtonStyles = {
     fontSize: 'xs'
   })
 };
+
+// AI TODO Suggestion styles
+export const aiTodoSuggestionStyles = {
+  container: css({
+    spaceY: '4'
+  }),
+
+  modeToggle: css({
+    display: 'flex',
+    gap: '2',
+    mb: '4'
+  }),
+
+  modeButton: css({
+    px: '3',
+    py: '2',
+    rounded: 'md',
+    fontSize: 'sm',
+    fontWeight: 'medium',
+    transition: 'all 0.2s',
+    cursor: 'pointer'
+  }),
+
+  modeButtonActive: css({
+    bg: 'primary.600',
+    color: 'white',
+    _hover: { bg: 'primary.700' }
+  }),
+
+  modeButtonInactive: css({
+    bg: 'gray.100',
+    color: 'gray.700',
+    _hover: { bg: 'gray.200' }
+  }),
+
+  form: css({
+    spaceY: '4',
+    p: '4',
+    bg: 'gray.50',
+    rounded: 'md',
+    border: '1px solid',
+    borderColor: 'gray.200'
+  }),
+
+  formTitle: css({
+    fontSize: 'lg',
+    fontWeight: 'bold',
+    color: 'gray.800',
+    mb: '3'
+  }),
+
+  resultContainer: css({
+    mt: '4',
+    p: '4',
+    bg: 'success.50',
+    border: '1px solid',
+    borderColor: 'success.200',
+    rounded: 'md'
+  }),
+
+  resultHeader: css({
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    mb: '3'
+  }),
+
+  resultTitle: css({
+    fontSize: 'lg',
+    fontWeight: 'bold',
+    color: 'success.800'
+  }),
+
+  actionButtons: css({
+    display: 'flex',
+    gap: '2'
+  }),
+
+  actionButton: css({
+    px: '2',
+    py: '1',
+    rounded: 'sm',
+    fontSize: 'xs',
+    fontWeight: 'medium',
+    transition: 'all 0.2s',
+    cursor: 'pointer'
+  }),
+
+  selectAllButton: css({
+    bg: 'blue.100',
+    color: 'blue.700',
+    _hover: { bg: 'blue.200' }
+  }),
+
+  deselectAllButton: css({
+    bg: 'gray.100',
+    color: 'gray.700',
+    _hover: { bg: 'gray.200' }
+  }),
+
+  stats: css({
+    mb: '4',
+    p: '3',
+    bg: 'white',
+    rounded: 'md',
+    border: '1px solid',
+    borderColor: 'success.200'
+  }),
+
+  statsContent: css({
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: 'sm',
+    color: 'success.700'
+  }),
+
+  sectionsContainer: css({
+    spaceY: '4',
+    maxH: '96',
+    overflowY: 'auto'
+  }),
+
+  section: css({
+    border: '1px solid',
+    borderColor: 'success.200',
+    rounded: 'md',
+    overflow: 'hidden'
+  }),
+
+  sectionHeader: css({
+    p: '3',
+    bg: 'success.100',
+    borderBottom: '1px solid',
+    borderColor: 'success.200',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    cursor: 'pointer'
+  }),
+
+  sectionTitle: css({
+    fontSize: 'md',
+    fontWeight: 'bold',
+    color: 'success.800'
+  }),
+
+  sectionInfo: css({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '2'
+  }),
+
+  sectionCount: css({
+    fontSize: 'xs',
+    color: 'success.600'
+  }),
+
+  sectionArrow: css({
+    fontSize: 'lg',
+    color: 'success.600',
+    transition: 'transform 0.2s'
+  }),
+
+  sectionContent: css({
+    p: '3',
+    bg: 'white',
+    spaceY: '2'
+  }),
+
+  todoItem: css({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3',
+    p: '2',
+    rounded: 'md',
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  }),
+
+  todoItemSelected: css({
+    bg: 'success.50',
+    border: '1px solid',
+    borderColor: 'success.200'
+  }),
+
+  todoItemHover: css({
+    _hover: { bg: 'success.50' }
+  }),
+
+  todoCheckbox: css({
+    w: '4',
+    h: '4',
+    accentColor: 'success.600',
+    cursor: 'pointer'
+  }),
+
+  todoContent: css({
+    flex: '1',
+    minW: '0'
+  }),
+
+  todoTask: css({
+    fontSize: 'sm',
+    color: 'gray.800',
+    fontWeight: 'medium'
+  }),
+
+  todoMeta: css({
+    display: 'flex',
+    gap: '3',
+    fontSize: 'xs',
+    color: 'gray.500',
+    mt: '1'
+  }),
+
+  todoPriority: css({
+    color: 'red.600'
+  }),
+
+  todoPriorityMedium: css({
+    color: 'orange.600'
+  }),
+
+  todoPriorityLow: css({
+    color: 'blue.600'
+  }),
+
+  bottomActions: css({
+    display: 'flex',
+    gap: '3',
+    mt: '4',
+    pt: '3',
+    borderTop: '1px solid',
+    borderColor: 'success.200'
+  }),
+
+  addButton: css({
+    px: '4',
+    py: '2',
+    bg: 'success.600',
+    color: 'white',
+    rounded: 'md',
+    fontSize: 'sm',
+    fontWeight: 'medium',
+    transition: 'all 0.2s',
+    cursor: 'pointer',
+    _hover: { bg: 'success.700' },
+    _disabled: { opacity: '0.5', cursor: 'not-allowed' }
+  }),
+
+  addAllButton: css({
+    px: '4',
+    py: '2',
+    bg: 'blue.600',
+    color: 'white',
+    rounded: 'md',
+    fontSize: 'sm',
+    fontWeight: 'medium',
+    transition: 'all 0.2s',
+    cursor: 'pointer',
+    _hover: { bg: 'blue.700' },
+    _disabled: { opacity: '0.5', cursor: 'not-allowed' }
+  })
+};

@@ -38,6 +38,7 @@ export async function generateTodo(projectName: string, timeAvailable: number, d
     if (response.ok) {
       const data = await response.json();
       console.warn('✅ Scrapbox TODO API成功:', endpoint);
+      console.log('📝 Scrapbox TODO API生レスポンス:', JSON.stringify(data, null, 2));
       return {
         success: true,
         content: data.content,
@@ -105,6 +106,7 @@ export async function generateGeneralTodo(timeAvailable: number, recentProgress?
     if (response.ok) {
       const data = await response.json();
       console.warn('✅ 一般TODO API成功:', endpoint);
+      console.log('📝 一般TODO API生レスポンス:', JSON.stringify(data, null, 2));
       return {
         success: true,
         content: data.content,
