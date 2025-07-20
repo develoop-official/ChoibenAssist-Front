@@ -16,8 +16,6 @@ import { sectionStyles } from './styles/components';
 import { CreateTodoItem } from './types/todo-item';
 import { supabase } from '../lib/supabase';
 
-
-
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -26,6 +24,7 @@ export default function DashboardPage() {
 
   const [completingTodoId, setCompletingTodoId] = useState<string | null>(null);
   const [completedTodoId, setCompletedTodoId] = useState<string | null>(null);
+  const [deletingTodoId, setDeletingTodoId] = useState<string | null>(null);
 
   // 未認証の場合はログインページにリダイレクト
   useEffect(() => {
@@ -129,6 +128,31 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteTodo = async (todoId: string) => {
+    try {
+      setDeletingTodoId(todoId);
+      if (!supabase) {
+        throw new Error('Supabase client is not initialized');
+      }
+      
+      const { error } = await supabase
+        .from('todo_items')
+        .delete()
+        .eq('id', todoId);
+
+      if (error) {
+        throw error;
+      }
+
+      // 成功時は何もしない（useTodosフックが自動的に更新する）
+    } catch (error) {
+      console.error('TODO削除エラー:', error);
+      alert('TODOの削除に失敗しました');
+    } finally {
+      setDeletingTodoId(null);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className={css({
@@ -157,7 +181,6 @@ export default function DashboardPage() {
         maxW: '4xl',
         mx: 'auto'
       })}>
-
 
         {/* 統計カード */}
         <div className={css({
@@ -214,9 +237,11 @@ export default function DashboardPage() {
                     key={todo.id}
                     todo={todo}
                     onComplete={handleCompleteTodo}
+                    onDelete={handleDeleteTodo}
                     completing={completingTodoId === todo.id}
                     completed={completedTodoId === todo.id}
                     showDetails={true}
+                    deletingTodoId={deletingTodoId}
                   />
                 ))}
               </div>

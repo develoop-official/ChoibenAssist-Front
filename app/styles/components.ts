@@ -724,5 +724,18 @@ export const aiTodoSuggestionStyles = {
     cursor: 'pointer',
     _hover: { bg: 'blue.700' },
     _disabled: { opacity: '0.5', cursor: 'not-allowed' }
+  }),
+
+  cancelButton: css({
+    px: '4',
+    py: '2',
+    bg: 'gray.500',
+    color: 'white',
+    rounded: 'md',
+    fontSize: 'sm',
+    fontWeight: 'medium',
+    _hover: { bg: 'gray.600' },
+    _disabled: { opacity: 0.6, cursor: 'not-allowed' },
+    transition: 'all 0.2s'
   })
 };

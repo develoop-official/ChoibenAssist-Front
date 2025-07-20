@@ -5,14 +5,15 @@ import React, { useState } from 'react';
 import { CreateTodoItem } from '../types/todo-item';
 import { parseMarkdownTodos, flattenTodoSections, convertToCreateTodoItem, ParsedTodo } from '../utils/todo-parser';
 import { aiTodoSuggestionStyles } from '../styles/components';
+import { css } from '../../styled-system/css';
 
 interface AiTodoSuggestionResultProps {
   content: string;
   onAddTodos: (_todoItems: CreateTodoItem[]) => Promise<void>;
+  onCancel: () => void; // キャンセル時のコールバックを追加
 }
 
-export default function AiTodoSuggestionResult({ content, onAddTodos }: AiTodoSuggestionResultProps) {
-  const [selectedSections, setSelectedSections] = useState<string[]>([]);
+export default function AiTodoSuggestionResult({ content, onAddTodos, onCancel }: AiTodoSuggestionResultProps) {
   const [selectedTodos, setSelectedTodos] = useState<string[]>([]);
   const [addingTodos, setAddingTodos] = useState(false);
 
@@ -20,23 +21,18 @@ export default function AiTodoSuggestionResult({ content, onAddTodos }: AiTodoSu
   const sections = parseMarkdownTodos(content);
   const allTodos = flattenTodoSections(sections);
 
-  // 初期化時にすべてのセクションを展開
+  // 初期化時にすべてのTODOを選択
   React.useEffect(() => {
-    if (sections.length > 0 && selectedSections.length === 0) {
-      setSelectedSections(sections.map(section => section.title));
+    if (allTodos.length > 0 && selectedTodos.length === 0) {
+      const allTodoIds: string[] = [];
+      sections.forEach((section, sectionIndex) => {
+        section.todos.forEach((todo, todoIndex) => {
+          allTodoIds.push(`${sectionIndex}-${todoIndex}`);
+        });
+      });
+      setSelectedTodos(allTodoIds);
     }
-  }, [sections, selectedSections.length]);
-
-  // セクション選択の切り替え
-  const toggleSection = (sectionTitle: string) => {
-    setSelectedSections(prev => {
-      if (prev.includes(sectionTitle)) {
-        return prev.filter(title => title !== sectionTitle);
-      } else {
-        return [...prev, sectionTitle];
-      }
-    });
-  };
+  }, [allTodos.length, selectedTodos.length, sections]);
 
   // 個別TODO選択の切り替え
   const toggleTodo = (todoId: string) => {
@@ -47,21 +43,6 @@ export default function AiTodoSuggestionResult({ content, onAddTodos }: AiTodoSu
         return [...prev, todoId];
       }
     });
-  };
-
-  // 全選択/全解除
-  const selectAll = () => {
-    const allTodoIds: string[] = [];
-    sections.forEach((section, sectionIndex) => {
-      section.todos.forEach((todo, todoIndex) => {
-        allTodoIds.push(`${sectionIndex}-${todoIndex}`);
-      });
-    });
-    setSelectedTodos(allTodoIds);
-  };
-
-  const deselectAll = () => {
-    setSelectedTodos([]);
   };
 
   // 選択されたTODOを追加
@@ -96,6 +77,8 @@ export default function AiTodoSuggestionResult({ content, onAddTodos }: AiTodoSu
       await onAddTodos(createTodoItems);
       alert(`${selectedTodoItems.length}個のTODOを追加しました！`);
       setSelectedTodos([]);
+      // 追加後にフォームに戻る
+      onCancel();
     } catch (error) {
       console.error('TODO追加エラー:', error);
       alert('TODOの追加に失敗しました');
@@ -103,130 +86,59 @@ export default function AiTodoSuggestionResult({ content, onAddTodos }: AiTodoSu
       setAddingTodos(false);
     }
   };
-
-  // 全TODOを追加
-  const handleAddAllTodos = async () => {
-    try {
-      setAddingTodos(true);
-      const createTodoItems = allTodos.map(convertToCreateTodoItem);
-      await onAddTodos(createTodoItems);
-      alert(`${allTodos.length}個のTODOを追加しました！`);
-    } catch (error) {
-      console.error('TODO追加エラー:', error);
-      alert('TODOの追加に失敗しました');
-    } finally {
-      setAddingTodos(false);
-    }
-  };
-
-  const totalTime = allTodos.reduce((sum, todo) => sum + todo.study_time, 0);
 
   return (
     <div className={aiTodoSuggestionStyles.resultContainer}>
-      <div className={aiTodoSuggestionStyles.resultHeader}>
-        <h3 className={aiTodoSuggestionStyles.resultTitle}>
-          🤖 AI提案のTODOリスト
-        </h3>
-        <div className={aiTodoSuggestionStyles.actionButtons}>
-          <button
-            onClick={selectAll}
-            className={`${aiTodoSuggestionStyles.actionButton} ${aiTodoSuggestionStyles.selectAllButton}`}
-          >
-            全選択
-          </button>
-          <button
-            onClick={deselectAll}
-            className={`${aiTodoSuggestionStyles.actionButton} ${aiTodoSuggestionStyles.deselectAllButton}`}
-          >
-            全解除
-          </button>
-        </div>
-      </div>
-
-      {/* 統計情報 */}
-      <div className={aiTodoSuggestionStyles.stats}>
-        <div className={aiTodoSuggestionStyles.statsContent}>
-          <span>セクション数: {sections.length}</span>
-          <span>TODO数: {allTodos.length}</span>
-          <span>総学習時間: {totalTime.toFixed(1)}時間</span>
-        </div>
-      </div>
-
-      {/* セクション別表示 */}
+      {/* TODOリスト表示 */}
       <div className={aiTodoSuggestionStyles.sectionsContainer}>
         {sections.map((section, sectionIndex) => (
           <div key={sectionIndex} className={aiTodoSuggestionStyles.section}>
-            {/* セクションヘッダー */}
-            <div 
-              className={aiTodoSuggestionStyles.sectionHeader}
-              onClick={() => toggleSection(section.title)}
-            >
-              <h4 className={aiTodoSuggestionStyles.sectionTitle}>
-                📋 {section.title}
-              </h4>
-              <div className={aiTodoSuggestionStyles.sectionInfo}>
-                <span className={aiTodoSuggestionStyles.sectionCount}>
-                  {section.todos.length}個 / {section.totalTime.toFixed(1)}時間
-                </span>
-                <span 
-                  className={aiTodoSuggestionStyles.sectionArrow}
-                  style={{
-                    transform: selectedSections.includes(section.title) ? 'rotate(90deg)' : 'rotate(0deg)'
-                  }}
-                >
-                  ▶
-                </span>
-              </div>
-            </div>
-
             {/* セクション内容 */}
-            {selectedSections.includes(section.title) && (
-              <div className={aiTodoSuggestionStyles.sectionContent}>
-                {section.todos.map((todo, todoIndex) => {
-                  const todoId = `${sectionIndex}-${todoIndex}`;
-                  const isSelected = selectedTodos.includes(todoId);
+            <div className={aiTodoSuggestionStyles.sectionContent}>
+              {section.todos.map((todo, todoIndex) => {
+                const todoId = `${sectionIndex}-${todoIndex}`;
+                const isSelected = selectedTodos.includes(todoId);
 
-                  return (
-                    <div 
-                      key={todoIndex} 
-                      className={`${aiTodoSuggestionStyles.todoItem} ${
-                        isSelected ? aiTodoSuggestionStyles.todoItemSelected : ''
-                      } ${aiTodoSuggestionStyles.todoItemHover}`}
-                      onClick={() => toggleTodo(todoId)}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          toggleTodo(todoId);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className={aiTodoSuggestionStyles.todoCheckbox}
-                      />
-                      <div className={aiTodoSuggestionStyles.todoContent}>
-                        <div className={aiTodoSuggestionStyles.todoTask}>
-                          {todo.task}
-                        </div>
-                        <div className={aiTodoSuggestionStyles.todoMeta}>
-                          <span>⏱️ {todo.study_time}分</span>
-                          {todo.goal && <span>🎯 {todo.goal}</span>}
-                          {todo.priority && (
-                            <span className={
-                              todo.priority === 1 ? aiTodoSuggestionStyles.todoPriority :
-                              todo.priority === 2 ? aiTodoSuggestionStyles.todoPriorityMedium :
-                              aiTodoSuggestionStyles.todoPriorityLow
-                            }>
-                              ⭐ 優先度{todo.priority === 1 ? '高' : todo.priority === 2 ? '中' : '低'}
-                            </span>
-                          )}
-                        </div>
+                return (
+                  <div 
+                    key={todoIndex} 
+                    className={`${aiTodoSuggestionStyles.todoItem} ${
+                      isSelected ? aiTodoSuggestionStyles.todoItemSelected : ''
+                    } ${aiTodoSuggestionStyles.todoItemHover}`}
+                    onClick={() => toggleTodo(todoId)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleTodo(todoId);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className={aiTodoSuggestionStyles.todoCheckbox}
+                    />
+                    <div className={aiTodoSuggestionStyles.todoContent}>
+                      <div className={aiTodoSuggestionStyles.todoTask}>
+                        {todo.task}
+                      </div>
+                      <div className={aiTodoSuggestionStyles.todoMeta}>
+                        <span>⏱️ {todo.study_time}分</span>
+                        {todo.goal && <span>🎯 {todo.goal}</span>}
+                        {todo.priority && (
+                          <span className={
+                            todo.priority === 1 ? aiTodoSuggestionStyles.todoPriority :
+                            todo.priority === 2 ? aiTodoSuggestionStyles.todoPriorityMedium :
+                            aiTodoSuggestionStyles.todoPriorityLow
+                          }>
+                            ⭐ 優先度{todo.priority === 1 ? '高' : todo.priority === 2 ? '中' : '低'}
+                          </span>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ))}
       </div>
@@ -234,18 +146,18 @@ export default function AiTodoSuggestionResult({ content, onAddTodos }: AiTodoSu
       {/* アクションボタン */}
       <div className={aiTodoSuggestionStyles.bottomActions}>
         <button
+          onClick={onCancel}
+          disabled={addingTodos}
+          className={aiTodoSuggestionStyles.cancelButton}
+        >
+          キャンセル
+        </button>
+        <button
           onClick={handleAddSelectedTodos}
           disabled={addingTodos || selectedTodos.length === 0}
           className={aiTodoSuggestionStyles.addButton}
         >
-          {addingTodos ? '追加中...' : `選択した${selectedTodos.length}個を追加`}
-        </button>
-        <button
-          onClick={handleAddAllTodos}
-          disabled={addingTodos}
-          className={aiTodoSuggestionStyles.addAllButton}
-        >
-          {addingTodos ? '追加中...' : `全${allTodos.length}個を追加`}
+          {addingTodos ? '追加中...' : '追加'}
         </button>
       </div>
     </div>

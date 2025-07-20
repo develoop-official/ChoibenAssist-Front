@@ -12,6 +12,7 @@ interface AiTodoSuggestionFormProps {
   onError: (_error: string) => void;
   onLoading: (_loading: boolean) => void;
   scrapboxProjectName?: string;
+  loading: boolean;
 }
 
 interface TodoSuggestionResponse {
@@ -24,7 +25,8 @@ export default function AiTodoSuggestionForm({
   onResult, 
   onError, 
   onLoading, 
-  scrapboxProjectName 
+  scrapboxProjectName,
+  loading
 }: AiTodoSuggestionFormProps) {
   const [useScrapbox, setUseScrapbox] = useState(!!scrapboxProjectName);
 
@@ -106,6 +108,7 @@ export default function AiTodoSuggestionForm({
         <div className={aiTodoSuggestionStyles.modeToggle}>
           <button
             onClick={() => setUseScrapbox(!useScrapbox)}
+            disabled={loading}
             className={`${aiTodoSuggestionStyles.modeButton} ${
               useScrapbox ? aiTodoSuggestionStyles.modeButtonActive : aiTodoSuggestionStyles.modeButtonInactive
             }`}
@@ -128,6 +131,7 @@ export default function AiTodoSuggestionForm({
             type="number"
             min="1"
             max="480"
+            disabled={loading}
             value={useScrapbox ? scrapboxForm.time_available : generalForm.time_available}
             onChange={(e) => {
               const value = parseInt(e.target.value) || 0;
@@ -149,6 +153,7 @@ export default function AiTodoSuggestionForm({
             </label>
             <input
               type="text"
+              disabled={loading}
               value={scrapboxForm.daily_goal}
               onChange={(e) => setScrapboxForm(prev => ({
                 ...prev,
@@ -166,6 +171,7 @@ export default function AiTodoSuggestionForm({
                 最近の進捗
               </label>
               <textarea
+                disabled={loading}
                 value={generalForm.recent_progress}
                 onChange={(e) => setGeneralForm(prev => ({
                   ...prev,
@@ -182,6 +188,7 @@ export default function AiTodoSuggestionForm({
               </label>
               <input
                 type="text"
+                disabled={loading}
                 value={generalForm.weak_areas}
                 onChange={(e) => setGeneralForm(prev => ({
                   ...prev,
@@ -198,6 +205,7 @@ export default function AiTodoSuggestionForm({
               </label>
               <input
                 type="text"
+                disabled={loading}
                 value={generalForm.daily_goal}
                 onChange={(e) => setGeneralForm(prev => ({
                   ...prev,
@@ -212,9 +220,32 @@ export default function AiTodoSuggestionForm({
 
         <button
           type="submit"
-          className={buttonStyles.primary}
+          disabled={loading}
+          className={`${buttonStyles.primary} ${loading ? css({
+            opacity: 0.6,
+            cursor: 'not-allowed'
+          }) : ''}`}
         >
-          TODOを生成
+          {loading ? (
+            <div className={css({
+              display: 'flex',
+              alignItems: 'center',
+              gap: '2'
+            })}>
+              <div className={css({
+                width: '4',
+                height: '4',
+                border: '2px solid',
+                borderColor: 'transparent',
+                borderTopColor: 'currentColor',
+                borderRadius: 'full',
+                animation: 'spin 1s linear infinite'
+              })} />
+              <span>生成中...</span>
+            </div>
+          ) : (
+            'TODOを生成'
+          )}
         </button>
       </form>
     </div>

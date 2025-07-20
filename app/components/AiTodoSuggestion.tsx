@@ -35,6 +35,33 @@ export default function AiTodoSuggestion({ onAddTodos, scrapboxProjectName }: Ai
     setLoading(isLoading);
   };
 
+  // キャンセル時の処理
+  const handleCancel = () => {
+    setResult(null);
+    setError('');
+  };
+
+  // 結果が表示されている場合はフォームを非表示
+  if (result) {
+    return (
+      <div>
+        {/* エラーメッセージ */}
+        {error && (
+          <div className={statusStyles.error}>
+            {error}
+          </div>
+        )}
+
+        {/* 結果表示 */}
+        <AiTodoSuggestionResult
+          content={result.content}
+          onAddTodos={onAddTodos}
+          onCancel={handleCancel}
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <AiTodoSuggestionForm
@@ -42,6 +69,7 @@ export default function AiTodoSuggestion({ onAddTodos, scrapboxProjectName }: Ai
         onError={handleError}
         onLoading={handleLoading}
         scrapboxProjectName={scrapboxProjectName}
+        loading={loading}
       />
 
       {/* エラーメッセージ */}
@@ -49,14 +77,6 @@ export default function AiTodoSuggestion({ onAddTodos, scrapboxProjectName }: Ai
         <div className={statusStyles.error}>
           {error}
         </div>
-      )}
-
-      {/* 結果表示 */}
-      {result && (
-        <AiTodoSuggestionResult
-          content={result.content}
-          onAddTodos={onAddTodos}
-        />
       )}
     </div>
   );
