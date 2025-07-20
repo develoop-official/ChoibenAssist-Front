@@ -217,6 +217,7 @@ export default function PcHeader() {
                     alt="アバター"
                     width={40}
                     height={40}
+                    priority
                     className={css({
                       w: "full",
                       h: "full",
