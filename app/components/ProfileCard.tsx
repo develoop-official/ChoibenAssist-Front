@@ -11,7 +11,6 @@ import LoadingSpinner from './ui/LoadingSpinner';
 import MarkdownRenderer from './ui/MarkdownRenderer';
 
 interface UserProfile {
-  id: string;
   user_id: string;
   username: string;
   full_name?: string;
@@ -245,6 +244,7 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
                   alt="プロフィール画像"
                   width={96}
                   height={96}
+                  priority
                   className={css({
                     w: 'full',
                     h: 'full',
@@ -361,6 +361,7 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
                       alt="プロフィール画像"
                       width={96}
                       height={96}
+                      priority
                       className={css({
                         w: 'full',
                         h: 'full',

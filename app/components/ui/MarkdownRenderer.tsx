@@ -8,9 +8,10 @@ import { css } from '../../../styled-system/css';
 interface MarkdownRendererProps {
   content: string;
   className?: string;
+  onHashtagClick?: (hashtag: string) => void;
 }
 
-export default function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+export default function MarkdownRenderer({ content, className, onHashtagClick }: MarkdownRendererProps) {
   const markdownStyles = css({
     '& p': {
       mb: '2',
@@ -95,9 +96,62 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
     }
   });
 
+  // ハッシュタグを認識して変換する関数
+  const processHashtags = (text: string) => {
+    const hashtagRegex = /#(\w+)/g;
+    const parts = text.split(hashtagRegex);
+    
+    return parts.map((part, index) => {
+      // 奇数インデックスはハッシュタグの内容
+      if (index % 2 === 1) {
+        return (
+          <span
+            key={index}
+            onClick={() => onHashtagClick?.(part)}
+            className={css({
+              display: 'inline-block',
+              bg: 'blue.100',
+              color: 'blue.800',
+              px: '2',
+              py: '1',
+              rounded: 'full',
+              fontSize: 'xs',
+              fontWeight: 'medium',
+              cursor: onHashtagClick ? 'pointer' : 'default',
+              mx: '1',
+              _hover: onHashtagClick ? { bg: 'blue.200' } : {}
+            })}
+          >
+            #{part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  // カスタムレンダラーでハッシュタグを処理
+  const components = {
+    p: ({ children }: any) => {
+      if (typeof children === 'string') {
+        return <p className={css({ mb: '2', lineHeight: 'relaxed' })}>{processHashtags(children)}</p>;
+      }
+      return <p className={css({ mb: '2', lineHeight: 'relaxed' })}>{children}</p>;
+    },
+    text: ({ children }: any) => {
+      if (typeof children === 'string' && children.includes('#')) {
+        return <>{processHashtags(children)}</>;
+      }
+      return children;
+    }
+  };
+
   return (
     <div className={`${markdownStyles} ${className || ''}`}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      <ReactMarkdown 
+        remarkPlugins={[remarkGfm]}
+        components={components}
+      >
         {content}
       </ReactMarkdown>
     </div>

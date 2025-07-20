@@ -2,3 +2,43 @@
 @import "../styled-system/styles.css";
 
 @layer reset, base, tokens, recipes, utilities;
+
+/* カスタムグローバルスタイル */
+body {
+  background-color: #FBFFE4; /* primary.50 */
+  color: #2D6B5D; /* primary.900 */
+}
+
+/* 完了アニメーション */
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* 緑系統の統一カラーリング */
+.primary-bg-light {
+  background-color: #F0F9E8; /* primary.100 */
+}
+
+.primary-bg-medium {
+  background-color: #B3D8A8; /* primary.400 */
+}
+
+.primary-bg-dark {
+  background-color: #3D8D7A; /* primary.800 */
+}

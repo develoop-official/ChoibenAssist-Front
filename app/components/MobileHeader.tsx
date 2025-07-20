@@ -141,6 +141,7 @@ export default function MobileHeader() {
                 alt="アバター"
                 width={32}
                 height={32}
+                priority
                 className={css({
                   w: "full",
                   h: "full",

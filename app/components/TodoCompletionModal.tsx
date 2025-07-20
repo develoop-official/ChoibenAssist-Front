@@ -34,13 +34,13 @@ export default function TodoCompletionModal({
   const generateDefaultContent = (todo: TodoItem) => {
     const hashtags = ['学習完了', 'TODO完了'];
     if (todo.study_time > 0) {
-      hashtags.push(`${todo.study_time}時間学習`);
+      hashtags.push(`${todo.study_time}分学習`);
     }
     if (todo.due_date) {
       hashtags.push('期限達成');
     }
 
-    return `✅ ${todo.task} を完了しました！\n\n学習時間: ${todo.study_time}時間\n${hashtags.map(tag => `#${tag}`).join(' ')}`;
+    return `✅ ${todo.task} を完了しました！\n\n学習時間: ${todo.study_time}分\n${hashtags.map(tag => `#${tag}`).join(' ')}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,7 +161,7 @@ export default function TodoCompletionModal({
             color: 'green.700'
           })}>
             <div><strong>タスク:</strong> {todo.task}</div>
-            <div><strong>学習時間:</strong> {todo.study_time}時間</div>
+                          <div><strong>学習時間:</strong> {todo.study_time}分</div>
             {todo.due_date && (
               <div><strong>期限:</strong> {todo.due_date}</div>
             )}

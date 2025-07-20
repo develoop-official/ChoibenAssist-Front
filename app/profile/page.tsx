@@ -13,7 +13,6 @@ import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 interface UserProfile {
-  id: string;
   user_id: string;
   username: string;
   full_name?: string;
@@ -127,54 +126,93 @@ export default function ProfilePage() {
 
   return (
     <main className={css({
-      bg: 'gray.50',
+      bg: 'primary.50',
       minH: '100vh',
       py: '8',
-      px: '4'
+      px: '4',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     })}>
       <div className={css({
-        maxW: '7xl',
-        mx: 'auto'
+        maxW: '6xl',
+        w: 'full',
+        mx: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '8'
       })}>
 
-        {error && <ErrorMessage message={error} />}
+        {error && (
+          <div className={css({
+            w: 'full',
+            maxW: '4xl'
+          })}>
+            <ErrorMessage message={error} />
+          </div>
+        )}
 
         {loading ? (
           <div className={css({
             display: 'flex',
             justifyContent: 'center',
-            py: '16'
+            alignItems: 'center',
+            py: '16',
+            w: 'full'
           })}>
             <LoadingSpinner />
           </div>
         ) : (
           <div className={css({
-            spaceY: '8'
+            w: 'full',
+            maxW: '4xl',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8'
           })}>
             {/* プロフィール情報と最近の投稿 */}
             <div className={css({
               display: 'grid',
-              gridTemplateColumns: { base: '1fr', lg: '2fr 1fr' },
-              gap: '8'
+              gridTemplateColumns: { base: '1fr', lg: '1fr 1fr' },
+              gap: '8',
+              w: 'full'
             })}>
               {/* 左側：プロフィールカード */}
-              {user && (
-                <ProfileCard 
-                  profile={profile} 
-                  user={user}
-                  onProfileUpdate={handleProfileUpdate}
-                />
+              {user && profile && (
+                <div className={css({
+                  display: 'flex',
+                  justifyContent: 'center'
+                })}>
+                  <ProfileCard 
+                    profile={profile}
+                    user={user}
+                    onProfileUpdate={handleProfileUpdate}
+                  />
+                </div>
               )}
 
               {/* 右側：最近の学習投稿 */}
               {user && (
-                <StudyPosts userId={user.id} limit={5} />
+                <div className={css({
+                  display: 'flex',
+                  justifyContent: 'center'
+                })}>
+                  <StudyPosts userId={user.id} limit={5} />
+                </div>
               )}
             </div>
 
             {/* 学習アクティビティヒートマップ */}
             {user && (
-              <ActivityHeatmap userId={user.id} />
+              <div className={css({
+                w: 'full',
+                display: 'flex',
+                justifyContent: 'center'
+              })}>
+                <ActivityHeatmap userId={user.id} />
+              </div>
             )}
           </div>
         )}

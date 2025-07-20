@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import { supabase } from '../../lib/supabase';
 import { css } from '../../styled-system/css';
-import FollowButton from '../components/FollowButton';
 import HashtagSearch from '../components/HashtagSearch';
-import ShareButton from '../components/ShareButton';
-import TimelineComment from '../components/TimelineComment';
+import TimelinePostCard from '../components/TimelinePostCard';
 import TimelinePostForm from '../components/TimelinePostForm';
 import ErrorMessage from '../components/ui/ErrorMessage';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
@@ -43,13 +42,46 @@ interface UserProfile {
   icon_url?: string;
 }
 
-export default function TimelinePage() {
+function TimelineContent() {
   const { user, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
   const [posts, setPosts] = useState<TodoPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedHashtag, setSelectedHashtag] = useState<string>('');
-  const [showPostForm, setShowPostForm] = useState(false);
+  const [completedTodo, setCompletedTodo] = useState<any>(null);
+  const [showCompletedTodoModal, setShowCompletedTodoModal] = useState(false);
+  const [baseUrl, setBaseUrl] = useState<string>('');
+
+  // クライアントサイドでのみbaseUrlを設定
+  useEffect(() => {
+    setBaseUrl(window.location.origin);
+  }, []);
+
+  // URLパラメータから完了したTODOの情報を取得
+  useEffect(() => {
+    const todoId = searchParams.get('completed_todo');
+    if (todoId) {
+      fetchCompletedTodo(todoId);
+      setShowCompletedTodoModal(true);
+    }
+  }, [searchParams]);
+
+  const fetchCompletedTodo = async (todoId: string) => {
+    try {
+      const { data, error } = await supabase!
+        .from('todo_items')
+        .select('*')
+        .eq('id', todoId)
+        .single();
+      
+      if (!error && data) {
+        setCompletedTodo(data);
+      }
+    } catch (err) {
+      console.error('完了したTODOの取得エラー:', err);
+    }
+  };
 
   const fetchPosts = useCallback(async () => {
     if (!supabase) {
@@ -125,12 +157,28 @@ export default function TimelinePage() {
   const handleLike = async (postId: string) => {
     if (!user) return;
 
-    try {
-      // 現在のいいね状態を確認
-      const currentPost = posts.find(post => post.id === postId);
-      if (!currentPost) return;
+    // 現在のいいね状態を確認
+    const currentPost = posts.find(post => post.id === postId);
+    if (!currentPost) return;
 
-      const isCurrentlyLiked = currentPost.is_liked;
+    const isCurrentlyLiked = currentPost.is_liked;
+    const originalLikesCount = currentPost.likes_count;
+
+    try {
+      // UIを即座に更新（楽観的更新）
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? {
+                ...post,
+                is_liked: !isCurrentlyLiked,
+                likes_count: isCurrentlyLiked
+                  ? (post.likes_count || 0) - 1
+                  : (post.likes_count || 0) + 1
+              }
+            : post
+        )
+      );
 
       if (isCurrentlyLiked) {
         // いいねを削除
@@ -153,17 +201,35 @@ export default function TimelinePage() {
 
         if (error) throw error;
       }
-
-      // 投稿一覧を更新
-      fetchPosts();
     } catch (err) {
       console.error('いいねエラー:', err);
+      // エラーが発生した場合、状態を元に戻す
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? {
+                ...post,
+                is_liked: isCurrentlyLiked,
+                likes_count: originalLikesCount
+              }
+            : post
+        )
+      );
       alert('いいねの操作に失敗しました');
     }
   };
 
   const handlePostCreated = () => {
-    setShowPostForm(false);
+    setShowCompletedTodoModal(false);
+    setCompletedTodo(null);
+    fetchPosts();
+  };
+
+  const handlePostUpdated = () => {
+    fetchPosts();
+  };
+
+  const handlePostDeleted = () => {
     fetchPosts();
   };
 
@@ -171,32 +237,9 @@ export default function TimelinePage() {
     fetchPosts();
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 60) {
-      return `${diffMins}分前`;
-    } else if (diffHours < 24) {
-      return `${diffHours}時間前`;
-    } else {
-      return `${diffDays}日前`;
-    }
-  };
-
-  const getUserDisplayName = (profile?: UserProfile) => {
-    if (profile?.username) return profile.username;
-    if (profile?.full_name) return profile.full_name;
-    return '匿名ユーザー';
-  };
-
-  const getUserInitial = (profile?: UserProfile) => {
-    const displayName = getUserDisplayName(profile);
-    return displayName[0]?.toUpperCase() || 'U';
+  const handleCloseCompletedTodoModal = () => {
+    setShowCompletedTodoModal(false);
+    setCompletedTodo(null);
   };
 
   if (authLoading || loading) {
@@ -258,39 +301,8 @@ export default function TimelinePage() {
       {/* ヘッダー */}
       <div className={css({
         textAlign: 'center',
-        mb: '8'
+        mb: '6'
       })}>
-        <h1 className={css({
-          fontSize: '3xl',
-          fontWeight: 'bold',
-          color: 'blue.700',
-          mb: '2'
-        })}>
-          📱 ちょい勉タイムライン
-        </h1>
-        <p className={css({
-          fontSize: 'lg',
-          color: 'gray.600',
-          mb: '4'
-        })}>
-          みんなの学習成果をチェックしよう！
-        </p>
-        <button
-          onClick={() => setShowPostForm(!showPostForm)}
-          className={css({
-            px: '6',
-            py: '3',
-            bg: 'blue.600',
-            color: 'white',
-            rounded: 'lg',
-            fontSize: 'md',
-            fontWeight: 'medium',
-            _hover: { bg: 'blue.700' },
-            transition: 'all 0.2s'
-          })}
-        >
-          {showPostForm ? '投稿フォームを閉じる' : '📝 学習成果を投稿'}
-        </button>
       </div>
 
       <div className={css({
@@ -321,7 +333,7 @@ export default function TimelinePage() {
             <h3 className={css({
               fontSize: 'lg',
               fontWeight: 'bold',
-              color: 'gray.900',
+              color: 'primary.800',
               mb: '3'
             })}>
               📊 統計
@@ -329,7 +341,7 @@ export default function TimelinePage() {
             <div className={css({
               spaceY: '2',
               fontSize: 'sm',
-              color: 'gray.600'
+              color: 'primary.700'
             })}>
               <div className={css({
                 display: 'flex',
@@ -371,16 +383,16 @@ export default function TimelinePage() {
 
         {/* メインコンテンツ */}
         <div className={css({
-          spaceY: '6'
+          spaceY: '4'
         })}>
           {/* 投稿フォーム */}
-          {showPostForm && (
-            <TimelinePostForm onPostCreated={handlePostCreated} />
-          )}
+          <TimelinePostForm 
+            onPostCreated={handlePostCreated}
+          />
 
           {/* 投稿一覧 */}
           <div className={css({
-            spaceY: '4'
+            spaceY: '3'
           })}>
             {posts.length === 0 ? (
               <div className={css({
@@ -388,7 +400,9 @@ export default function TimelinePage() {
                 rounded: 'lg',
                 p: '8',
                 textAlign: 'center',
-                shadow: 'md'
+                shadow: 'md',
+                border: '1px solid',
+                borderColor: 'gray.200'
               })}>
                 <div className={css({
                   fontSize: '4xl',
@@ -399,7 +413,7 @@ export default function TimelinePage() {
                 <h3 className={css({
                   fontSize: 'xl',
                   fontWeight: 'bold',
-                  color: 'gray.700',
+                  color: 'primary.700',
                   mb: '2'
                 })}>
                   {selectedHashtag ? `#${selectedHashtag}の投稿がありません` : 'まだ投稿がありません'}
@@ -415,216 +429,173 @@ export default function TimelinePage() {
               </div>
             ) : (
               posts.map(post => (
-                <div
+                <TimelinePostCard
                   key={post.id}
-                  className={css({
-                    bg: 'white',
-                    rounded: 'lg',
-                    p: '6',
-                    shadow: 'md',
-                    border: '1px solid',
-                    borderColor: 'gray.200',
-                    transition: 'all 0.2s',
-                    _hover: {
-                      shadow: 'lg',
-                      transform: 'translateY(-1px)'
-                    }
-                  })}
-                >
-                  {/* ユーザー情報 */}
-                  <div className={css({
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    mb: '4'
-                  })}>
-                    <div className={css({
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '3'
-                    })}>
-                      <div className={css({
-                        w: '12',
-                        h: '12',
-                        rounded: 'full',
-                        bg: 'blue.100',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 'lg',
-                        fontWeight: 'bold',
-                        color: 'blue.600'
-                      })}>
-                        {post.user_profile?.icon_url ? (
-                          // TODO: 画像表示の実装
-                          <span>{getUserInitial(post.user_profile)}</span>
-                        ) : (
-                          getUserInitial(post.user_profile)
-                        )}
-                      </div>
-                      <div>
-                        <div className={css({
-                          fontWeight: 'bold',
-                          color: 'gray.900'
-                        })}>
-                          {getUserDisplayName(post.user_profile)}
-                        </div>
-                        <div className={css({
-                          fontSize: 'sm',
-                          color: 'gray.500'
-                        })}>
-                          {formatTimeAgo(post.created_at)}
-                        </div>
-                      </div>
-                    </div>
-                    <FollowButton targetUserId={post.user_id} />
-                  </div>
-
-                  {/* Todo完了バッジ */}
-                  {post.todo && (
-                    <div className={css({
-                      mb: '3',
-                      p: '3',
-                      bg: 'green.50',
-                      border: '1px solid',
-                      borderColor: 'green.200',
-                      rounded: 'md'
-                    })}>
-                      <div className={css({
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '2',
-                        mb: '1'
-                      })}>
-                        <span className={css({
-                          fontSize: 'lg'
-                        })}>
-                          ✅
-                        </span>
-                        <span className={css({
-                          fontSize: 'sm',
-                          fontWeight: 'bold',
-                          color: 'green.700'
-                        })}>
-                          Todo完了
-                        </span>
-                      </div>
-                      <div className={css({
-                        fontSize: 'sm',
-                        color: 'green.600'
-                      })}>
-                        <div><strong>タスク:</strong> {post.todo.task}</div>
-                        <div><strong>学習時間:</strong> {post.todo.study_time}時間</div>
-                        {post.todo.due_date && (
-                          <div><strong>期限:</strong> {post.todo.due_date}</div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 投稿内容 */}
-                  <div className={css({
-                    mb: '4'
-                  })}>
-                    <p className={css({
-                      fontSize: 'md',
-                      color: 'gray.900',
-                      lineHeight: 'relaxed',
-                      mb: '3'
-                    })}>
-                      {post.content}
-                    </p>
-
-                    {/* ハッシュタグ */}
-                    {post.hashtags.length > 0 && (
-                      <div className={css({
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '2'
-                      })}>
-                        {post.hashtags.map(tag => (
-                          <span
-                            key={tag}
-                            className={css({
-                              px: '2',
-                              py: '1',
-                              bg: 'blue.50',
-                              color: 'blue.700',
-                              rounded: 'full',
-                              fontSize: 'xs',
-                              fontWeight: 'medium',
-                              cursor: 'pointer',
-                              _hover: { bg: 'blue.100' }
-                            })}
-                            onClick={() => setSelectedHashtag(tag)}
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* アクション */}
-                  <div className={css({
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4',
-                    pt: '3',
-                    borderTop: '1px solid',
-                    borderColor: 'gray.100'
-                  })}>
-                    <button
-                      onClick={() => handleLike(post.id)}
-                      className={css({
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '2',
-                        px: '3',
-                        py: '2',
-                        rounded: 'lg',
-                        bg: post.is_liked ? 'red.50' : 'gray.50',
-                        color: post.is_liked ? 'red.600' : 'gray.600',
-                        border: '1px solid',
-                        borderColor: post.is_liked ? 'red.200' : 'gray.200',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        _hover: {
-                          bg: post.is_liked ? 'red.100' : 'gray.100'
-                        }
-                      })}
-                    >
-                      <span className={css({
-                        fontSize: 'lg'
-                      })}>
-                        {post.is_liked ? '❤️' : '🤍'}
-                      </span>
-                      <span className={css({
-                        fontSize: 'sm',
-                        fontWeight: 'medium'
-                      })}>
-                        {post.likes_count || 0}
-                      </span>
-                    </button>
-
-                    <TimelineComment
-                      postId={post.id}
-                      onCommentAdded={handleCommentAdded}
-                    />
-
-                    <ShareButton
-                      shareData={createPostShareData(
-                        post,
-                        `${window.location.origin}/timeline/post/${post.id}`
-                      )}
-                    />
-                  </div>
-                </div>
+                  post={post}
+                  onLike={handleLike}
+                  onCommentAdded={handleCommentAdded}
+                  onHashtagClick={setSelectedHashtag}
+                  onPostUpdated={handlePostUpdated}
+                  onPostDeleted={handlePostDeleted}
+                  baseUrl={baseUrl}
+                  createPostShareData={createPostShareData}
+                />
               ))
             )}
           </div>
         </div>
       </div>
+
+      {/* 完了したTODOのモーダル */}
+      {showCompletedTodoModal && completedTodo && (
+        <div className={css({
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
+          bg: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: '1000',
+          p: '4'
+        })}>
+          <div className={css({
+            bg: 'white',
+            rounded: 'xl',
+            p: '6',
+            maxW: 'md',
+            w: 'full',
+            shadow: '2xl',
+            border: '2px solid',
+            borderColor: 'gray.300'
+          })}>
+            <div className={css({
+              textAlign: 'center',
+              mb: '6'
+            })}>
+              <div className={css({
+                fontSize: '4xl',
+                mb: '3'
+              })}>
+                🎉
+              </div>
+              <h2 className={css({
+                fontSize: 'xl',
+                fontWeight: 'bold',
+                color: 'green.700',
+                mb: '2'
+              })}>
+                TODO完了おめでとうございます！
+              </h2>
+              <p className={css({
+                color: 'gray.600',
+                mb: '4'
+              })}>
+                学習成果をタイムラインに投稿して、みんなと共有しましょう！
+              </p>
+            </div>
+
+            {/* 完了したTODOの詳細 */}
+            <div className={css({
+              bg: 'green.50',
+              border: '1px solid',
+              borderColor: 'green.200',
+              rounded: 'lg',
+              p: '4',
+              mb: '6'
+            })}>
+              <div className={css({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2',
+                mb: '3'
+              })}>
+                <span className={css({
+                  fontSize: 'lg'
+                })}>
+                  ✅
+                </span>
+                <span className={css({
+                  fontSize: 'md',
+                  fontWeight: 'bold',
+                  color: 'green.700'
+                })}>
+                  完了したTODO
+                </span>
+              </div>
+              <div className={css({
+                spaceY: '2',
+                fontSize: 'sm',
+                color: 'green.600'
+              })}>
+                <div><strong>タスク:</strong> {completedTodo.task}</div>
+                <div><strong>学習時間:</strong> {completedTodo.study_time}分</div>
+                {completedTodo.due_date && (
+                  <div><strong>期限:</strong> {completedTodo.due_date}</div>
+                )}
+                {completedTodo.priority && (
+                  <div><strong>優先度:</strong> {completedTodo.priority === 1 ? '高' : completedTodo.priority === 2 ? '中' : '低'}</div>
+                )}
+                {completedTodo.goal && (
+                  <div><strong>目標:</strong> {completedTodo.goal}</div>
+                )}
+              </div>
+            </div>
+
+            {/* アクションボタン */}
+            <div className={css({
+              display: 'flex',
+              gap: '3'
+            })}>
+              <button
+                onClick={() => {
+                  setShowCompletedTodoModal(false);
+                }}
+                className={css({
+                  flex: '1',
+                  px: '4',
+                  py: '3',
+                  bg: 'green.500',
+                  color: 'white',
+                  rounded: 'lg',
+                  fontWeight: 'bold',
+                  fontSize: 'md',
+                  _hover: { bg: 'green.600' },
+                  transition: 'all 0.2s'
+                })}
+              >
+                📝 投稿する
+              </button>
+              <button
+                onClick={handleCloseCompletedTodoModal}
+                className={css({
+                  px: '4',
+                  py: '3',
+                  bg: 'gray.300',
+                  color: 'gray.700',
+                  rounded: 'lg',
+                  fontWeight: 'bold',
+                  fontSize: 'md',
+                  _hover: { bg: 'gray.400' },
+                  transition: 'all 0.2s'
+                })}
+              >
+                後で
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
+  );
+}
+
+export default function TimelinePage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <TimelineContent />
+    </Suspense>
   );
 }

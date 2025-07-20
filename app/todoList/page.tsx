@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState, useMemo } from "react";
 
+import { supabase } from "../../lib/supabase";
 import { css } from "../../styled-system/css";
 import TodoCompletionModal from "../components/TodoCompletionModal";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
@@ -53,8 +54,7 @@ export default function TodoListPage() {
 
   return (
     <main className={css({ maxW: "2xl", mx: "auto", px: "4", py: "8" })}>
-      <div className={css({ display: "flex", justifyContent: "space-between", alignItems: "center", mb: "8" })}>
-        <h2 className={css({ fontSize: "2xl", fontWeight: "bold", color: "primary.700" })}>TODOリスト</h2>
+      <div className={css({ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: "6" })}>
         <div className={css({ display: "flex", gap: "3" })}>
           <Link
             href="/timeline"
@@ -103,11 +103,11 @@ export default function TodoListPage() {
         <div className={css({ spaceY: "8" })}>
           {/* 最近のTODOリスト */}
           <div>
-            <h3 className={css({ fontSize: "xl", fontWeight: "bold", color: "gray.800", mb: "4" })}>
+            <h3 className={css({ fontSize: "xl", fontWeight: "bold", color: "primary.800", mb: "4" })}>
               最近のTODOリスト
             </h3>
             {recentTodos.length === 0 ? (
-              <div className={css({ color: "gray.500", textAlign: "center", py: "8" })}>最近のTODOはありません</div>
+              <div className={css({ color: "primary.600", textAlign: "center", py: "8" })}>最近のTODOはありません</div>
             ) : (
               <ul className={css({ spaceY: "4" })}>
                 {recentTodos.map(todo => (
@@ -128,16 +128,17 @@ export default function TodoListPage() {
           {/* これまでのTODOリスト */}
           {pastTodos.length > 0 && (
             <div>
-              <h3 className={css({ fontSize: "xl", fontWeight: "bold", color: "gray.800", mb: "4" })}>
+              <h3 className={css({ fontSize: "xl", fontWeight: "bold", color: "primary.800", mb: "4" })}>
                 これまでのTODOリスト
               </h3>
               <div className={css({
                 maxH: "96",
                 overflowY: "auto",
                 border: "1px solid",
-                borderColor: "gray.200",
+                borderColor: "primary.200",
                 rounded: "lg",
-                p: "4"
+                p: "4",
+                bg: "primary.50"
               })}>
                 <ul className={css({ spaceY: "3" })}>
                   {pastTodos.map(todo => (
@@ -226,7 +227,7 @@ function TodoItem({ todo, isMyTodo, _onStatusUpdate, onCompletion, removingId, _
             </div>
           )}
           <div className={css({ fontSize: compact ? "xs" : "sm", color: "blue.600", mt: "1", fontWeight: "medium" })}>
-            学習時間: {todo.study_time}時間
+                          学習時間: {todo.study_time}分
           </div>
           <div className={css({ fontSize: "xs", color: "gray.400", mt: "1" })}>
             作成日: {todo.created_at.slice(0, 10)}
@@ -255,6 +256,53 @@ function TodoItem({ todo, isMyTodo, _onStatusUpdate, onCompletion, removingId, _
           >
             {todo.status === "completed" ? "完了済み" : "完了にする"}
           </button>
+          <div className={css({ display: "flex", gap: "1" })}>
+            <Link
+              href={`/todoList/${todo.id}/edit`}
+              className={css({
+                px: compact ? "1.5" : "2",
+                py: compact ? "0.5" : "1",
+                bg: "yellow.400",
+                color: "white",
+                rounded: "sm",
+                fontSize: "xs",
+                fontWeight: "bold",
+                _hover: { bg: "yellow.500" },
+                transition: "all 0.2s",
+                textDecoration: "none",
+                display: "inline-block"
+              })}
+            >
+              編集
+            </Link>
+            <button
+              className={css({
+                px: compact ? "1.5" : "2",
+                py: compact ? "0.5" : "1",
+                bg: "red.500",
+                color: "white",
+                rounded: "sm",
+                fontSize: "xs",
+                fontWeight: "bold",
+                _hover: { bg: "red.600" },
+                transition: "all 0.2s"
+              })}
+              onClick={async () => {
+                if (confirm("このTODOを削除しますか？")) {
+                  try {
+                    await supabase?.from("todo_items").delete().eq("id", todo.id);
+                    // ページをリロードしてリストを更新
+                    window.location.reload();
+                  } catch (error) {
+                    console.error("TODO削除エラー:", error);
+                    alert("TODOの削除に失敗しました");
+                  }
+                }
+              }}
+            >
+              削除
+            </button>
+          </div>
         </div>
       )}
     </li>
