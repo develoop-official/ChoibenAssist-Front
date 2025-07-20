@@ -343,6 +343,113 @@ const july20WeekIndex = Math.floor(july20Index / 7);
 - **視覚的デバッグ**: 色変更やテストラベルによる即座のフィードバック
 - **段階的改善**: 機能を段階的に実装し、問題を早期発見
 
+### 🤖 GeminiAI提案機能の開発
+
+#### 🎯 課題
+ダッシュボードでのGeminiAIによる学習提案機能において、以下の技術的課題に直面しました。
+
+**主な問題点:**
+- AIからの提案をどのようにmarkdown形式で出力するか
+- ダッシュボード全体の見やすいUIデザインの実現
+- 学習時間の可視化をどのように効果的に行うか
+
+#### 🔍 解決プロセス
+
+##### **Phase 1: Markdown出力の実装**
+```javascript
+// React Markdownライブラリを使用した実装
+import ReactMarkdown from 'react-markdown';
+
+const AiTodoSuggestion = ({ suggestion }) => {
+  return (
+    <div className={css({
+      bg: 'white',
+      rounded: 'xl',
+      p: '6',
+      shadow: 'lg',
+      border: '1px solid',
+      borderColor: 'gray.200'
+    })}>
+      <ReactMarkdown className={css({
+        prose: true,
+        'prose-headings': { color: 'gray.900' },
+        'prose-p': { color: 'gray.700' },
+        'prose-strong': { color: 'blue.600' }
+      })}>
+        {suggestion}
+      </ReactMarkdown>
+    </div>
+  );
+};
+```
+
+**結果**: AIからの提案が構造化されたmarkdownとして美しく表示される
+
+##### **Phase 2: ダッシュボードデザインの改善**
+```javascript
+// Google Fitを参考にした円グラフ実装
+const StudyProgressChart = ({ studyTime, targetTime }) => {
+  const percentage = (studyTime / targetTime) * 100;
+  const radius = 60;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className={css({
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '4'
+    })}>
+      <svg width="140" height="140" className={css({ transform: 'rotate(-90deg)' })}>
+        <circle
+          cx="70"
+          cy="70"
+          r={radius}
+          stroke="gray.200"
+          strokeWidth="8"
+          fill="transparent"
+        />
+        <circle
+          cx="70"
+          cy="70"
+          r={radius}
+          stroke="green.500"
+          strokeWidth="8"
+          fill="transparent"
+          strokeDasharray={strokeDasharray}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className={css({
+        textAlign: 'center',
+        fontSize: '2xl',
+        fontWeight: 'bold',
+        color: 'gray.900'
+      })}>
+        {Math.round(percentage)}%
+      </div>
+    </div>
+  );
+};
+```
+
+**結果**: 直感的で見やすい学習進捗の可視化を実現
+
+#### 🏆 成果
+- ✅ AI提案が構造化されたmarkdownとして美しく表示
+- ✅ Google Fitを参考にした直感的な円グラフデザイン
+- ✅ ダッシュボード全体の統一感のあるUI
+- ✅ ユーザビリティの大幅向上
+
+#### 📚 技術的学び
+1. **React Markdownライブラリの活用**: AI出力の構造化とスタイリングの効率化
+2. **デザインシステムの重要性**: Google Fitなどの優れたUIを参考にした設計
+3. **SVGによる円グラフ実装**: パフォーマンスとカスタマイズ性の両立
+4. **ユーザー体験の最適化**: 直感的で分かりやすい情報の可視化
+
 ## 🤝 コントリビューション
 
 プロジェクトへの貢献を歓迎します！
