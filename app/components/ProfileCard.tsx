@@ -244,6 +244,7 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
                   alt="プロフィール画像"
                   width={96}
                   height={96}
+                  priority
                   className={css({
                     w: 'full',
                     h: 'full',
@@ -360,6 +361,7 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
                       alt="プロフィール画像"
                       width={96}
                       height={96}
+                      priority
                       className={css({
                         w: 'full',
                         h: 'full',
