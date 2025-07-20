@@ -17,7 +17,6 @@ export interface TodoSection {
  */
 export function parseMarkdownTodos(content: string): TodoSection[] {
   console.log('🔍 TODO解析開始 - 生コンテンツ:', content);
-  console.log('📄 TODO解析開始 - 行分割後:', content.split('\n'));
   
   const lines = content.split('\n');
   const sections: TodoSection[] = [];
@@ -35,13 +34,11 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    console.log(`🔍 解析中 - 行${i + 1}: "${line}"`);
     
     // 空行をスキップ
     if (!line) {
       // 空行でTODOの終了を判定
       if (currentTodo && currentSection) {
-        console.log('💾 TODO保存:', currentTodo);
         currentSection.todos.push(currentTodo);
         currentSection.totalTime += currentTodo.study_time;
         currentTodo = null;
@@ -54,7 +51,6 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
     if (line.startsWith('##') || line.startsWith('###')) {
       // 前のTODOがあれば保存
       if (currentTodo && currentSection) {
-        console.log('💾 TODO保存:', currentTodo);
         currentSection.todos.push(currentTodo);
         currentSection.totalTime += currentTodo.study_time;
         currentTodo = null;
@@ -68,7 +64,6 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
         totalTime: 0
       };
       sections.push(currentSection);
-      console.log('📂 新しいセクション作成:', title);
       continue;
     }
 
@@ -76,7 +71,6 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
     if (line.match(/^\d+\.\s/)) {
       // 前のTODOがあれば保存
       if (currentTodo && currentSection) {
-        console.log('💾 TODO保存:', currentTodo);
         currentSection.todos.push(currentTodo);
         currentSection.totalTime += currentTodo.study_time;
       }
@@ -90,28 +84,24 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
         priority: undefined
       };
       currentTodoLines = [taskName];
-      console.log('🆕 新しいTODO開始:', taskName);
       continue;
     }
 
     // 現在のTODOの詳細情報を収集
     if (currentTodo && line.startsWith('-')) {
       currentTodoLines.push(line);
-      console.log('📝 TODO詳細追加:', line);
       
       // 推定時間を抽出
       const timeMatch = line.match(/推定時間:\s*(\d+)\s*min/);
       if (timeMatch) {
         const minutes = parseInt(timeMatch[1]);
         currentTodo.study_time = minutes; // 分のまま保持
-        console.log('⏰ 時間設定:', minutes, '分');
       }
       
       // 内容を抽出
       const contentMatch = line.match(/内容:\s*(.+)/);
       if (contentMatch) {
         currentTodo.goal = contentMatch[1].trim();
-        console.log('📋 内容設定:', currentTodo.goal);
       }
       
       continue;
@@ -122,22 +112,13 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
       const note = line.replace(/^補足:\s*/, '').trim();
       if (note) {
         currentTodo.goal = currentTodo.goal ? `${currentTodo.goal} (補足: ${note})` : `補足: ${note}`;
-        console.log('📌 補足追加:', note);
       }
       continue;
-    }
-
-    // その他の行は無視（デバッグ用にログ出力）
-    if (currentTodo) {
-      console.log('⚠️ 未処理の行（TODO中）:', line);
-    } else {
-      console.log('⚠️ 未処理の行（TODO外）:', line);
     }
   }
 
   // 最後のTODOを保存
   if (currentTodo && currentSection) {
-    console.log('💾 最後のTODO保存:', currentTodo);
     currentSection.todos.push(currentTodo);
     currentSection.totalTime += currentTodo.study_time;
   }
@@ -145,8 +126,6 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
   console.log('✅ TODO解析完了 - 結果:', JSON.stringify(sections, null, 2));
   return sections;
 }
-
-
 
 /**
  * 解析されたTODOセクションをフラットなTODOリストに変換

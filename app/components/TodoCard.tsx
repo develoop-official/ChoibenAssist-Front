@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
-import { css } from '../../styled-system/css';
+import React from 'react';
+
 import { todoCardStyles } from '../styles/components';
+import { css } from '../../styled-system/css';
 
 interface TodoItem {
   id: string;

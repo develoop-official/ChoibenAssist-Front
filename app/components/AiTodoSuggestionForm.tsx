@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 
-import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
 import { supabase } from '../../lib/supabase';
-import { formStyles, buttonStyles, statusStyles, aiTodoSuggestionStyles } from '../styles/components';
+import { generateTodo, generateGeneralTodo } from '../actions/todo-actions';
+import { formStyles, buttonStyles, aiTodoSuggestionStyles } from '../styles/components';
 import { css } from '../../styled-system/css';
 
 interface AiTodoSuggestionFormProps {

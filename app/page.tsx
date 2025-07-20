@@ -2,19 +2,18 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 
+import { supabase } from '../lib/supabase';
 import { css } from '../styled-system/css';
 
-import AiTodoSuggestionCard from './components/AiTodoSuggestionCard';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import StatCard from './components/StatCard';
+import AiTodoSuggestionCard from './components/AiTodoSuggestionCard';
 import TodoCard from './components/TodoCard';
 import { useAuth } from './hooks/useAuth';
 import { useTodos } from './hooks/useTodos';
 import { sectionStyles } from './styles/components';
 import { CreateTodoItem } from './types/todo-item';
-import { supabase } from '../lib/supabase';
 
 export default function DashboardPage() {
   const router = useRouter();

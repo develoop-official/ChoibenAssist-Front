@@ -3,9 +3,8 @@
 import React, { useState } from 'react';
 
 import { CreateTodoItem } from '../types/todo-item';
-import { parseMarkdownTodos, flattenTodoSections, convertToCreateTodoItem, ParsedTodo } from '../utils/todo-parser';
 import { aiTodoSuggestionStyles } from '../styles/components';
-import { css } from '../../styled-system/css';
+import { parseMarkdownTodos, flattenTodoSections, convertToCreateTodoItem, ParsedTodo } from '../utils/todo-parser';
 
 interface AiTodoSuggestionResultProps {
   content: string;
