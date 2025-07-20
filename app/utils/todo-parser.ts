@@ -92,7 +92,7 @@ export function parseMarkdownTodos(content: string): TodoSection[] {
       currentTodoLines.push(line);
       
       // 推定時間を抽出
-      const timeMatch = line.match(/推定時間:\s*(\d+)\s*min/);
+      const timeMatch = line.match(/推定時間:\s*(\d+)\s*分/);
       if (timeMatch) {
         const minutes = parseInt(timeMatch[1]);
         currentTodo.study_time = minutes; // 分のまま保持
