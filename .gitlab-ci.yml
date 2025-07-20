@@ -67,6 +67,8 @@ build:
     # Dockerイメージのビルド
     - docker build 
         --build-arg BUILDKIT_INLINE_CACHE=1
+        --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL"
+        --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY"
         --cache-from $DOCKER_REGISTRY:latest
         --tag $DOCKER_REGISTRY:$DOCKER_TAG
         --tag $DOCKER_REGISTRY:latest
@@ -150,8 +152,6 @@ deploy_production:
         --restart unless-stopped \
         -p 3001:3001 \
         --env NODE_ENV=production \
-        --env NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
         --env BACKEND_API_URL="$BACKEND_API_URL" \
         --env API_SECRET_KEY="$API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
@@ -216,8 +216,6 @@ deploy_staging:
         --restart unless-stopped \
         -p 3002:3001 \
         --env NODE_ENV=development \
-        --env NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
-        --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
         --env BACKEND_API_URL="$BACKEND_API_URL" \
         --env API_SECRET_KEY="$API_SECRET_KEY" \
         $DOCKER_REGISTRY:$DOCKER_TAG
