@@ -132,11 +132,12 @@ deploy_production:
     - docker --version
     - echo "$DOCKER_REGISTRY:$DOCKER_TAG"
     # 環境変数の確認（機密情報はマスクされる）
-    - echo "Environment variables check:"
-    - echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:0:20}..."
-    - echo "NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:0:20}..."
-    - echo "BACKEND_API_URL: ${BACKEND_API_URL:0:20}..."
-    - echo "API_SECRET_KEY: ${API_SECRET_KEY:0:20}..."
+    - |
+      echo "Environment variables check:"
+      echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL::20}..."
+      echo "NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY::20}..."
+      echo "BACKEND_API_URL: ${BACKEND_API_URL::20}..."
+      echo "API_SECRET_KEY: ${API_SECRET_KEY::20}..."
   script:
     # 既存のコンテナを停止・削除
     - docker stop $CONTAINER_NAME || true
@@ -197,11 +198,12 @@ deploy_staging:
     - echo "Deploying to staging environment..."
     - echo "$DOCKER_REGISTRY:$DOCKER_TAG"
     # 環境変数の確認（機密情報はマスクされる）
-    - echo "Environment variables check:"
-    - echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:0:20}..."
-    - echo "NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:0:20}..."
-    - echo "BACKEND_API_URL: ${BACKEND_API_URL:0:20}..."
-    - echo "API_SECRET_KEY: ${API_SECRET_KEY:0:20}..."
+    - |
+      echo "Environment variables check:"
+      echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL::20}..."
+      echo "NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY::20}..."
+      echo "BACKEND_API_URL: ${BACKEND_API_URL::20}..."
+      echo "API_SECRET_KEY: ${API_SECRET_KEY::20}..."
   script:
     # 既存のコンテナを停止・削除
     - docker stop $CONTAINER_NAME || true
