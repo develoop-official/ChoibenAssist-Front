@@ -10,6 +10,7 @@ import LoadingSpinner from './components/ui/LoadingSpinner';
 import StatCard from './components/StatCard';
 import AiTodoSuggestionCard from './components/AiTodoSuggestionCard';
 import TodoCard from './components/TodoCard';
+import StudyProgressChart from './components/StudyProgressChart';
 import { useAuth } from './hooks/useAuth';
 import { useTodos } from './hooks/useTodos';
 import { sectionStyles } from './styles/components';
@@ -32,30 +33,37 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router]);
 
-  // TODOリストから学習時間を計算（実際のstudy_timeを使用）
+  // 今日完了したTODOの学習時間を計算
   const today = new Date();
-  const todayTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at);
-    return todoDate.toDateString() === today.toDateString();
+  const todayCompletedTodos = todos.filter(todo => {
+    if (todo.status !== 'completed') return false;
+    const completedDate = new Date(todo.updated_at);
+    return completedDate.toDateString() === today.toDateString();
   });
-  const todayTotalMinutes = todayTodos.reduce((total, todo) => total + todo.study_time, 0);
+  const todayTotalMinutes = todayCompletedTodos.reduce((total, todo) => total + todo.study_time, 0);
+  
+  // デバッグ用ログ
+  console.log('今日完了したTODO:', todayCompletedTodos);
+  console.log('今日の合計学習時間（分）:', todayTotalMinutes);
 
-  // 今週の学習時間を計算
+  // 今週完了したTODOの学習時間を計算
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - today.getDay());
-  const weekTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at);
-    return todoDate >= weekStart;
+  const weekCompletedTodos = todos.filter(todo => {
+    if (todo.status !== 'completed') return false;
+    const completedDate = new Date(todo.updated_at);
+    return completedDate >= weekStart;
   });
-  const weekTotalMinutes = weekTodos.reduce((total, todo) => total + todo.study_time, 0);
+  const weekTotalMinutes = weekCompletedTodos.reduce((total, todo) => total + todo.study_time, 0);
 
-  // 今月の学習時間を計算
+  // 今月完了したTODOの学習時間を計算
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const monthTodos = todos.filter(todo => {
-    const todoDate = new Date(todo.created_at);
-    return todoDate >= monthStart;
+  const monthCompletedTodos = todos.filter(todo => {
+    if (todo.status !== 'completed') return false;
+    const completedDate = new Date(todo.updated_at);
+    return completedDate >= monthStart;
   });
-  const monthTotalMinutes = monthTodos.reduce((total, todo) => total + todo.study_time, 0);
+  const monthTotalMinutes = monthCompletedTodos.reduce((total, todo) => total + todo.study_time, 0);
 
   // 完了したTODOの数
   const completedTodos = todos.filter(todo => todo.status === 'completed');
@@ -181,31 +189,149 @@ export default function DashboardPage() {
         mx: 'auto'
       })}>
 
-        {/* 統計カード */}
+        {/* スマホ版: 目標達成率のみ */}
         <div className={css({
-          display: 'grid',
-          gridTemplateColumns: { base: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
-          gap: { base: '4', md: '6' },
+          display: { base: 'block', lg: 'none' },
+          mb: '8'
+        })}>
+          <div className={css({
+            bg: 'white',
+            rounded: 'xl',
+            shadow: 'lg',
+            p: '6',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid',
+            borderColor: 'gray.100',
+            maxW: 'sm',
+            mx: 'auto'
+          })}>
+            <h3 className={css({
+              fontSize: 'lg',
+              fontWeight: 'bold',
+              color: 'gray.900',
+              mb: '4',
+              textAlign: 'center'
+            })}>
+              今日の目標達成率
+            </h3>
+            <StudyProgressChart
+              targetMinutes={profile?.target_study_time || 120}
+              actualMinutes={todayTotalMinutes}
+              size={140}
+              label="今日の学習時間"
+            />
+          </div>
+        </div>
+
+        {/* PC版: 今月の学習時間・完了済みTODOを円グラフで表示 */}
+        <div className={css({
+          display: { base: 'none', lg: 'grid' },
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '8',
           mb: '8',
           maxW: '4xl',
           mx: 'auto'
         })}>
-          <StatCard
-            value={`${Math.floor(todayTotalMinutes / 60)}h ${todayTotalMinutes % 60}m`}
-            label="今日の学習時間"
-          />
-          <StatCard
-            value={`${Math.floor(weekTotalMinutes / 60)}h ${weekTotalMinutes % 60}m`}
-            label="今週の学習時間"
-          />
-          <StatCard
-            value={`${Math.floor(monthTotalMinutes / 60)}h ${monthTotalMinutes % 60}m`}
-            label="今月の学習時間"
-          />
-          <StatCard
-            value={completedTodos.length}
-            label="完了したTODO"
-          />
+          {/* 今月の学習時間チャート */}
+          <div className={css({
+            bg: 'white',
+            rounded: 'xl',
+            shadow: 'lg',
+            p: '6',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid',
+            borderColor: 'gray.100'
+          })}>
+            <h3 className={css({
+              fontSize: 'lg',
+              fontWeight: 'bold',
+              color: 'gray.900',
+              mb: '4',
+              textAlign: 'center'
+            })}>
+              今月の学習時間
+            </h3>
+            <StudyProgressChart
+              targetMinutes={(profile?.target_study_time || 120) * 30}
+              actualMinutes={monthTotalMinutes}
+              size={140}
+              label="今月の学習時間"
+            />
+            <div className={css({
+              textAlign: 'center',
+              mt: '3'
+            })}>
+              <div className={css({
+                fontSize: 'lg',
+                fontWeight: 'bold',
+                color: 'gray.900'
+              })}>
+                {Math.floor(monthTotalMinutes / 60)}時間{Math.floor(monthTotalMinutes % 60)}分
+              </div>
+              <div className={css({
+                fontSize: 'sm',
+                color: 'gray.600',
+                mt: '1'
+              })}>
+                目標: {Math.floor(((profile?.target_study_time || 120) * 30) / 60)}時間{Math.floor(((profile?.target_study_time || 120) * 30) % 60)}分
+              </div>
+            </div>
+          </div>
+
+          {/* 今日の目標達成率チャート */}
+          <div className={css({
+            bg: 'white',
+            rounded: 'xl',
+            shadow: 'lg',
+            p: '6',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid',
+            borderColor: 'gray.100'
+          })}>
+            <h3 className={css({
+              fontSize: 'lg',
+              fontWeight: 'bold',
+              color: 'gray.900',
+              mb: '4',
+              textAlign: 'center'
+            })}>
+              今日の目標達成率
+            </h3>
+            <StudyProgressChart
+              targetMinutes={profile?.target_study_time || 120}
+              actualMinutes={todayTotalMinutes}
+              size={140}
+              label="今日の学習時間"
+            />
+            <div className={css({
+              textAlign: 'center',
+              mt: '3'
+            })}>
+              <div className={css({
+                fontSize: 'lg',
+                fontWeight: 'bold',
+                color: 'gray.900'
+              })}>
+                {Math.floor(todayTotalMinutes / 60)}時間{Math.floor(todayTotalMinutes % 60)}分
+              </div>
+              <div className={css({
+                fontSize: 'sm',
+                color: 'gray.600',
+                mt: '1'
+              })}>
+                目標: {Math.floor((profile?.target_study_time || 120) / 60)}時間{Math.floor((profile?.target_study_time || 120) % 60)}分
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className={css({
