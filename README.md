@@ -270,6 +270,186 @@ ChoibenAssist-Front/
 - より高度なAI分析機能
 - マルチ言語対応
 
+## 💼 技術的課題と解決事例
+
+### 📊 ActivityHeatmapコンポーネントの開発
+
+#### 🎯 課題
+学習進捗を可視化するヒートマップコンポーネントにおいて、横軸の月ラベル表示に技術的課題が発生しました。
+
+**主な問題点:**
+- 月ラベルが画面に表示されない
+- データの実際の位置とラベルの位置がずれる
+- 7月の学習データが2月の位置に誤表示される
+
+#### 🔍 解決プロセス
+
+##### **Phase 1: 複雑な絶対配置アプローチ**
+```javascript
+// 週の幅を精密計算
+const cellWidth = 16; // w: '4'
+const cellGap = 4; // gap: '1'  
+const weekGap = 4; // gap: '1'
+const weekWidth = cellWidth * 7 + cellGap * 6 + weekGap; // 140px
+const leftPx = weekIndex * weekWidth;
+```
+
+**結果**: 計算値と実際のレンダリング結果に乖離が発生
+
+##### **Phase 2: データ駆動型配置**
+```javascript
+// 7月20日のデータ位置を基準とした動的配置
+const july20Index = activityData.findIndex(data => data.date === '2025-07-20');
+const july20WeekIndex = Math.floor(july20Index / 7);
+```
+
+**結果**: ロジックが複雑化し、デバッグが困難
+
+##### **Phase 3: シンプルなフレックスボックス配置（最終解決策）**
+```javascript
+{['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'].map((month) => (
+  <div key={month} className={css({
+    fontSize: 'lg',
+    fontWeight: 'bold',
+    color: 'green.800',
+    bg: 'green.100',
+    px: '4',
+    py: '3',
+    rounded: 'xl',
+    border: '2px solid',
+    borderColor: 'green.400',
+    whiteSpace: 'nowrap',
+    flexShrink: 0
+  })}>
+    {month}
+  </div>
+))}
+```
+
+#### 🏆 成果
+- ✅ 月ラベルが確実に表示される
+- ✅ 1月から12月まで全ての月が正しく表示
+- ✅ レスポンシブデザインに対応
+- ✅ ユーザビリティの大幅向上
+
+#### 📚 技術的学び
+1. **シンプルな実装の優位性**: 複雑な計算より保守性の高いシンプルなアプローチを選択
+2. **段階的デバッグの重要性**: 詳細なログ出力と視覚的フィードバックによる効率的な問題解決
+3. **CSSレイアウトの深い理解**: z-index、overflow、positioningの適切な使い分け
+4. **ユーザー中心の開発**: ユーザーフィードバックに基づく迅速な修正と改善
+
+#### 🛠️ 開発手法
+- **詳細なログ出力**: 各段階でのデータ状態を可視化
+- **視覚的デバッグ**: 色変更やテストラベルによる即座のフィードバック
+- **段階的改善**: 機能を段階的に実装し、問題を早期発見
+
+### 🤖 GeminiAI提案機能の開発
+
+#### 🎯 課題
+ダッシュボードでのGeminiAIによる学習提案機能において、以下の技術的課題に直面しました。
+
+**主な問題点:**
+- AIからの提案をどのようにmarkdown形式で出力するか
+- ダッシュボード全体の見やすいUIデザインの実現
+- 学習時間の可視化をどのように効果的に行うか
+
+#### 🔍 解決プロセス
+
+##### **Phase 1: Markdown出力の実装**
+```javascript
+// React Markdownライブラリを使用した実装
+import ReactMarkdown from 'react-markdown';
+
+const AiTodoSuggestion = ({ suggestion }) => {
+  return (
+    <div className={css({
+      bg: 'white',
+      rounded: 'xl',
+      p: '6',
+      shadow: 'lg',
+      border: '1px solid',
+      borderColor: 'gray.200'
+    })}>
+      <ReactMarkdown className={css({
+        prose: true,
+        'prose-headings': { color: 'gray.900' },
+        'prose-p': { color: 'gray.700' },
+        'prose-strong': { color: 'blue.600' }
+      })}>
+        {suggestion}
+      </ReactMarkdown>
+    </div>
+  );
+};
+```
+
+**結果**: AIからの提案が構造化されたmarkdownとして美しく表示される
+
+##### **Phase 2: ダッシュボードデザインの改善**
+```javascript
+// Google Fitを参考にした円グラフ実装
+const StudyProgressChart = ({ studyTime, targetTime }) => {
+  const percentage = (studyTime / targetTime) * 100;
+  const radius = 60;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className={css({
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '4'
+    })}>
+      <svg width="140" height="140" className={css({ transform: 'rotate(-90deg)' })}>
+        <circle
+          cx="70"
+          cy="70"
+          r={radius}
+          stroke="gray.200"
+          strokeWidth="8"
+          fill="transparent"
+        />
+        <circle
+          cx="70"
+          cy="70"
+          r={radius}
+          stroke="green.500"
+          strokeWidth="8"
+          fill="transparent"
+          strokeDasharray={strokeDasharray}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className={css({
+        textAlign: 'center',
+        fontSize: '2xl',
+        fontWeight: 'bold',
+        color: 'gray.900'
+      })}>
+        {Math.round(percentage)}%
+      </div>
+    </div>
+  );
+};
+```
+
+**結果**: 直感的で見やすい学習進捗の可視化を実現
+
+#### 🏆 成果
+- ✅ AI提案が構造化されたmarkdownとして美しく表示
+- ✅ Google Fitを参考にした直感的な円グラフデザイン
+- ✅ ダッシュボード全体の統一感のあるUI
+- ✅ ユーザビリティの大幅向上
+
+#### 📚 技術的学び
+1. **React Markdownライブラリの活用**: AI出力の構造化とスタイリングの効率化
+2. **デザインシステムの重要性**: Google Fitなどの優れたUIを参考にした設計
+3. **SVGによる円グラフ実装**: パフォーマンスとカスタマイズ性の両立
+4. **ユーザー体験の最適化**: 直感的で分かりやすい情報の可視化
+
 ## 🤝 コントリビューション
 
 プロジェクトへの貢献を歓迎します！
