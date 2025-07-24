@@ -462,9 +462,6 @@ const StudyProgressChart = ({ studyTime, targetTime }) => {
 
 詳細な開発ルールは [`DEVELOPMENT_RULES.md`](./DEVELOPMENT_RULES.md) を参照してください。
 
-## 📄 ライセンス
-
-このプロジェクトはMITライセンスの下で公開されています。
 
 ## 🙋‍♂️ サポート
 
