@@ -8,6 +8,32 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // リフレッシュトークンエラーを処理する関数
+  const handleRefreshTokenError = async () => {
+    console.warn('リフレッシュトークンエラーを検出しました。ローカルストレージをクリアしてログアウト状態にします。');
+    
+    try {
+      // ローカルストレージをクリア
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Supabaseのセッションもクリア
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+      
+      setUser(null);
+      setError(null);
+      
+      // ログインページにリダイレクト
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    } catch (err) {
+      console.error('ログアウト処理エラー:', err);
+    }
+  };
+
   useEffect(() => {
     // Supabaseクライアントが存在しない場合
     if (!supabase) {
@@ -24,11 +50,10 @@ export const useAuth = () => {
         const error = response?.error;
 
         // リフレッシュトークンエラーの場合、ローカルストレージをクリア
-        if (error?.message?.includes('Invalid Refresh Token') || error?.message?.includes('Refresh Token Not Found')) {
-          console.warn('リフレッシュトークンエラーを検出しました。ローカルストレージをクリアします。');
-          setUser(null);
-          setError(null);
-          setLoading(false);
+        if (error?.message?.includes('Invalid Refresh Token') || 
+            error?.message?.includes('Refresh Token Not Found') ||
+            error?.message?.includes('JWT expired')) {
+          await handleRefreshTokenError();
           return;
         }
 
@@ -40,6 +65,15 @@ export const useAuth = () => {
         }
       } catch (err) {
         console.error('認証エラー:', err);
+        // エラーメッセージにリフレッシュトークン関連の文字列が含まれている場合
+        if (err instanceof Error && (
+          err.message.includes('Invalid Refresh Token') ||
+          err.message.includes('Refresh Token Not Found') ||
+          err.message.includes('JWT expired')
+        )) {
+          await handleRefreshTokenError();
+          return;
+        }
         setError('認証サービスの接続に失敗しました');
       } finally {
         setLoading(false);
@@ -51,15 +85,24 @@ export const useAuth = () => {
     // 認証状態の変更を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('認証状態変更:', event, session?.user?.id);
+        
         // リフレッシュトークンエラーをチェック
         if (event === 'TOKEN_REFRESHED' && !session) {
           console.warn('トークンリフレッシュに失敗しました。ログアウト状態にします。');
+          await handleRefreshTokenError();
+          return;
+        }
+        
+        // その他の認証エラー
+        if (event === 'SIGNED_OUT') {
           setUser(null);
           setError(null);
-        } else {
-          setUser(session?.user ?? null);
+        } else if (session) {
+          setUser(session.user);
           setError(null);
         }
+        
         setLoading(false);
       }
     );
@@ -107,9 +150,17 @@ export const useAuth = () => {
       return { error: new Error('Supabaseが設定されていません。lib/supabase.tsファイルを確認し、環境変数SUPABASE_URLとSUPABASE_ANON_KEYが正しく設定されているか確認してください。') };
     }
     try {
-      // ローカルストレージもクリア
-      localStorage.removeItem('supabase.auth.token');
+      // ローカルストレージとセッションストレージをクリア
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Supabaseのセッションをクリア
       const { error } = await supabase.auth.signOut();
+      
+      // ユーザー状態をリセット
+      setUser(null);
+      setError(null);
+      
       return { error };
     } catch (err) {
       console.error('ログアウトエラー:', err);

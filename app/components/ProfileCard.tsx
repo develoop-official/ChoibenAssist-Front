@@ -75,7 +75,7 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
           icon_url: formData.icon_url,
           bio: formData.bio,
           scrapbox_project_name: formData.scrapbox_project_name,
-          target_study_time: formData.target_study_time,
+          // target_study_time: formData.target_study_time, // カラムが存在しない場合は除外
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -89,7 +89,7 @@ export default function ProfileCard({ profile, user, onProfileUpdate }: ProfileC
         icon_url: formData.icon_url,
         bio: formData.bio,
         scrapbox_project_name: formData.scrapbox_project_name,
-        target_study_time: formData.target_study_time,
+        target_study_time: formData.target_study_time, // フロントエンド側では保持
         updated_at: new Date().toISOString()
       };
 
