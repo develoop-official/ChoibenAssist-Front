@@ -125,7 +125,7 @@ deploy_production:
     - shell
   environment:
     name: production
-    url: https://choiben-front.youkan.uk/ # 実際のURLに変更
+    url: https://choiben-front.youkan.uk/
   variables:
     DEPLOY_ENV: "production"
     CONTAINER_NAME: "choibenassist-front-prod"
@@ -182,52 +182,3 @@ deploy_production:
     - test
   only:
     - main
-
-# 開発環境へのデプロイ
-deploy_staging:
-  stage: deploy
-  tags:
-    - shell
-  environment:
-    name: staging
-    url: https://choiben-front-dev.youkan.uk/  # 実際のURLに変更
-  variables:
-    DEPLOY_ENV: "staging"
-    CONTAINER_NAME: "choibenassist-front-staging"
-  before_script:
-    - echo "Deploying to staging environment..."
-    - echo "$DOCKER_REGISTRY:$DOCKER_TAG"
-    # 環境変数の確認（機密情報はマスクされる）
-    - |
-      echo "Environment variables check:"
-      echo "NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL::20}..."
-      echo "NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY::20}..."
-      echo "BACKEND_API_URL: ${BACKEND_API_URL::20}..."
-      echo "API_SECRET_KEY: ${API_SECRET_KEY::20}..."
-  script:
-    # 既存のコンテナを停止・削除
-    - docker stop $CONTAINER_NAME || true
-    - docker rm $CONTAINER_NAME || true
-    
-    # 新しいコンテナを起動
-    - |
-      docker run -d \
-        --name $CONTAINER_NAME \
-        --restart unless-stopped \
-        -p 3002:3001 \
-        --env NODE_ENV=development \
-        --env BACKEND_API_URL="$BACKEND_API_URL" \
-        --env API_SECRET_KEY="$API_SECRET_KEY" \
-        $DOCKER_REGISTRY:$DOCKER_TAG
-    
-    # ヘルスチェック
-    - sleep 10
-    - docker ps | grep $CONTAINER_NAME
-  after_script:
-    - echo "Staging deployment completed"
-    - docker logs $CONTAINER_NAME --tail 20
-  dependencies:
-    - build
-  only:
-    - develop
-
